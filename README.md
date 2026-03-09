@@ -20,8 +20,8 @@ The project is an open research to better understand their internal workings and
 ```
 .
 ├── firmware
-│   ├── cfe_bcm63xx_03022026.bin
 │   ├── _cfe_bcm63xx_03022026.bin.extracted
+│   ├── cfe_bcm63xx_03022026.bin.tar.gz
 │   ├── docs
 │   ├── logs
 │   └── scripts
