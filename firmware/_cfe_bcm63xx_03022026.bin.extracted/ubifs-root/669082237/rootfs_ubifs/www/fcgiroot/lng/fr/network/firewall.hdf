@@ -1,0 +1,18 @@
+Env.Page.Title = Filtrage
+
+Env.Help.Text = Dans la rubrique <b>Filtrage</b>, vous pouvez activer la protection des ports régulièrement attaqués par les vers et les virus Windows (ports n°135, 137, 138, 139, 445). Vous pouvez aussi bloquer les requêtes SMTP qui n'utilisent pas le serveur SMTP du groupe SFR.<br/><br/>  Enfin vous pouvez bloquer le ping depuis internet à destination de votre Box. Ce service n'affecte que les connexions en IPv4. Rendez-vous dans la section <b>Réseau v6</b> sur la page <b>Filtrage</b> pour configurer le filtrage des connexions en IPv6.
+
+Env.Section.firewall.Title = Filtrage
+
+Env.Var.filter_mode.Header = Filtrage
+Env.Var.filter_mode.Value.on = Personnalisé
+Env.Var.filter_mode.Value.off = Désactivé
+Env.Var.filter_mode.Error.value = Format incorrect
+
+Env.Var.filter_simple.Header = Options
+
+Env.Var.filter_simple_winsharedrop.Header = Protéger vos ordinateurs Windows de l'internet
+
+Env.Var.filter_simple_smtpdrop.Header = Autoriser l'envoi de courriels uniquement par l'intermédiaire des serveurs mail du groupe SFR
+
+Env.Var.filter_simple_icmpdrop.Header = Bloquer le ping entrant

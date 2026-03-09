@@ -1,0 +1,41 @@
+Env.Page.Title = Windows file sharing (SMB)
+
+Env.Help.Text = In the <b>Windows file sharing</b> section, you can manage the file sharing service of your Box. In order to share files, you have to plug an external hard drive or a thumb drive on port 1 or 2 of your Box.<br /><br />To avoid data loss, <b>be sure to eject the device before removing it</b> on the Status page &rarr; Device or wait 30 seconds after the last copy was made.
+
+Env.Text.PlugUsbKey = Plug in a thumb drive on USB port of your Box to share folders
+Env.Text.NoShare = No shared folder
+
+Env.Section.SambaServer = Windows file sharing
+
+Env.Var.samba_status.Header = Service status
+
+Env.Var.samba_status.Value.up = Started
+Env.Var.samba_status.Value.down = Stopped
+Env.Var.samba_status.Value.starting = Starting
+Env.Var.samba_status.Value.installing = Installing
+Env.Var.samba_status.Value.error_unknown = Unknown error
+
+Env.Var.samba_active.Header = File sharing activation
+Env.Var.samba_active.Value.on = Enabled
+Env.Var.samba_active.Value.off = Disabled
+Env.Var.samba_active.Error.value = Incorrect value
+
+Env.Var.samba_workgroup.Header = Workgroup
+Env.Var.samba_workgroup.Error.value = Incorrect value. Only letters and numbers are allowed.
+
+Env.Var.samba_name.Header = Service name
+Env.Var.samba_name.Error.value = Incorrect value. Only letters and numbers are allowed.
+
+Env.Section.SambaShare = Shared folders
+
+Env.Var.samba_share_idx.Error.value = Incorrect value
+
+Env.Var.action.Error.value = Incorrect value
+
+Env.Var.samba_stockage_name.Header = Share name
+Env.Var.samba_stockage_name.Error.value = Incorrect value. Spaces are not allowed, and only letters and numbers are allowed.
+Env.Var.samba_stockage_name.Error.invalid_name = This name isn't allowed.
+
+Env.Var.samba_stockage_partition.Header = Partition
+Env.Var.samba_stockage_dir.Header = Folder
+Env.Var.samba_stockage_share.Error.value = Incorrect value

@@ -1,0 +1,27 @@
+Env.Page.Title = Network v6
+
+Env.Help.Text <<EOM
+In the <b>IPV6 status</b> section, you can check the status of IPV6 services (SLAAC, DHCPv6, UpnPv6, etc.). 
+<br /><br />In the <b>Connected hosts</b> section, you can find the list of the devices (IPv6 compatible) currently connected to your Box.
+<br /><br />Note that if your devices have several global IPv6 only one global IPV6 will be displayed per device. (The IPV6 displayed will be selected according to the following order of priority: dhcpv6 > eui64 > others)
+EOM
+
+Env.Section.global_status.Title = Services status
+
+Env.Var.netv6.Value = Internet v6
+Env.Var.dhcpv6.Value = DHCP v6
+Env.Var.upnpv6.Value = UPnP v6
+
+Env.Var.netv6.status.up = Operational
+Env.Var.netv6.status.noconnect = Not connected
+Env.Var.netv6.status.down = Disabled
+
+Env.Section.connected_computers.Title = Connected computer(s)
+
+Env.Var.hostname.Header = Host name
+Env.Var.mac_addr.Header = MAC address
+Env.Var.ip_addr.Header = IPv6 address
+Env.Var.port.Header = Port
+
+Env.Var.slaac.Header = SLAAC
+Env.Var.dmz6.Header = DMZ v6

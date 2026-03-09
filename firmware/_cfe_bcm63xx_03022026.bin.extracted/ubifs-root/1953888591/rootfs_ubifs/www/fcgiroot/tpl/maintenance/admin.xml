@@ -1,0 +1,3 @@
+<rsp stat="ok">
+  <autologin><?cs var:Var.autologin.Value?></autologin>
+</rsp>

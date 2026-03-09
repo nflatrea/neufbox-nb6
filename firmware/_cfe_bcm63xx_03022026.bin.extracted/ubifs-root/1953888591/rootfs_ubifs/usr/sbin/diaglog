@@ -1,0 +1,1206 @@
+#!/bin/sh
+#
+# ---- VARIABLES ---------------------------------
+#
+CMD=$1
+UPTIME="$(awk -F '.' '{print $1}' /proc/uptime)"
+NVRAM="/sys/mcu/eeprom"
+HOSTNAME="$(hostname)"
+TEMPERATURE="/sys/mcu/temperature/mcu"
+VOLTAGE="/sys/mcu/voltage/main_12v"
+
+# search wan configuration
+if [ ! -f /etc/in_rescue ]; then
+    CFG=/tmp/autoconf/$(autoconf get wanservices_file)
+else
+    CFG=/nonexistant
+fi
+
+# default if file not found 
+test -f "${CFG}" || CFG=/etc/default/autoconf/wanservices.xml
+
+#
+# ---- FUNCTIONS ---------------------------------
+#
+usage() {
+    echo "usage: diaglog <poll> <data|voip|tv|all>"
+    echo "               <push>"
+    echo "               <event> <reboot|uireset|btnreset|backup|upgrade|voice-test|rescue-done|download|flash|uidslconfig|ipv6|temp|power|migrate|mapt>"
+    echo "               <error> <voice|wifi|temp|power|upgrade|nbd|ipv6-conf>"
+}
+
+
+add_field() {
+    # it might be unsafe to provide all field - for a push command for
+    # instance - then filter these information
+    sensitive_id="97"
+
+    if [ $CMD = "push" ]; then
+        for id in $sensitive_id; do
+            if [ $id = $1 ]; then
+                return;
+            fi
+        done
+    fi
+
+    [ -n "$2" ] && msg="${msg};$1=$2"
+
+    if [ "${DEBUG}" == "error" ] && [ -z "$2" ]; then
+            echo "Missing field: $1"
+    elif [ "${DEBUG}" == "info" ]; then
+            echo "$1=$2"
+    fi
+}
+
+
+general_info() {
+    # 02 Autoconf IP
+    if [ "$(status get net_ipv6_infra)" = "Only" ]; then
+        add_field "02" "$(status get net_autoconf_ip6addr)"
+    else
+        add_field "02" "$(status get net_autoconf_ipaddr)"
+    fi
+    # 03 IAD Model
+    if [ -e "/proc/productid" ]
+    then
+        add_field "03" "$(cat /proc/productid)"
+    else
+        # LBGH1
+        add_field "03" "$(cat $NVRAM/pid)"
+    fi
+    # 04 Mac Address
+    if [ -e "/proc/mac_address_base" ]
+    then
+        add_field "04" "$(cat /proc/mac_address_base)"
+    else
+        #lbgh1
+        add_field "04" "$(cat $NVRAM/mac_address)"
+    fi
+    # 05 Serial number
+    add_field "05" "$(status get sn)"
+    # 06 uptime
+    add_field "06" "${UPTIME}"
+    # 07 data uptime
+    add_field "07" "$(status get net_data_uptime)"
+    # 08 PPP/DHCP session count
+    add_field "08" "$(status get net_data_counter)"
+    # 09 net mode config
+    if [ "$(nvram get net_mode)" = "bridge" ]; then
+        add_field "09" "0"
+    else
+        add_field "09" "1"
+    fi
+    # 0A net status
+    if [ "$(status get net_ipv6_infra)" = "Only" ]; then
+        add_field "0A" "1"
+    else
+        add_field "0A" "0"
+    fi
+    # 0B fqdn
+    add_field "0B" "$(status get voip_fqdn)"
+    # 0C data IP
+    add_field "0C" "$(status get net_data_ipaddr)"
+    # 0D firmwares
+    if [ ! -f /etc/in_rescue ]; then
+        version="$(status get version_bootloader)_$(status get version_mainfirmware)_$(status get version_rescuefirmware)"
+        test -d /etc/adsl && version="${version}_$(status get version_dsldriver)"
+        version="${version}_$(nvram get version_system)"
+    fi
+    test -z "${version}" && version="$(cat /etc/efixo_release)"
+    add_field "0D" "${version}"
+    # 0E IDUR
+    add_field "0E" "$(autoconf get idur)"
+    # 11 Temperature
+    add_field "11" "$(cat /sys/mcu/temperature)"
+    # 12 Voltage
+    add_field "12" "$(cat /sys/mcu/voltage)"
+}
+
+
+data_info() {
+    local rx="$(cat /sys/class/net/eth0/statistics/rx_bytes)"
+    local tx="$(cat /sys/class/net/eth0/statistics/tx_bytes)"
+    local mcast="$(cat /sys/class/net/eth0/statistics/multicast)"
+    local ftth_port_downtime="$(status get ftth_port_downtime)"
+    local ftth_port_uptime="$(status get ftth_port_uptime)"
+
+    if [ -d /etc/xdsl ]; then
+        local xdsl_profile="$(xdslctl info --show | grep 'Profile' | cut -d ':' -f 2 && \
+                            xdslctl info --show | grep 'TPS-TC' | cut -d ':' -f 2)"
+        local adsl_phy_version="$(xdslctl --version 2>&1|grep 'PHY'|sed -e 's/\(.*\) - \(.*\)/\2/')"
+
+        local adsl_crc_up="$(dsl get adsl_crc_up)"
+        local adsl_crc_down="$(dsl get adsl_crc_down)"
+        local net_data_ifname="$(status get net_data_ifname)"
+
+        # 14 adsl uptime
+        add_field "14" "$(status get adsl_uptime)"
+        # 15 ppp adsl uptime
+        add_field "15" "$(status get net_data_uptime)"
+        # 16 xDsl Line mode
+        add_field "16" "$(dsl get adsl_linemode)"
+        # 17 xDsl Line mode
+        add_field "17" "$(echo ${xdsl_profile})"    # remove dirty formatting
+        # 18 adsl mode
+        add_field "18" "$(nvram get adsl_config)"
+        # 19 bitrate down
+        add_field "19" "$(dsl get adsl_rate_down)"
+        # 1A bitrate up
+        add_field "1A" "$(dsl get adsl_rate_up)"
+        # 1B max down
+        add_field "1B" "$(dsl get adsl_max_down)"
+        # 1C max up
+        add_field "1C" "$(dsl get adsl_max_up)"
+        # 1D attenuation down
+        add_field "1D" "$(dsl get adsl_attenuation_down)"
+        # 1E attenuation up
+        add_field "1E" "$(dsl get adsl_attenuation_up)"
+        # 1F noise down
+        add_field "1F" "$(dsl get adsl_snr_down)"
+        # 20 noise up
+        add_field "20" "$(dsl get adsl_snr_up)"
+        # 21 power down
+        add_field "21" "$(dsl get adsl_power_down)"
+        # 22 power up
+        add_field "22" "$(dsl get adsl_power_up)"
+        # 23 downstream crc count
+        add_field "23" "${adsl_crc_down}"
+        # 24 upstream crc count
+        add_field "24"  "${adsl_crc_up}"
+        # 25 downstream crc rate
+        add_field "25" "$(( ${adsl_crc_down:=0} * 3600 / ${UPTIME} ))"
+        # 26 upstream crc rate
+        add_field "26"  "$(( ${adsl_crc_up:=0} * 3600 / ${UPTIME} ))"
+        # 27 HEC downstream uncorr
+        add_field "27" "$(dsl get adsl_hec_down)"
+        # 28 HEC upstream uncorr
+        add_field "28" "$(dsl get adsl_hec_up)"
+        # 29 FEC downstream corr
+        add_field "29" "$(dsl get adsl_fec_down)"
+        # 2A FEC upstream corr
+        add_field "2A" "$(dsl get adsl_fec_up)"
+        # 2B nb synchro dsl
+        add_field "2B" "$(status get adsl_counter)"
+        # 2C nb session dsl
+        add_field "2C" "$(status get ppp_adsl_counter)"
+        # 2D downstream error per sec
+        add_field "2D" "$(dsl get adsl_es_down)"
+        # 2E upstream error per sec
+        add_field "2E" "$(dsl get adsl_es_up)"
+        # 2F es threshold
+        add_field "2F" "$(dsl get adsl_ses_down)"
+        # 30 ses
+        add_field "30" "$(dsl get adsl_ses_up)"
+        # 31 as
+        add_field "31" "$(dsl get adsl_as)"
+        # 32 uas
+        add_field "32" "$(dsl get adsl_uas)"
+        # 33 bitswap download
+        add_field "33" "$(dsl get adsl_bitswap_down)"
+        # 34 bitswap upload
+        add_field "34" "$(dsl get adsl_bitswap_up)"
+        # 35 RS downstream
+        add_field "35" "$(dsl get adsl_rs_down)"
+        # 36 RS upstream
+        add_field "36" "$(dsl get adsl_rs_up)"
+        # 37 RS downstream corr
+        add_field "37" "$(dsl get adsl_rs_corr_down)"
+        # 38 RS upstream corr
+        add_field "38" "$(dsl get adsl_rs_corr_up)"
+        # 39 RS downstream uncorr
+        add_field "39" "$(dsl get adsl_rs_uncorr_down)"
+        # 3A RS upstream uncorr
+        add_field "3A" "$(dsl get adsl_rs_uncorr_up)"
+
+        # 3B xmt download
+        add_field "3B" "$(dsl get adsl_rtx_down)"
+        # 3C xmt upload
+        add_field "3C" "$(dsl get adsl_rtx_up)"
+        # 3D xmtCorr download
+        add_field "3D" "$(dsl get adsl_rtxcorr_down)"
+        # 3E xmtCorr upload
+        add_field "3E" "$(dsl get adsl_rtxcorr_up)"
+        # 3F xmtunCorr download
+        add_field "3F" "$(dsl get adsl_rtxuncorr_down)"
+        # 40 xmtunCorr upload
+        add_field "40" "$(dsl get adsl_rtxuncorr_up)"
+    fi
+
+    if [ -d /etc/ftth ] && [ "$(status get net_data_access)" = "ftth" ]; then
+        # ONT
+        # NBFWEFIXO-299: deactivate automatic ont updates
+        # because of ONT stability problems
+
+        # Theorically, as 'PT' ONT do not suffer stability problem when calling numerous '/etc/init.d/ont update'
+        # we could use here something like:
+        #   if [ "$(nvram get ont_mode)" = "ondemand" ] && ont get sn | grep -q PT >/dev/null; then
+        #       /etc/init.d/ont update
+        #   fi
+        # but we won't as '/etc/init.d/ont update' is too lengthy (about 30 sec) and will thus induce a too long delay
+        # for people/tools investigating the box via 'telnet 192.168.1.1 1287'. In case of 'PT' ONT we instead rely on
+        # the values collected via the periodic '/etc/init.d/ont update' call done via the ont.c plugin timeout
+        # This period is configurable via the nvram parameter 'ont_delay_system'
+
+        # 41 timestamp at update
+        add_field "41" "$(ont get timestamp)"
+        # 42 RSSI receive PON power
+        add_field "42" "$(ont get rssi_receive)"
+        # 43 RSSI transmit PON power
+        add_field "43" "$(ont get rssi_transmit)"
+        # 44 RSSI current bias
+        add_field "44" "$(ont get rssi_bias)"
+        # 45 RSSI temperature
+        add_field "45" "$(ont get rssi_temp)"
+        # 46 RSSI Vcc
+        add_field "46" "$(ont get rssi_vcc)"
+        # 47 ont uptime
+        add_field "47" "$(ont get uptime)"
+        # 48 ont slid
+        add_field "48" "$(ont get slid)"
+        # 49 ont serial number
+        add_field "49" "$(ont get sn)"
+        # 4A led equipment
+        case "$(ont get leds_eqpt)" in
+        "GREEN")
+            add_field "4A" "0"
+            ;;
+        "RED")
+            add_field "4A" "1"
+            ;;
+        "OFF"|*)
+            add_field "4A" "2"
+            ;;
+        esac
+        # 4B led PON
+        case "$(ont get leds_pon)" in
+        "GREEN")
+            add_field "4B" "0"
+            ;;
+        "RED")
+            add_field "4B" "1"
+            ;;
+        "OFF"|*)
+            add_field "4B" "2"
+            ;;
+        esac
+        # 4C led management
+        case "$(ont get leds_mgnt)" in
+        "GREEN")
+            add_field "4C" "0"
+            ;;
+        "RED")
+            add_field "4C" "1"
+            ;;
+        "OFF"|*)
+            add_field "4C" "2"
+            ;;
+        esac
+        # 4D led lan
+        case "$(ont get leds_lan)" in
+        "GREEN")
+            add_field "4D" "0"
+            ;;
+        "RED")
+            add_field "4D" "1"
+            ;;
+        "OFF"|*)
+            add_field "4D" "2"
+            ;;
+        esac
+        # 4E led alarm
+        case "$(ont get leds_alm)" in
+        "GREEN")
+            add_field "4E" "0"
+            ;;
+        "RED")
+            add_field "4E" "1"
+            ;;
+        "OFF"|*)
+            add_field "4E" "2"
+            ;;
+        esac
+        # 4F status power
+        if [ "$(ont get status_power)" = "ACTIVE" ]; then
+            add_field "4F" "0"
+        else
+            add_field "4F" "1"
+        fi
+        # 50 status lan loss
+        if [ "$(ont get status_lanlos)" = "ACTIVE" ]; then
+            add_field "50" "0"
+        else
+            add_field "50" "1"
+        fi
+        # 51 status frame loss
+        if [ "$(ont get status_lossframe)" = "ACTIVE" ]; then
+            add_field "51" "0"
+        else
+            add_field "51" "1"
+        fi
+        # 52 status gem loss
+        if [ "$(ont get status_lossgem)" = "ACTIVE" ]; then
+            add_field "52" "0"
+        else
+            add_field "52" "1"
+        fi
+        # 53 status signal loss
+        if [ "$(ont get status_losssignal)" = "ACTIVE" ]; then
+            add_field "53" "0"
+        else
+            add_field "53" "1"
+        fi
+        # 54 status error message
+        if [ "$(ont get status_errormsg)" = "ACTIVE" ]; then
+            add_field "54" "0"
+        else
+            add_field "54" "1"
+        fi
+        # 55 status omcc
+        if [ "$(ont get status_omcc)" = "ACTIVE" ]; then
+            add_field "55" "0"
+        else
+            add_field "55" "1"
+        fi
+        # 56 status deactivate
+        if [ "$(ont get status_deactivate)" = "ACTIVE" ]; then
+            add_field "56" "0"
+        else
+            add_field "56" "1"
+        fi
+        # 57 status ranged
+        if [ "$(ont get status_ranged)" = "ACTIVE" ]; then
+            add_field "57" "0"
+        else
+            add_field "57" "1"
+        fi
+        # 58 status phy error
+        if [ "$(ont get status_phyerror)" = "ACTIVE" ]; then
+            add_field "58" "0"
+        else
+            add_field "58" "1"
+        fi
+        # 59 status phy error in
+        if [ "$(ont get status_phyerrorin)" = "ACTIVE" ]; then
+            add_field "59" "0"
+        else
+            add_field "59" "1"
+        fi
+        # 5A status high
+        if [ "$(ont get status_high)" = "ACTIVE" ]; then
+            add_field "5A" "0"
+        else
+            add_field "5A" "1"
+        fi
+        # 5B status low
+        if [ "$(ont get status_low)" = "ACTIVE" ]; then
+            add_field "5B" "0"
+        else
+            add_field "5B" "1"
+        fi
+        # 5C status rdi
+        if [ "$(ont get status_rdi)" = "ACTIVE" ]; then
+            add_field "5C" "0"
+        else
+            add_field "5C" "1"
+        fi
+        # 5D status signal degraded
+        if [ "$(ont get status_degraded)" = "ACTIVE" ]; then
+            add_field "5D" "0"
+        else
+            add_field "5D" "1"
+        fi
+        # 5E status signal failed
+        if [ "$(ont get status_failed)" = "ACTIVE" ]; then
+            add_field "5E" "0"
+        else
+            add_field "5E" "1"
+        fi
+        # 5F status startup failure
+        if [ "$(ont get status_failure)" = "ACTIVE" ]; then
+            add_field "5F" "0"
+        else
+            add_field "5F" "1"
+        fi
+        # 60 status download done
+        if [ "$(ont get status_dldone)" = "ACTIVE" ]; then
+            add_field "60" "0"
+        else
+            add_field "60" "1"
+        fi
+        # 61 status download fail
+        if [ "$(ont get status_dlfail)" = "ACTIVE" ]; then
+            add_field "61" "0"
+        else
+            add_field "61" "1"
+        fi
+        # 62 status download idle
+        if [ "$(ont get status_dlidle)" = "ACTIVE" ]; then
+            add_field "62" "0"
+        else
+            add_field "62" "1"
+        fi
+        # 63 status download ip
+        if [ "$(ont get status_dlip)" = "ACTIVE" ]; then
+            add_field "63" "0"
+        else
+            add_field "63" "1"
+        fi
+        # 64 status download start
+        if [ "$(ont get status_dlstart)" = "ACTIVE" ]; then
+            add_field "64" "0"
+        else
+            add_field "64" "1"
+        fi
+        # 65 FTTH Rx bytes
+        add_field "65" "${rx}"
+        # 66 FTTH Tx bytes
+        add_field "66" "${tx}"
+        # 67 FFTH Multicast packets
+        add_field "67" "${mcast}"
+        # 68 FTTH Link Downtime
+        add_field "68" "${ftth_port_downtime}"
+        # 69 FTTH Link Uptime
+        add_field "69" "${ftth_port_uptime}"
+    fi
+
+    # 6A Wifi status
+    if [ "$(status get wlan_status)" = "up" ]; then
+        add_field "6A" "1"
+    else
+        add_field "6A" "0"
+    fi
+    # 6B Hotspot status
+    if [ "$(status get hotspot_status)" = "up" ]; then
+        add_field "6B" "1"
+    else
+        add_field "6B" "0"
+    fi
+    # 6C mobile hotspot status
+    add_field "6C" "$(status get hotspot_eapsim_status)"
+    event_ipv6
+    # 75 PHY driver version
+    add_field "75" "${adsl_phy_version}"
+    # 76 tech chain
+    add_field "76" "$(autoconf get wanservices_chain)"
+    # 77 WAN status
+    if [ "$(status get net_data_status)" = "down" ]; then
+        add_field "77" "ko"
+    else
+        add_field "77" "${net_data_ifname%?}"
+    fi
+    # 78 FTTH port speed
+    add_field "78" "$(status get link_ftth_speed)"
+    # 79 FTTH switch speed (pipe separated list)
+    add_field "79" "$(status get link_lan1_speed)|$(status get link_lan2_speed)|$(status get link_lan3_speed)|$(status get link_lan4_speed)"
+
+    if [ "$(status get net_ipv6_infra)" = "Only" ]; then
+        # 7A MAP-T configuration validate
+        case "$(status get net_mapt_confstatus)" in
+        "ok"|"update")
+            add_field "7A" "1"
+            ;;
+        "ko"|"outofservice")
+            add_field "7A" "2"
+            ;;
+        *)
+            add_field "7A" "0"
+            ;;
+        esac
+
+        # 7B MAP-T IPv4
+        add_field "7B" "$(status get net_mapt_ipaddr)"
+    fi
+}
+
+
+voip_conf_ipv6_ready() {
+    # conditions are
+    # - voip configuration: ipv6 parameter is set to "on"
+    # - voip configuration: stack parameter is "alcatel"
+    # - voip configuration: protocol parameter is "sip"
+    # - current ipv6: infra is not Tunnel
+    [ "$(status get net_ipv6_infra)" != "Only" ] && return
+
+    local voip_ipv6="$(autoconf get voip_ipv6)"
+    local voip_sig="$(autoconf get voip_sig)"
+    local voip_stack="$(autoconf get voip_stack)"
+
+    if [ "${voip_ipv6}" = "on" \
+        -a "${voip_sig}" = "sip" \
+        -a "${voip_stack}" = "alcatel" ]; then
+        add_field "$1" "0"
+    else
+        add_field "$1" "1"
+    fi
+}
+
+
+voip_info() {
+    # 7C VoIP status
+    if [ "$(status get voip_up)" = "up" ]; then
+        add_field "7C" "1"
+    else
+        add_field "7C" "0"
+    fi
+
+
+    # 7F FXS port status / 80 FXS port error
+    if [ "$(status get voip_error)" = "unknown" ]; then
+        add_field "7F" "unknown"
+    else
+        local voip_errnum="$(status get voip_errnum)"
+        case "${voip_errnum}" in
+        "0"|"101")
+                add_field "7F" "ok"
+                add_field "80" "${voip_errnum}"
+                ;;
+        *)
+                add_field "7F" "ko"
+                add_field "80" "${voip_errnum}"
+                ;;
+        esac
+    fi
+    # 81 VoIP crypto status
+    add_field "81" "$(status get voip_decryptstatus)"
+    # 82 VoIP uptime total
+    add_field "82" "$(status get voip_uptimetotal)"
+    # 83 VoIP downtime total
+    add_field "83" "$(status get voip_downtimetotal)"
+    # 84 VoIP line uptime total
+    add_field "84" "$(status get voip_lineuptimetotal)"
+    # 85 VoIP line downtime total
+    add_field "85" "$(status get voip_linedowntimetotal)"
+    # 86 VoIP line uptime total
+    add_field "86" "$(status get voip_loginuptimetotal)"
+    # 87 VoIP line downtime total
+    add_field "87" "$(status get voip_logindowntimetotal)"
+    # 88 VoIP mode
+    add_field "88" "$(status get voip_network)"
+    # 89 VoIP tech chain
+    add_field "89" "$(autoconf get voip_chain)"
+    # 8A VoIP uptime
+    add_field "8A" "$(status get voip_uptime)"
+    # 8B VoIP hook state
+    add_field "8B" "$(status get voip_hookstate)"
+    # 8C IPv6 incompatible config
+    voip_conf_ipv6_ready "8C"
+}
+
+
+iptv_info() {
+    status xml lan > /tmp/diaglog-lan.xml
+    status xml igmp > /tmp/diaglog-igmp.xml
+
+    mac=""
+    igmp="$(roxml -q /tmp/diaglog-igmp.xml "//group" | awk 'ORS=";"')"
+    igmp_status="$(ps aux | grep igmpprox[y])"
+    for macaddr in $(roxml -q /tmp/diaglog-lan.xml "//type=stb/../macaddr"); do
+        if [ $(roxml -q /tmp/diaglog-lan.xml "//macaddr=${macaddr}/../status") == "online" ]; then
+            mac="${mac}${macaddr};"
+        fi
+    done
+
+    rm -f /tmp/diaglog-igmp.xml
+    rm -f /tmp/diaglog-lan.xml
+
+    # 8F TV private IP
+    add_field "8F" "$(status get net_tv_ipaddr)"
+    # 90 STB MAC address
+    add_field "90" "${mac%?}"
+    # 91 IGMP status
+    if [ -z "${igmp_status}" ]; then
+        add_field "91" "0"
+    else
+        add_field "91" "0"
+    fi
+    # 92 Multicast IGMP stream
+    add_field "92" "${igmp%?}"
+    # 93 IGMP max streams request 
+    add_field "93" "$(status get igmp_streams_max)"
+    # 94 IGMP join counter
+    add_field "94" "$(status get igmp_streams_join)"
+    # 95 IGMP leave counter
+    add_field "95" "$(status get igmp_streams_leave)"
+    # 96 PFS Network techchain 
+    add_field "96" "$(autoconf get iptv_chain)"
+    # 97 Local Network techchain
+    add_field "97" "$(status get lan_iptv_chain|sed 's/://g')"
+
+    # reset
+    status set igmp_streams_max 0
+    status set igmp_streams_join 0
+    status set igmp_streams_leave 0
+}
+
+
+error_info() {
+    local panic="$(cat /sys/mcu/counter/kernel_panic)"
+    local oom="$(cat /sys/mcu/counter/kernel_out_of_memory)"
+    local rootfs0="$(nanddump -f /dev/null -l 1 /dev/mtd1 2>&1 | awk '/bad blocks/{print $NF}')"
+    local rootfs1="$(nanddump -f /dev/null -l 1 /dev/mtd2 2>&1 | awk '/bad blocks/{print $NF}')"
+    local data="$(nanddump -f /dev/null -l 1 /dev/mtd3 2>&1 | awk '/bad blocks/{print $NF}')"
+
+    # B8  upgrade attempts counter
+    add_field "B8" "$(status get upgrade_counter)"
+    # B9  upgrade failure counter
+    add_field "B9" "$(status get upgrade_failure_total)"
+    # BA upgrade failure counter (VoIP)
+    add_field "BA" "$(status get upgrade_failure_voipbusy)"
+    # BB upgrade failure counter (signal)
+    add_field "BB" "$(status get upgrade_failure_signal)"
+    # BC upgrade failure counter (Download)
+    add_field "BC" "$(status get upgrade_failure_download)"
+    # BD upgrade failure counter (Checksum)
+    add_field "BD" "$(status get upgrade_failure_checksum)"
+    # BE upgrade failure counter (Flash)
+    add_field "BE" "$(status get upgrade_failure_flash)"
+    # C0 Upgrade error
+    add_field "C0" "$(status get upgrade_failure_last)"
+    # C2 MCU panic counter
+    add_field "C2" "${panic}"
+    # C3 MCU OOM
+    add_field "C3" "${oom}"
+    # C4 Bad block counter on rootfs0
+    add_field "C4" "${rootfs0}"
+    # C5 Bad block counter on rootfs0
+    add_field "C5" "${rootfs1}"
+    # C6 Bad block counter on data
+    add_field "C6" "${data}"
+}
+
+
+ipv6_conf_info() {
+    # C7 IPv6 DNSs
+    add_field "C7" "$(status get net_ipv6_dns)"
+    # C8 IPv6 incompatible config
+    voip_conf_ipv6_ready "C8"
+}
+
+
+diaglog_poll() {
+    general_info
+    case "$1" in
+        "data")
+        target=$1
+        data_info
+        ;;
+        "voip")
+        target=$1
+        voip_info
+        ;;
+        "tv")
+        target=$1
+        iptv_info
+        ;;
+        *)
+        target="data"
+        data_info
+        voip_info
+        iptv_info
+        ;;
+    esac
+
+    SERVER=$(roxml -q ${CFG} "//pushlog/${target}/server")
+}
+
+
+backup_event_route() {
+    if [ "$(status get net_data_access)" = "gprs" ]; then
+        local ifname="$(status get net_data_ifname)"
+        local server="$(nslookup $1 |grep "^Name" -A 1|sed -n 's/^Address.*: \(.*\) .*$/\1/p')"
+        ip route add ${server} dev ${ifname}
+    fi
+}
+
+
+diaglog_event_id() {
+    if [ "$2" == "ontime" ]; then
+        case "$1" in
+        "reboot")
+            echo "1"
+            ;;
+        "uireset")
+            echo "2"
+            ;;
+        "btnreset")
+            echo "3"
+            ;;
+        "diagreset")
+            echo "4"
+            ;;
+        "backup")
+            echo "5"
+            ;;
+        "uidslconfig")
+            echo "6"
+            ;;
+        "upgrade")
+            echo "7"
+            ;;
+        "voice-test")
+            echo "8"
+            ;;
+        "rescue-done")
+            echo "9"
+            ;;
+        "download")
+            echo "10"
+            ;;
+        "flash")
+            echo "11"
+            ;;
+        "migrate")
+            echo "15"
+            ;;
+        "mapt")
+            echo "17"
+            ;;
+        *)
+            echo "" 
+        esac
+    elif [ "$2" == "delayed" ]; then
+        case "$1" in
+        "ipv6")
+            echo "12"
+            ;;
+        "temp")
+            echo "13"
+            ;;
+        "power")
+            echo "14"
+            ;;
+        *)
+            echo ""
+        esac
+    else
+        echo "" 
+    fi
+}
+
+
+diaglog_event() {
+    SERVER=$(roxml -q ${CFG} "//pushlog/event/server")
+    msg="${msg}01=8"
+    local current_nisdomain
+    local cgnat_nisdomain
+
+    general_info
+    # 13 event counters
+    add_field "13" "$2"
+
+    case "$1" in
+    "reboot")
+        add_field "9D" "1"
+        ;;
+    "uireset")
+        add_field "9D" "2"
+        ;;
+    "btnreset")
+        add_field "9D" "3"
+        ;;
+    "diagreset")
+        add_field "9D" "4"
+        ;;
+    "backup")
+        backup_event_route $SERVER
+        add_field "9D" "5"
+        event_backup
+        ;;
+    "uidslconfig")
+        add_field "9D" "6"
+        ;;
+    "upgrade")
+        add_field "9D" "7"
+        upgrade_info
+        # B0 current upgrade
+        add_field "B0" "$1"
+        ;;
+    "voice-test")
+        add_field "9D" "8"
+        event_voice_test
+        ;;
+    "rescue-done")
+        add_field "9D" "9"
+        ;;
+    "download")
+        add_field "9D" "10"
+        ;;
+    "flash")
+        add_field "9D" "11"
+        ;;
+    "ipv6")
+        add_field "9D" "12"
+        event_ipv6
+        ;;
+    "temp")
+        add_field "9D" "13"
+        add_field "AB" "$(cat $TEMPERATURE)"
+        ;;
+    "power")
+        add_field "9D" "14"
+        add_field "AC" "$(cat $VOLTAGE)"
+        ;;
+    "migrate")
+        add_field "9D" "15"
+        add_field "AD" "$(autoconf get ipv6_infra)"
+
+        current_nisdomain="$(status get dhcpc_wan_nisdomain)"
+        cgnat_nisdomain=$(nvram get cgnat_nisdomain)
+        echo "$current_nisdomain" | grep -qi "$cgnat_nisdomain" && \
+            add_field "AF" "1" || add_field "AF" "0"
+        ;;
+    "mapt")
+        add_field "9D" "17"
+        add_field "B2" "$(status get net_mapt_ipaddr)"
+        add_field "B3" "$(status get net_mapt_portsets64)"
+        ;;
+    *)
+        logger -t "diaglog[$$]" "unhandled event=\"$1\""
+        exit 1
+    esac
+}
+
+
+event_voice_test() {
+    # 9E voice test step
+    add_field "9E" "$(status get vsstest_step)"
+    # 9F voice test state
+    add_field "9F" "$(status get vsstest_state)"
+}
+
+
+upgrade_info() {
+    # A0 upgrade attempts counter
+    add_field "A0" "$(status get upgrade_counter)"
+    # A1 upgrade failure counter
+    add_field "A1" "$(status get upgrade_failure_total)"
+    # A2 upgrade failure counter (VoIP)
+    add_field "A2" "$(status get upgrade_failure_voipbusy)"
+    # A3 upgrade failure counter (signal)
+    add_field "A3" "$(status get upgrade_failure_signal)"
+    # A4 upgrade failure counter (Download)
+    add_field "A4" "$(status get upgrade_failure_download)"
+    # A5 upgrade failure counter (Checksum)
+    add_field "A5" "$(status get upgrade_failure_checksum)"
+    # A6 upgrade failure counter (Flash)
+    add_field "A6" "$(status get upgrade_failure_flash)"
+}
+
+
+event_backup() {
+    # A7 Backup 3G Voice Status
+    if [ "$(status get gprs_active_tel)" = "off" ]; then
+        add_field "A7" "0"
+    else
+        add_field "A7" "1"
+    fi
+    # A8 Backup 3G Data Status
+    if [ "$(status get gprs_active_data)" = "off" ]; then
+        add_field "A8" "0"
+    else
+        add_field "A8" "1"
+    fi
+    # A9 Backup 3G Voice Config
+    case "$(nvram get gprs_service_voice)" in
+    "off")
+        add_field "A9" "0"
+        ;;
+    "on")
+        add_field "A9" "1"
+        ;;
+    "auto"|*)
+        add_field "A9" "2"
+        ;;
+    esac
+    # AA Backup 3G Data Config
+    case "$(nvram get gprs_service_data)" in
+    "off")
+        add_field "AA" "0"
+        ;;
+    "on")
+        add_field "AA" "1"
+        ;;
+    "auto"|*)
+        add_field "AA" "2"
+        ;;
+    esac
+    # AB Backup 3G Data session counter
+    add_field "AB" "$(status get gprs_sessions_total)"
+    # AC Backup 3G Failed Data session counter
+    add_field "AC" "$(status get gprs_sessions_failed)"
+    # AD Backup 3G Error
+    add_field "AD" "$(status get gprs_error)"
+    # AE Backup 3G Version
+    add_field "AE" "$(status get gprs_version)"
+    # AF Backup 3G APN
+    add_field "AF" "$(status get gprs_apn)"
+    # B1 IPV6 Status
+    add_field "B1" "$(status get net_ipv6_status)"
+}
+
+
+event_ipv6() {
+    # 6D ipv6 status
+    if [ "$(status get net_ipv6_status)" = "up" ]; then
+        add_field "6D" "1"
+    else
+        add_field "6D" "0"
+    fi
+    # 6E ipv6 prefix
+    add_field "6E" "$(status get net_ipv6_prefix)"
+    # 6F ipv6 user config
+    if [ "$(status get net_ipv6_infra)" != "Only" ]; then
+        add_field "6F" "$(nvram get ipv6_enable)"
+    fi
+    # 70 ipv6 uptime
+    add_field "70" "$(status get net_ipv6_uptime)"
+    # 71 ipv6 mode
+    add_field "71" "$(status get net_ipv6_infra)"
+    # 72 dhcp v6 status
+    if [ "$(nvram get dhcp6_active)" = "on" ]; then
+        add_field "72" "1"
+    else
+        add_field "72" "0"
+    fi
+    # 73 SLAAC v6 status
+    if [ "$(nvram get ipv6_slaac)" = "on" ]; then
+        add_field "73" "1"
+    else
+        add_field "73" "0"
+    fi
+    # IPv6 counter
+    add_field "74" "$(status get net_ipv6_counter)"
+}
+
+
+diaglog_error_id() {
+    if [ "$2" == "ontime" ]; then
+        case "$1" in
+        "voice")
+            echo "1"
+            ;;
+        "wifi")
+            echo "2"
+            ;;
+        "upgrade")
+            echo "5"
+            ;;
+        "ipv6-conf")
+            echo "10"
+            ;;
+        *)
+            echo ""
+        esac
+    elif [ "$2" == "delayed" ]; then
+        case "$1" in
+        "temp")
+            echo "3"
+            ;;
+        "power")
+            echo "4"
+            ;;
+        "nbd")
+            echo "6"
+            ;;
+        *)
+            echo ""
+        esac
+    else
+        echo ""
+    fi
+}
+
+
+diaglog_error() {
+    SERVER=$(roxml -q ${CFG} "//pushlog/error/server")
+
+    msg="${msg}01=9"
+    general_info
+    # 13 error counters
+    add_field "13" "$2"
+
+    case "$1" in
+    "voice")
+        add_field "B7" "1"
+        voip_info
+        ;;
+    "wifi")
+        add_field "B7" "2"
+        ;;
+    "temp")
+        add_field "B7" "3"
+        ;;
+    "power")
+        add_field "B7" "4"
+        ;;
+    "upgrade")
+        add_field "B7" "5"
+        # BF current upgrade
+        add_field "BF" "$1"
+        upgrade_info
+        ;;
+    "nbd")
+        add_field "B7" "6"
+        ;;
+    "ipv6-conf")
+        add_field "B7" "10"
+        ipv6_conf_info
+        ;;
+    *)
+        logger -t "diaglog[$$]" "unhandled error=\"$1\""
+        exit 1
+    esac
+    error_info
+}
+
+diaglog_ca() {
+    local conf=/etc/config/ca.xml
+    local notify=$(roxml -q ${conf} '//general/notification')
+
+    # is notification enabled ?
+    if [ "${notify}" != "on" ]; then
+        logger -t "diaglog[$$]" "ca: notification disabled."
+        exit 0
+    fi
+
+    # is there a server defined ?
+    local autoconf=/tmp/autoconf/$(autoconf get ca_file)
+    SERVER="$(roxml -q ${autoconf} '//notification/server'|sed 's/http:\/\///')"
+    if [ -z "${SERVER}" ]; then
+        logger -t "diaglog[$$]" "ca: server not defined"
+        exit 1
+    fi
+
+    msg="${msg}ev=$1"
+    msg="${msg};idur=$(autoconf get idur)"
+    msg="${msg};uid=$(roxml -q ${conf} '//general/identifier')"
+
+    if [ "$1" = "nd" ]; then
+        status xml lan > /tmp/diaglog-lan.xml
+        eval $(roxml -o /tmp/diaglog-lan.xml "/lan/topology/device[macaddr=$2]")
+        rm -f /tmp/diaglog-lan.xml
+
+        msg="${msg};hostname=${HOSTNAME}"
+        msg="${msg};port=${port}"
+        msg="${msg};macaddr=${macaddr}"
+        msg="${msg};type=${type}"
+        if [ ${port} = "wl0" ]; then
+            msg="${msg};ssid=$(nvram get wlan_wl0_ssid)"
+        fi
+    fi
+}
+
+
+diaglog_update_count() {
+    local type=$1
+    local name=$2
+    local last="$(status get diaglog_${type}_last)"
+    local now="$(status get uptime)"
+    local interval="$(nvram get diaglog_interval_${type})"
+    local status_entry="diaglog_${type}_count_${name}"
+    local count="$(status get ${status_entry})"
+    local entries=
+    local diaglog_lock="/run/diaglog.lock"
+    local counters_opt=
+
+    if [ -n "$(diaglog_${type}_id ${name} ontime)" ]; then
+        diaglog_${type} ${name}
+        return
+    elif [ -z "$(diaglog_${type}_id ${name} delayed)" ]; then
+        logger -t "diaglog[$$]" "unknown ${type} id: ${name}"
+        exit 1
+    fi
+
+    # interval conf system > autoconf > default
+    [ -z "${interval}" ] && interval="$(autoconf get diaglog_interval_${type})"
+    [ -z "${interval}" ] && interval="$(nvram get diaglog_interval_default_${type})"
+    local next="$(( ${last} + ${interval} ))"
+
+    lock "${diaglog_lock}"
+    # diaglog should be sent ?
+    if [ -n "${last}" -a "${now}" -le "${next}" ]; then
+        count="$(( ${count} + 1 ))"
+        logger -t "diaglog[$$]" "$1 $2 aborted: too early ${last}/${now}, $(( ${next} - ${now} )) sec left, count = ${count}"
+        status set "${status_entry}" "${count}"
+        lock -u "${diaglog_lock}"
+        exit 0
+    fi
+
+    entries=$(status list diaglog_${type}_count | sed "s/diaglog_${type}_count_\(.*\)=.*/\1/g")
+
+    # build id 13 and cleanup status
+    for entry in ${entries}; do
+        local status_entry="diaglog_${type}_count_${entry}"
+        local count="$(status get ${status_entry})"
+        [ -z "${count}" ] && continue
+        status set "${status_entry}"
+
+        local id="$(diaglog_${type}_id ${entry} delayed)"
+        if [ -z "${id}" ]; then
+            logger -t "diaglog[$$]" "skipping unknown ${type} id: ${entry}"
+            continue
+        fi
+
+        [ -z "${counters_opt}" ] || counters_opt="${counters_opt}|"
+
+        counters_opt="${counters_opt}${id}_${count}"
+    done
+
+    status set diaglog_${type}_last ${now}
+    lock -u "${diaglog_lock}"
+    diaglog_${type} ${name} "${counters_opt}"
+}
+
+
+#
+# ---- MAIN ENTRY --------------------------------
+#
+
+if [ -z "$(status get net_autoconf_ifname)" ]; then
+    logger -t "diaglog[$$]" "[$1/$2] aborted: no default route defined"
+    echo "diaglog[$$]" "[$1/$2] aborted: no default route defined"
+    exit 0
+fi
+
+msg="<26>$(date +'%h %d %H:%M:%S') ${HOSTNAME}"     # prefix
+case "$1" in
+"poll")
+    msg="${msg} nbd: "
+    add_field "01" "7"
+    diaglog_poll $2
+    ;;
+"event")
+    msg="${msg} nbd: "
+    diaglog_update_count "event" "$2"
+    ;;
+"error")
+    msg="${msg} nbd: "
+    diaglog_update_count "error" "$2"
+    ;;
+"ca")
+    msg="${msg} ca: "
+    diaglog_ca $2
+    ;;
+"push")
+    msg=""
+    add_field "01" "1"
+    diaglog_poll
+    echo "${msg#?}"
+    logger -t "diaglog[$$]" "[$1] [remote ip:$TCPREMOTEIP] ... ${msg#?}"
+    exit 1
+    ;;
+*)
+    usage
+    logger -t "diaglog[$$]" "[$1/$2] unhandle type=\"$1\""
+    exit 1
+esac
+
+if [ ! -z "${EXTRA_INFO}" ]; then
+    logger -t "diaglog[$$]" "add extra ${EXTRA_INFO}"
+    msg="${msg};${EXTRA_INFO}"
+fi
+
+[ "$(status get net_ipv6_infra)" = "Only" ] && ip_protocol="ipv6"
+
+logger -t "diaglog[$$]" "[$1/$2] \"syslog://${SERVER} ... ${msg}\" $ip_protocol"
+exec diaglog-send "syslog://${SERVER}" "${msg}" "$ip_protocol"

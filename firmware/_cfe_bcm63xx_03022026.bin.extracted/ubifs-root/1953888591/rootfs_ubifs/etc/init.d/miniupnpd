@@ -1,0 +1,98 @@
+#!/bin/sh /etc/rc.common
+
+START=50
+
+logger -t "upnp[$$]" "$action"
+
+UPNP_PORT=49152
+NAT_PMP_PORT=5351
+PIDFILE="/run/miniupnpd.pid"
+CONFFILE="/run/miniupnpd.conf"
+LOCKFILE="/run/miniupnpd.lock"
+
+boot() {
+    # force daemon start even though there is no interface
+    start
+}
+
+start() {
+	lock "${LOCKFILE}"
+
+	local lan_ifname=$(status get lan_ifname)
+	local lan_ipaddr=$(nvram get lan_ipaddr)
+	local lan_netmask=$(nvram get lan_netmask)
+	local cgnat_status=$(status get net_cgnat_status)
+
+	if [ "$(status get net_ipv6_infra)" == "Only" ]; then 
+		local net_data_ifname=$(status get net_mapt_ifname)
+	else
+		local net_data_ifname=$(status get net_data_ifname)
+	fi
+	if [ -z "${net_data_ifname}" ]; then
+		net_data_ifname="wan0"
+	fi
+	local upnpd_uuid=$(nvram get upnpd_uuid)
+	if [ -z "${upnpd_uuid}" ]; then
+		nvram reset upnpd_uuid
+		local upnpd_uuid=$(nvram get upnpd_uuid)
+		nvram commit user
+	fi
+
+	# miniupnpd conf file
+	if [ "$cgnat_status" = "up" ] ; then
+		echo "deny 0-65535 0.0.0.0/0 0-65535" > ${CONFFILE}
+	else
+		eval $(ipcalc -npb ${lan_ipaddr} ${lan_netmask})
+		echo "deny 0 ${NETWORK}/${PREFIX} 0-65535" > ${CONFFILE}
+		echo "deny 1287 ${NETWORK}/${PREFIX} 0-65535" >> ${CONFFILE}
+		echo "deny 1288 ${NETWORK}/${PREFIX} 0-65535" >> ${CONFFILE}
+		echo "deny 64036-65535 ${NETWORK}/${PREFIX} 0-65535" >> ${CONFFILE}
+	fi
+
+	if [ "$(nvram get upnpd_active)" == "on" -a "$cgnat_status" != "up" ]
+	then
+		iptables -A LAN_FILTER -p tcp -m tcp --dport ${UPNP_PORT} -j ACCEPT
+		iptables -A LAN_FILTER -p udp -m udp --dport ${NAT_PMP_PORT} -j ACCEPT
+	else
+		iptables -A LAN_FILTER -p tcp -m tcp --dport ${UPNP_PORT} -j STB_FILTER
+	fi
+
+	if [ "$(nvram get upnpd_active6)" == "on" ]
+	then
+		ip6tables -A LAN_FILTER -p tcp -m tcp --dport ${UPNP_PORT} -j ACCEPT
+		ip6tables -A LAN_FILTER -p udp -m udp --dport ${NAT_PMP_PORT} -j ACCEPT
+	else
+		ip6tables -A LAN_FILTER -p tcp -m tcp --dport ${UPNP_PORT} -j STB_FILTER
+	fi
+
+	[ "$(status get net_data_access)" = "adsl" ] && {
+		local RATES="-B $(($(dsl get adsl_rate_down)*1024)) $(($(dsl get adsl_rate_up)*1024))"
+	}
+	miniupnpd -N -f ${CONFFILE} -i ${net_data_ifname} -u ${upnpd_uuid} -a ${lan_ifname} -p ${UPNP_PORT} -U -S ${RATES}
+
+	lock -u "${LOCKFILE}"
+}
+
+stop() {
+	lock "${LOCKFILE}"
+
+	xtables -D LAN_FILTER -p tcp -m tcp --dport ${UPNP_PORT} -j ACCEPT 2>/dev/null
+	xtables -D LAN_FILTER -p udp -m udp --dport ${NAT_PMP_PORT} -j ACCEPT 2>/dev/null
+	xtables -D LAN_FILTER -p tcp -m tcp --dport ${UPNP_PORT} -j STB_FILTER 2>/dev/null
+
+	pid=$(cat ${PIDFILE})
+	[ -n "${pid}" ]	&& {
+		kill ${pid}
+		sleep 2
+		kill -TERM ${pid}
+	}
+	rm -f "${PIDFILE}"
+
+	status list_flush upnp_rule
+	status list_flush upnp_rule6
+
+	xtables -F MINIUPNPD
+	iptables -t nat -F MINIUPNPD
+
+	lock -u "${LOCKFILE}"
+}

@@ -1,0 +1,65 @@
+#!/bin/sh /etc/rc.common
+
+START=43
+
+logger -t "lan[$$]" "$action"
+
+boot() {
+	local lan_ifname=$(status get lan_ifname)
+	local lan_ipaddr=$(nvram get lan_ipaddr)
+	local lan_netmask=$(nvram get lan_netmask)
+	[ "$(nvram get net_mode)" = "bridge" ] && local mode="-bridge"
+	local topology_conf=/etc/config/topology${mode}.xml
+	[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+	local ipalias=$(roxml -q ${topology_conf} "//interface[@ifname=${lan_ifname}]/@ipalias")
+
+	# mark lan output traffic: remove from ifb
+	# FIXME perturb ipv6 routing
+	xtables -t mangle -I OUTPUT -j MARK --set-mark 1 -o $(status get lan_ifname)
+
+	xtables -N LAN_FILTER
+
+	# DNS
+	xtables -A LAN_FILTER -p udp -m udp --dport domain -j ACCEPT
+	xtables -A LAN_FILTER -p tcp -m tcp --dport domain -j ACCEPT
+	# DHCP server
+	iptables -A LAN_FILTER -p udp -m udp --dport bootps -j ACCEPT
+	# DHCPv6 server
+	ip6tables -A LAN_FILTER -p udp -m udp --dport dhcpv6-server -j ACCEPT
+	# webui
+	xtables -A LAN_FILTER -p tcp -m tcp --dport http -j ACCEPT
+	# mdns
+	xtables -A LAN_FILTER -p udp -m udp --dport mdns -j ACCEPT
+	# ssdp
+	xtables -A LAN_FILTER -p udp -m udp --dport 1900 -j ACCEPT
+	# acls
+	iptables -I LAN_FILTER -p icmp -j ACCEPT
+	# diaglog
+	xtables -I LAN_FILTER -p tcp --dport 1287 -j ACCEPT
+	# ssh
+	xtables -I LAN_FILTER -p tcp --dport 1288 -j ACCEPT
+
+	xtables -A INPUT -i ${lan_ifname} -m state --state NEW -j LAN_FILTER
+
+	ip link set ${lan_ifname} up
+
+	# setup local lan IP address
+	IPADDR=${lan_ipaddr}
+	ip -4 addr flush dev ${lan_ifname}
+	eval $(ipcalc -npb ${lan_ipaddr} ${lan_netmask})
+	ip addr add ${IPADDR}/${PREFIX} broadcast ${BROADCAST} dev ${lan_ifname} scope link
+	ip rule add priority 32765 from ${NETWORK}/${PREFIX} dev ${lan_ifname} table lan_t
+	ip route add ${NETWORK}/${PREFIX} dev ${lan_ifname} table lan_t
+	ip route add ${NETWORK}/${PREFIX} dev ${lan_ifname} table data_t
+
+	# reflection nat
+	iptables -t nat -A POSTROUTING -j SNAT --to ${lan_ipaddr} -o ${lan_ifname} -s ${NETWORK}/${PREFIX} -d ${NETWORK}/${PREFIX}
+
+	# setup local lan alias IP addres
+	eval $(ipcalc -npb ${ipalias})
+	ip addr add ${ipalias} broadcast ${BROADCAST} dev ${lan_ifname} scope link
+	ip rule add priority 32764 from ${NETWORK}/${PREFIX} dev ${lan_ifname} table lan_t
+	ip route add ${NETWORK}/${PREFIX} dev ${lan_ifname} table lan_t
+
+	loop.sh&
+}

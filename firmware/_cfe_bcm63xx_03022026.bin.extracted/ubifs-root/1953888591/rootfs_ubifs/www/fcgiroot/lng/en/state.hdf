@@ -1,0 +1,66 @@
+Env.Page.Title = Status
+
+Env.Help.Text << EOM
+In the <b>Services status</b> section, you can check the general status of the services provided by your Box, as: the internet access status, the IPv4 and IPv6 connectivity, the television and telephony status, the Wifi access point status, the file sharing and the printer sharing, the media server and the access control. <br />
+In the <b>Gateway information</b> section, you can find the following information about your box: MAC address, model, main firmware and rescue version, uptime (length since last reboot of your box).
+EOM
+
+Env.Section.services_status.Title = Services status
+
+Env.Var.internet_status.Header = Internet
+Env.Var.internet_status.Value.up = Internet up
+Env.Var.internet_status.Value.down = No Internet connection
+
+Env.Var.internet_access.Value.adsl =ADSL connection
+Env.Var.internet_access.Value.gprs =3G dongle connection
+
+Env.Var.voip_status.Header = Telephony
+Env.Var.voip_status.Value.up = Telephony up
+Env.Var.voip_status.Value.down = Telephony down
+
+Env.Var.voip_access.Value.adsl =ADSL connection
+Env.Var.voip_access.Value.gprs =3G dongle connection
+
+Env.Var.tv_status.Header = Television
+Env.Var.tv_status.Value.up = Television connected
+Env.Var.tv_status.Value.down = Television not connected
+
+Env.Section.modem_infos.Title = Gateway information
+
+Env.Var.modem_macaddr.Header = MAC address
+
+Env.Var.modem_model.Header = Model
+
+Env.Var.modem_mainversion.Header = Main version
+Env.Var.modem_rescueversion.Header = Rescue version
+
+Env.Var.modem_adslversion.Header = DSL driver version
+Env.Var.modem_mcuversion.Header = MCU firmware version
+
+Env.Var.modem_uptime.Header = Uptime
+
+Env.Section.led_configuration.Title = LED status
+
+Env.Var.leds_state.Header = LEDs
+Env.Var.leds_state.Value.on =  Enabled
+Env.Var.leds_state.Value.off = Disabled
+
+Env.Section.ipv6_info.Title = Internet IPv6
+Env.Var.net_ipv6_status.up = Operational
+Env.Var.net_ipv6_status.noconnect = Not connected
+Env.Var.net_ipv6_status.down = Disabled
+
+Env.Var.Wifi.Header = Wifi
+Env.Var.Samba.Header = Windows file sharing (SMB)
+Env.Var.p910nd.Header = Printer sharing
+Env.Var.upnpav.Header = Multimedia server
+Env.Var.ca.Header = Access Control
+
+Env.Var.ca_status.Value.enable = Enabled
+Env.Var.ca_status.Value.disabled = Disabled
+Env.Var.ca_status.Value.disabled_autoconf = Disabled by network
+Env.Var.ca_status.Value.disabled_user = Disabled by user
+Env.Var.ca_status.Value.disabled_date = Disabled (clock unavailable)
+Env.Var.ca_status.Value.disabled_data = Disabled (internet unavailable)
+Env.Var.ca_access_page.Value = Access to
+Env.Var.ca_access_page.Value.link = manager

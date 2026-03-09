@@ -1,0 +1,22 @@
+#!/bin/sh
+
+
+logline='.................................................................................'
+logs="daemon.log fastcgi.log hotspot.log kern.log messages status.log syslog voip.log voip_events.log voip_proto.log wlan.log"
+cd /var/log
+for f in $logs;
+do
+	echo $f
+	for i in $(seq 0 10000); do
+		echo $logline>> $f
+	done&
+done
+wait
+
+for f in $logs;
+do
+	out=/tmp/$(basename $f)
+	cat $f > $out
+	ls -l $out
+	grep -v $logline $out
+done

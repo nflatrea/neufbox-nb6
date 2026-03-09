@@ -1,0 +1,6 @@
+Env.Page.Title = Redémarrage
+
+Env.Section.reboot.Title = Redémarrage
+
+Env.Text.WillReboot = Cliquez sur "Redémarrer" pour redémarrer la Box.
+Env.Text.IsRebooting = Redémarrage en cours. Veuillez patienter.

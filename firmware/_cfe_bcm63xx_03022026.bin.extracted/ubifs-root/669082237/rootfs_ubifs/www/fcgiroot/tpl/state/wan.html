@@ -1,0 +1,323 @@
+<div class="title">
+    <h1><?cs call:sectionTitle("wan_info")?></h1>
+</div>
+
+<div class="content">
+    <table id="wan_info">
+        <tr>
+            <th scope="row"><?cs call:varHeader("wan_status") ?></th>
+            <?cs if:Env.status.net.status == "up"?>
+            <?cs set:net_access_status = "enabled" ?>
+            <?cs elif: Env.status.net.status == "partial"?>
+            <?cs set:net_access_status = "unused" ?>
+            <?cs else ?>
+            <?cs set:net_access_status = "disabled" ?>
+            <?cs /if ?>
+            <td id="wan_status" class="<?cs var:net_access_status ?>">
+                <?cs call:varValue(Env.Var.wan_status.Value[net_access_status]) ?>
+            </td>
+        </tr>
+        
+        <tr>
+            <th><?cs var:Env.Var.Sys.NetInfraExtra.Header ?></th>
+            <td><?cs if:Env.status.net.status =="up" ?>
+                            <?cs call:varValue_d(Env.Var.Sys.NetInfraExtra.Value[Var.Sys.NetInfraExtra.Value], Env.Var.Sys.NetInfraExtra.Value.unknown)?>
+                            
+                       <?cs elif:Env.status.net.data.access != "gprs" && ?Env.autoconf.wanservices.infra ?>
+                            <?cs if:Env.autoconf.wanservices.infra == "11" || Env.autoconf.wanservices.infra == "12" || Env.autoconf.wanservices.infra == "13" ?>
+                                 <?cs var:Env.Var.Sys.NetInfraExtra.Value.ftth ?>
+                            <?cs elif:Env.autoconf.wanservices.infra == "9" || Env.autoconf.wanservices.infra == "10" ?>
+                                 <?cs var:Env.Var.Sys.NetInfraExtra.Value.VDSL2 ?>
+                            <?cs else?>    
+                                 <?cs var:Env.Var.Sys.NetInfraExtra.Value.adsl ?>
+                            <?cs /if ?>
+                       <?cs else ?>
+                            <?cs var:Env.Var.Sys.NetInfraExtra.Value.unknown ?>
+                       <?cs /if ?>
+            </td>
+        </tr>
+        
+        
+        
+        <tr>
+            <th scope="row"><?cs call:varHeader("wan_uptime") ?></th>
+            <td>
+                <?cs var:Var.wan_uptime.day.Value ?>  <?cs var:Env.Text.dayAbbr?>
+                <?cs var:Var.wan_uptime.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+                <?cs var:Var.wan_uptime.min.Value ?> <?cs var:Env.Text.minAbbr?>
+                <?cs var:Var.wan_uptime.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+            </td>
+        </tr>
+    </table>
+</div>
+    
+<div class="title">
+    <h1><?cs call:sectionTitle("wan_info_v4")?></h1>
+</div>
+
+<div class="content">
+    <table>
+        <tr>
+            <th scope="row"><?cs call:varHeader("wan_status") ?></th>
+            <td class="<?cs if:Var.status_access_v4.Value == "up" ?>enabled<?cs elif:Var.status_access_v4.Value == "down" ?>disabled<?cs elif:Var.status_access_v4.Value == "partial" ?>unused<?cs /if ?>">
+            <?cs if:Var.status_access_v4.Value == "up" ?><?cs var:Env.Var.wan_status.Value.enabled ?><?cs /if ?>
+            <?cs if:Var.status_access_v4.Value == "partial" ?><?cs var:Env.Var.wan_status.Value.unused ?><?cs /if ?>
+            <?cs if:Var.status_access_v4.Value == "down" ?><?cs var:Env.Var.wan_status.Value.disabled ?><?cs /if ?>
+            </td>
+        </tr>
+            
+        <?cs if:Var.status_access_v4.Value == "up"?>
+            <?cs if:Env.status.net.cgnat.status != "up"?>
+                <tr>
+                    <th scope="row"><?cs call:varHeader("wan_ipaddr") ?></th>
+                    <td><?cs var:Env.status.net.data.ipaddr ?><?cs if:Env.status.net.mapt.status == "up" ?>&nbsp;<?cs var:Var.net_shared_ipaddr.Value ?> (<?cs var:Env.Text.Shared ?>)<?cs /if ?></td>
+                </tr>
+            <?cs /if?>
+
+        <?cs if: Env.status.net.mapt.status == "down" && Env.status.net.cgnat.status == "down" && Env.status.net.ipv6.status == "down" ?>
+        
+            <tr>
+                <th scope="row"><?cs call:varHeader("wan_gateway") ?></th>
+                <td><?cs var:Env.status.net.data.gateway ?></td>
+            </tr>
+        <?cs /if?>  
+        
+        <?cs if:Env.status.net.ipv6.infra != "Only" ?>
+            <tr>
+                <th scope="row"><?cs call:varHeader("wan_dns_server") ?></th>
+                <td><?cs var:Var.wan_dns_1.Value ?><?cs if:?Var.wan_dns_2.Value ?>, <?cs var:Var.wan_dns_2.Value?><?cs /if?></td>
+            </tr>
+        <?cs /if ?>
+        
+        <tr>
+            <th scope="row"><?cs call:varHeader("wan_uptime") ?></th>
+            <td>
+                <?cs if:?Var.wan_uptime_v4.sec.Value ?>
+                    <?cs var:Var.wan_uptime_v4.day.Value ?>  <?cs var:Env.Text.dayAbbr?>
+                    <?cs var:Var.wan_uptime_v4.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+                    <?cs var:Var.wan_uptime_v4.min.Value ?> <?cs var:Env.Text.minAbbr?>
+                    <?cs var:Var.wan_uptime_v4.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+                <?cs else ?>
+                    <?cs var:Var.wan_uptime.day.Value ?>  <?cs var:Env.Text.dayAbbr?>
+                    <?cs var:Var.wan_uptime.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+                    <?cs var:Var.wan_uptime.min.Value ?> <?cs var:Env.Text.minAbbr?>
+                    <?cs var:Var.wan_uptime.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+                <?cs /if ?>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><?cs call:varHeader("infra_proto") ?> </th>
+            <td>
+                <?cs if:Env.status.net.mapt.status == "up" ?>
+                    <?cs var:Env.Var.infra_proto.Value.mapt ?>
+                <?cs elif:Env.status.net.cgnat.status == "up" ?>
+                    <?cs var:Env.Var.infra_proto.Value.cgnat ?>
+                <?cs else ?>
+                    <?cs call:varValue(Env.Var.infra_proto.Value[Var.infra_proto.Value])?>
+                <?cs /if ?>
+            </td>
+        </tr>
+        <?cs /if?>
+    </table>
+</div>
+
+<div class="title">
+    <h1><?cs call:sectionTitle("wan_info_v6")?></h1>
+</div>
+
+<div class="content">
+    <table id="ipv6_info">
+        <tr>
+            <th scope="row"><?cs call:varHeader("wan_status") ?></th>
+            <?cs if:Env.user.ipv6.enable == "on" || Env.autoconf.ipv6.force == "true" || Env.status.net.ipv6.status == "up" ?>
+                <?cs if:Env.status.net.ipv6.status == "up" ?>
+                        <?cs set:net_ipv6_status = "enabled" ?>
+                <?cs else ?>
+                        <?cs set:net_ipv6_status = "unused" ?>
+                <?cs /if ?>
+            <?cs else ?>
+                <?cs set:net_ipv6_status = "disabled" ?>
+            <?cs /if ?>
+
+            <td class="<?cs var:net_ipv6_status ?>">
+                <?cs if:net_ipv6_status == "enabled" ?><?cs var:Env.Var.net_ipv6_status.up ?><?cs /if ?>
+                <?cs if:net_ipv6_status == "unused" ?><?cs var:Env.Var.net_ipv6_status.noconnect ?><?cs /if ?>
+                <?cs if:net_ipv6_status == "disabled" ?><?cs var:Env.Var.net_ipv6_status.down ?><?cs /if ?>
+            </td>
+        </tr>
+
+        <?cs if:Env.status.net.ipv6.status == "up" ?>
+        <tr>
+            <th scope="row"><?cs call:varHeader("ipv6_prefix") ?></th>
+            <td><?cs var:Env.status.net.ipv6.prefix ?></td>
+        </tr>
+        
+        <tr>
+            <th scope="row"><?cs call:varHeader("wan_gateway") ?></th>
+            <td><?cs var:Env.status.net.ipv6.gateway ?></td>
+        </tr>
+         <?cs if:Env.status.net.ipv6.dns != "" ?>
+            <tr>
+                <th scope="row"><?cs call:varHeader("wan_dns_server") ?></th>
+                <td><?cs var:Env.status.net.ipv6.dns ?></td>
+            </tr>
+        <?cs /if ?>
+        <tr>
+            <th scope="row"><?cs call:varHeader("wan_uptime") ?></th>
+            <td>
+                <?cs var:Var.net_ipv6_uptime.day.Value ?>  <?cs var:Env.Text.dayAbbr?>
+                <?cs var:Var.net_ipv6_uptime.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+                <?cs var:Var.net_ipv6_uptime.min.Value ?> <?cs var:Env.Text.minAbbr?>
+                <?cs var:Var.net_ipv6_uptime.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+            </td>
+        </tr>
+            
+        <tr>
+            <th scope="row"><?cs call:varHeader("infra_proto") ?></th>
+            <td>
+                <?cs if:Env.status.net.ipv6.infra == "Tunnel" ?>
+                        <?cs call:varValue(Env.Var.infra_proto_v6.Value['l2tp'])?>
+                <?cs else ?>
+                        <?cs call:varValue(Env.Var.infra_proto_v6.Value['dhcp'])?>
+                <?cs /if ?>
+            </td>
+        </tr>    
+        <?cs /if?>
+    </table>
+</div>
+
+<?cs if:Var.net_data_access.Value != "ftth" ?> 
+    <?cs set:Env.Help.Text = Env.Help.Text.DSL?>
+     
+    <div class="title">
+	<h1><?cs call:sectionTitle("infra_dsl_info")?></h1>
+    </div>
+    
+    <div class="content">
+        <?cs if:Env.status.adsl.link != "up"?>
+            <?cs var:Env.Text.DSLNoSynchro ?>
+        <?cs else?>
+        <table id="adsl_info">
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_ratedown") ?></th>
+                <td><?cs var:Var.infra_dsl_ratedown.Value ?>&nbsp;Kbps</td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_rateup") ?></th>
+                <td><?cs var:Var.infra_dsl_rateup.Value ?>&nbsp;Kbps</td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_noisedown") ?></th>
+                <td><?cs var:Var.infra_dsl_snrdown.Value ?>&nbsp;dB</td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_noiseup") ?></th>
+                <td><?cs var:Var.infra_dsl_snrup.Value ?>&nbsp;dB</td>
+            </tr>
+           
+            <?cs if:Var.infra_dsl_linemode.Value=="VDSL2" ?>
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_line_attenuationup") ?></th>
+                <td><?cs var:Env.dsl.adsl.attenuation.line.up0 ?> / <?cs var:Env.dsl.adsl.attenuation.line.up1 ?> / <?cs var:Env.dsl.adsl.attenuation.line.up2 ?> / <?cs var:Env.dsl.adsl.attenuation.line.up3 ?>&nbsp;dB</td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_line_attenuationdown") ?></th>
+                <td><?cs var:Env.dsl.adsl.attenuation.line.down1 ?> / <?cs var:Env.dsl.adsl.attenuation.line.down2 ?> / <?cs var:Env.dsl.adsl.attenuation.line.down3 ?>&nbsp;dB</td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_sig_attenuationup") ?></th>
+                <td><?cs var:Env.dsl.adsl.attenuation.sig.up0 ?> / <?cs var:Env.dsl.adsl.attenuation.sig.up1 ?> / <?cs var:Env.dsl.adsl.attenuation.sig.up2 ?> / <?cs var:Env.dsl.adsl.attenuation.sig.up3 ?>&nbsp;dB</td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_sig_attenuationdown") ?></th>
+                <td><?cs var:Env.dsl.adsl.attenuation.sig.down1 ?> / <?cs var:Env.dsl.adsl.attenuation.sig.down2 ?> / <?cs var:Env.dsl.adsl.attenuation.sig.down3 ?>&nbsp;dB</td>
+            </tr>
+            <?cs else?>
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_attenuationdown") ?></th>
+                <td><?cs var:Var.infra_dsl_attenuationdown.Value ?>&nbsp;dB</td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_attenuationup") ?></th>
+                <td><?cs var:Var.infra_dsl_attenuationup.Value ?>&nbsp;dB</td>
+            </tr>
+            <?cs /if?>
+            
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_linemode") ?></th>
+                <td><?cs var:Var.infra_dsl_linemode.Value ?></td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_dsl_uptime") ?></th>
+                <td>
+                    <?cs var:Var.infra_dsl_uptime.day.Value ?> <?cs var:Env.Text.dayAbbr?>
+                    <?cs var:Var.infra_dsl_uptime.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+                    <?cs var:Var.infra_dsl_uptime.min.Value ?> <?cs var:Env.Text.minAbbr?>
+                    <?cs var:Var.infra_dsl_uptime.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+                </td>
+            </tr>
+	</table>
+	<?cs /if?>
+	<a href="/state/wan/extra"><?cs var:Env.Link.ADSLStats ?></a>
+    </div>
+<?cs /if?>
+
+<?cs if:Var.net_data_access.Value == "gprs" ?>
+
+    <?cs set:Env.Help.Text = Env.Help.Text.radio?>
+    
+    <div class="title">
+	<h1><?cs var:Env.Section.infra_gprs_info.Title ?></h1>
+    </div>
+
+    <div class="content">
+        <?cs if:Env.status.net.status != "up" ?>
+            <?cs var:Env.Text.LinkDown ?>
+        <?cs else?>
+        <table id="gprs_info">
+            <tr>
+                <th scope="row"><?cs call:varHeader("infra_gprs_dbm") ?></th>
+                <td>
+                    <?cs if:Var.infra_gprs_rssi.Value == -1?>
+                        <?cs var:Env.Text.UnknownValue?>
+                    <?cs else?>
+                        <?cs var:Var.infra_gprs_dbm.Value?> dBm
+                    <?cs /if?>
+                </td>
+            </tr>
+        </table>
+        <?cs /if?>
+    </div>
+<?cs /if?>
+
+<?cs if:Env.status.ppp.adsl.status == "up" ?>
+<div class="title">
+    <h1><?cs call:sectionTitle("infra_ppp_info")?></h1>
+</div>
+
+<div class="content">
+    <?cs if:Env.status.ppp.adsl.status != "up"?>
+        <?cs var:Env.Text.LinkDown ?>
+    <?cs else?>
+    <table id="ppp_info">
+        <tr>
+            <th scope="row"><?cs call:varHeader("infra_ppp_ifname") ?></th>
+            <td><?cs var:Env.status.ppp.adsl.ifname ?></td>
+        </tr>
+        <?cs if:Env.status.ppp.adsl.session != ""?>
+        <tr>
+            <th scope="row"><?cs call:varHeader("infra_ppp_session") ?></th>
+            <td><?cs var:Env.status.ppp.adsl.session ?></td>
+        </tr>
+        <?cs /if?>
+        <?cs if:Env.status.ppp.adsl.server != ""?>
+        <tr>
+            <th scope="row"><?cs call:varHeader("infra_ppp_server") ?></th>
+            <td><?cs var:Env.status.ppp.adsl.server ?></td>
+        </tr>
+        <?cs /if?>
+    </table>
+    <?cs /if?>
+</div>
+<?cs /if?>
+

@@ -1,0 +1,6 @@
+<wifi freq="5GHz"><?cs each:item = Scan.wlan.wl0 ?>
+    <ap ssid="<?cs Var:item.ssid ?>" bssid="<?cs var:item.bssid ?>"  rssi="<?cs var:item.rssi ?>" channel="<?cs var:item.channel ?>"/><?cs /each ?>
+  </wifi>
+  <wifi freq="2.4GHz"><?cs each:item = Scan.wlan.wl1 ?>
+    <ap ssid="<?cs var:item.ssid ?>" bssid="<?cs var:item.bssid ?>"  rssi="<?cs var:item.rssi ?>" channel="<?cs var:item.channel ?>"/><?cs /each ?>
+  </wifi>

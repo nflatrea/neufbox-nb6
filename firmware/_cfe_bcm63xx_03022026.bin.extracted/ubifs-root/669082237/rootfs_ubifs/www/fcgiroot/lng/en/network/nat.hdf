@@ -1,0 +1,88 @@
+Env.Page.Title = NAT
+
+Env.Help.Text = In the <b>port forwarding</b> section, you can define the destination among your equipments for traffic coming from the Internet. Some software need to be reached directly from the Internet in order to function properly (games, peer to peer,...). You can configure these rules here. Check the documentation coming with the software for more information.<br /><br />In the <b>UPnP</b> section, you can disable or enable the UPnP service of your Box. When UPnP is enabled, you don't need to configure rules for address translation for UPnP compatible software.<br /><br />In the <b>DMZ</b> section, you can enable or disable the DMZ feature of the Box. When the DMZ is enabled, you can allow one of your devices to be accessible from the Internet. It is recommended that you use a firewall on this device.<br /><br />In the <b>Proxy Wake on LAN</b> section, you can enable or disable the Proxy Wake on LAN feature of the Box. When service is enabled, you can send WoL packets from the Internet to a device located in the LAN of the Box.<br/><br />In the <b>ALGs</b> section, you can enable or disable the ALGs features of the Box. If you are using an external VoIP service, you may need to disable SIP ALG.
+
+Env.Section.nat_config.Title = Port forwarding
+Env.Section.nat_config_mapt.Title = Port forwarding
+
+Env.Var.nat_rulename.Header = Name
+Env.Var.nat_rulename.Error.value = Invalid format. Only alphanumerics caracters, '_' and '-' are allowed.
+
+Env.Var.nat_proto.Header = Protocol
+Env.Var.nat_proto.Value.tcp = TCP
+Env.Var.nat_proto.Value.udp = UDP
+Env.Var.nat_proto.Value.both = both
+Env.Var.nat_proto.Error.value = Invalid format
+Env.Var.nat_proto.Error.invalid_protocol = Invalid protocol
+
+Env.Var.nat_range.Header = Type
+Env.Var.nat_range.Value.false = Port
+Env.Var.nat_range.Value.true =  Range
+Env.Var.nat_range.Error.value = Invalid format
+
+Env.Var.nat_extport.Header = External ports
+Env.Var.nat_extport.Error.value = Invalid format
+Env.Var.nat_extport.Error.invalid_extport = Invalid external port
+Env.Var.nat_extport.Error.extport_reserved = Reserved external port(s)
+Env.Var.nat_extport.Error.extport_already_use = Port already in use
+Env.Var.nat_extport.Error.extport_unavailable = This port is not available for your IPv4
+Env.Var.nat_extrange_p0.Error.value = Invalid format
+Env.Var.nat_extrange_p1.Error.value = Invalid format
+Env.Var.nat_extrange.Error.invalid_extportrange = Invalid external port range
+Env.Var.nat_extrange.Error.extport_reserved = Reserved external port(s)
+Env.Var.nat_extrange.Error.extport_already_use = Port(s) already in use
+Env.Var.nat_extrange.Error.extportrange_unavailable = This port range is not available for your IPv4
+
+Env.Var.nat_dstip.Header = IP address
+Env.Var.nat_dstip.Error.invalid_ip = Invalid IP address
+
+Env.Var.nat_dstport.Header = Destination ports
+Env.Var.nat_dstport.Error.value = Invalid format
+Env.Var.nat_dstport.Error.invalid_dstport = Invalid destination port
+Env.Var.nat_dstrange_p0.Error.value = Invalid format
+Env.Var.nat_dstrange_p1.Error.value = Invalid format
+Env.Var.nat_dstrange.Error.invalid_dstportrange = Invalid destination port range
+
+Env.Var.nat_active.Header = Activation
+
+Env.Section.upnpd_config.Title = UPnP
+
+Env.Var.upnpd_active.Header = UPnP Activation
+Env.Var.upnpd_active.Value.on = Enabled
+Env.Var.upnpd_active.Value.off = Disabled
+Env.Var.upnpd_active.Error.value = Invalid format
+
+Env.Var.upnpd_nat_rules.Header = Active UPnP rules
+
+Env.Text.Enable = Enable
+Env.Text.Disable = Disable
+Env.Text.PrivatePortListError = You can't use the following ports
+Env.Text.rule = rule
+Env.Text.rules = rules
+
+Env.Section.dmz_config.Title = DMZ
+Env.Var.dmz_active.Header = Enable DMZ
+Env.Var.dmz_active.Value.on = Enabled
+Env.Var.dmz_active.Value.off = Disabled
+Env.Var.dmz_active.Error.value = Invalid format
+Env.Var.dmz_ip.Header = Ip Address
+Env.Var.dmz_ip3.Error.value = Invalid IP Address
+
+Env.Section.wol_config.Title = Proxy Wake on LAN
+Env.Var.wol_active.Header = Enable WoL proxy
+Env.Var.wol_active.Value.on = Enabled
+Env.Var.wol_active.Value.off = Disabled
+
+Env.Section.sipalg_config.Title = ALGs
+Env.Var.sipalg_active.Header = Enable SIP ALG
+Env.Var.sipalg_active.Value.on = Enabled
+Env.Var.sipalg_active.Value.off = Disabled
+Env.Var.pptp_active.Header = Enable <acronym title="Point-to-Point Tunneling Protocol">PPTP</acronym>
+Env.Var.pptp_active.Value.on = Enabled
+Env.Var.pptp_active.Value.off = Disabled
+Env.Var.gre_active.Header = Enable <acronym title="Generic Routing Encapsulation">GRE</acronym> module
+Env.Var.gre_active.Value.on = Enabled
+Env.Var.gre_active.Value.off = Disabled
+Env.Var.mapt.Info.Value = Warning : You currently share an IPv4 with other subscriber. This is perfectly normal in a new IPv6 infrastructure. However, one of the consequences is that there is only a limited amount of external ports available to you. You can access this list by going to the external port input area in your settings, and press the <button class="btn" type="button"  style="outline: 0;"><i class="icon-th icon-white"></i></button> button. 
+Env.Var.mapt.popup.Title.Value =  Mutual IPv4 public address port range
+Env.Var.mapt.popup.Description.Value = Please find here the port range available to you, to help you define the port fowarding rules related to you public IPv4 address.

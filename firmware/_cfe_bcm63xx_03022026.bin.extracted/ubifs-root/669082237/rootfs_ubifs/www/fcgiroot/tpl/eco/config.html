@@ -1,0 +1,144 @@
+<?cs if:Env.user.eco.led.active == "off" ?>
+<div class="alert alert-warning"><?cs var:Env.Var.warning_led ?></div>
+<?cs /if ?>
+
+
+<div class="title">
+        <h1><?cs var:Env.Text.Notice ?></h1>
+</div>
+<div class="content">
+    <div class="alert alert-warning">
+        <p id="ecolantv_warning" ><?cs var:Env.Var.ecolantv.Value ?></p>
+        <?cs each:item = Env.status.lan.topology.device ?>
+            <?cs if:item.status=="online" ?>
+                <?cs set:this.device[item.port] = item.type ?>
+                <?cs if:?this.stb && item.type=="stb" ?>
+                <?cs set:this.stb=this.stb + ", "+item.port ?>
+                <?cs elif:item.type=="stb" ?>
+                <?cs set:this.stb=item.port ?>
+                <?cs /if ?>
+            <?cs /if ?>
+        <?cs /each ?>
+        <?cs if:?this.stb ?><p><?cs var:Env.Var.warning_stb.part1 ?> <b><?cs var:this.stb ?></b> <?cs var:Env.Var.warning_stb.part2 ?></p><?cs /if ?>
+    </div>
+</div>
+
+<div class="title">
+        <h1><?cs var:Env.Section.configuration.Title ?></h1>
+</div>
+<div class="content">
+        <form id="form_eco_config" action="<?cs var:Env.Page.Name ?>" method="post">
+                <table id="table_eco_config">
+                        <tr class="custom">
+                                <th scope="row"><?cs var:Env.Var.telephone.Header ?></th>
+                                <td>
+                                    <label for="voip_active" class="checkbox">
+                                    <input name="eco_voip_active" id="voip_active" type="checkbox" value="off" <?cs if:Env.user.eco.voip.active == "off" ?> checked="checked" <?cs /if ?> />&nbsp;<?cs var:Env.Text.Disable ?></label></td>
+                        </tr>
+                        
+                        <?cs if:?Var.pwrsaveenable.Value && Var.pwrsaveenable.Value ?>
+                        <tr class="custom">
+                                <th scope="row"><?cs var:Env.Var.powersw.Header ?></th>
+                                <td>
+                                    <label for="powersw_active" class="checkbox">
+                                    <input name="eco_powersw_active" id="powersw_active" type="checkbox" value="off" <?cs if:Env.user.eco.powersw.active == "off" ?> checked="checked" <?cs /if ?> />&nbsp;<?cs var:Env.Text.Disable ?></label>
+                                    </td>
+                        </tr >
+                        <?cs /if ?>
+                        <tr class="custom">
+                                <th scope="row"><?cs var:Env.Var.ethernet_lan.Header ?>LAN 1</th>
+                                <td>
+                                    <div class="control-group">
+                                        <select class="eco_link_lan span2" name="eco_link_lan1_active">
+                                                <?cs if:this.device.lan1 != "stb" ?>
+                                                <option value="off" <?cs if:Env.user.eco.link.lan1.active == "off" ?> selected="selected" <?cs /if ?> ><?cs var:Env.Text.Disable ?></option>
+                                                <option value="10"  <?cs if:Env.user.eco.link.lan1.active == "10" ?> selected="selected" <?cs /if ?> >10 Mbps</option>
+                                                <?cs /if ?>
+                                                <option value="100" <?cs if:Env.user.eco.link.lan1.active == "100" ?> selected="selected" <?cs /if ?> >100 Mbps</option>
+                                                <option value="1000" <?cs if:Env.user.eco.link.lan1.active == "1000" ?> selected="selected" <?cs /if ?>>1000 Mbps</option>
+                                        </select>
+                                        <?cs if:?this.device.lan1 && this.device.lan1=="stb"?>
+                                        <span class="help-inline"><i class="icon-warning-sign"></i>&nbsp;Télévision détectée</span>
+                                        <?cs /if?>
+                                        <label for="eco_link_lan1_eee" class="checkbox">    
+                                            <input type="checkbox" name="eco_link_lan1_eee" id="eco_link_lan1_eee" <?cs if:?this.device.lan1 && this.device.lan1=="stb" ?>disabled="disabled"<?cs /if ?> <?cs if:Env.user.eco.link.lan1.eee == "on" ?>checked="checked"<?cs /if ?> <?cs if:Env.user.eco.link.lan1.active == "off" ?> disabled="disabled" <?cs /if ?> />&nbsp;EEE 802.3az
+                                        </label>
+                                        
+                                    </div>
+                                </td>
+                        </tr>
+                        <tr class="custom">
+                                <th scope="row"><?cs var:Env.Var.ethernet_lan.Header ?>LAN 2</th>
+                                <td>
+                                        <select class="eco_link_lan span2" name="eco_link_lan2_active">
+                                                <?cs if:this.device.lan2 != "stb" ?>
+                                                <option value="off" <?cs if:Env.user.eco.link.lan2.active == "off" ?> selected="selected" <?cs /if ?>><?cs var:Env.Text.Disable ?></option>
+                                                <option value="10" <?cs if:Env.user.eco.link.lan2.active == "10" ?> selected="selected" <?cs /if ?> >10 Mbps</option>
+                                                <?cs /if ?>
+                                                <option value="100" <?cs if:Env.user.eco.link.lan2.active == "100" ?> selected="selected" <?cs /if ?>>100 Mbps</option>
+                                                <option value="1000" <?cs if:Env.user.eco.link.lan2.active == "1000" ?> selected="selected" <?cs /if ?>>1000 Mbps</option>
+                                        </select>
+                                        <?cs if:?this.device.lan2 && this.device.lan2=="stb" ?>
+                                        <span class="help-inline"><i class="icon-warning-sign"></i>&nbsp;Télévision détectée</span>
+                                        <?cs /if?>
+                                        <label for="eco_link_lan2_eee" class="checkbox">    
+                                        <input type="checkbox" name="eco_link_lan2_eee" id="eco_link_lan2_eee" <?cs if:?this.device.lan2 && this.device.lan2=="stb" ?>disabled="disabled"<?cs /if ?> <?cs if:Env.user.eco.link.lan2.eee == "on" ?>checked="checked"<?cs /if ?> <?cs if:Env.user.eco.link.lan2.active == "off" ?> disabled="disabled" <?cs /if ?>/>&nbsp;EEE 802.3az
+                                        </label>
+                                    
+                                </td>
+                        </tr>
+                        <tr class="custom">
+                                <th scope="row"><?cs var:Env.Var.ethernet_lan.Header ?>LAN 3</th>
+                                <td>
+                                        <select class="eco_link_lan span2" name="eco_link_lan3_active">
+                                                <?cs if:this.device.lan3 != "stb" ?>
+                                                <option value="off" <?cs if:Env.user.eco.link.lan3.active == "off" ?> selected="selected" <?cs /if ?> ><?cs var:Env.Text.Disable ?></option>
+                                                <option value="10" <?cs if:Env.user.eco.link.lan3.active == "10" ?> selected="selected" <?cs /if ?> >10 Mbps</option>
+                                                <?cs /if ?>
+                                                <option value="100" <?cs if:Env.user.eco.link.lan3.active == "100" ?> selected="selected" <?cs /if ?> >100 Mbps</option>
+                                                <option value="1000" <?cs if:Env.user.eco.link.lan3.active == "1000" ?> selected="selected" <?cs /if ?>>1000 Mbps</option>
+                                        </select>
+                                        <?cs if:?this.device.lan3 && this.device.lan3=="stb" ?>
+                                        <span class="help-inline"><i class="icon-warning-sign"></i>&nbsp;Télévision détectée</span>
+                                        <?cs /if?>
+                                        <label for="eco_link_lan3_eee" class="checkbox">
+                                        <input type="checkbox" name="eco_link_lan3_eee" id="eco_link_lan3_eee" <?cs if:?this.device.lan3 && this.device.lan3=="stb" ?>disabled="disabled"<?cs /if ?> <?cs if:Env.user.eco.link.lan3.eee == "on" ?>checked="checked"<?cs /if ?> <?cs if:Env.user.eco.link.lan3.active == "off" ?> disabled="disabled" <?cs /if ?>/>&nbsp;EEE 802.3az
+                                        </label>
+                                        
+                                </td>
+                        </tr>
+                        <tr class="custom">
+                                <th scope="row"><?cs var:Env.Var.ethernet_lan.Header ?>LAN 4</th>
+                                <td>
+                                        <select class="eco_link_lan span2" name="eco_link_lan4_active">
+                                                <?cs if:this.device.lan4 != "stb" ?>
+                                                <option value="off" <?cs if:Env.user.eco.link.lan4.active == "off" ?> selected="selected" <?cs /if ?>><?cs var:Env.Text.Disable ?></option>
+                                                <option value="10" <?cs if:Env.user.eco.link.lan4.active == "10" ?> selected="selected" <?cs /if ?>>10 Mbps</option>
+                                                <?cs /if ?>
+                                                <option value="100" <?cs if:Env.user.eco.link.lan4.active == "100" ?> selected="selected" <?cs /if ?>>100 Mbps</option>
+                                                <option value="1000" <?cs if:Env.user.eco.link.lan4.active == "1000" ?> selected="selected" <?cs /if ?>>1000 Mbps</option>
+                                        </select>
+                                        <?cs if:?this.device.lan4 && this.device.lan4=="stb" ?>
+                                        <span class="help-inline"><i class="icon-warning-sign"></i>&nbsp;Télévision détectée</span>
+                                        <?cs /if?>
+                                    <label for="eco_link_lan4_eee" class="checkbox">    
+                                    <input type="checkbox" name="eco_link_lan4_eee" id="eco_link_lan4_eee" <?cs if:?this.device.lan4 && this.device.lan=="stb" ?>disabled="disabled"<?cs /if ?> <?cs if:Env.user.eco.link.lan4.eee == "on" ?>checked="checked"<?cs /if ?> <?cs if:Env.user.eco.link.lan4.active == "off" ?> disabled="disabled" <?cs /if ?>/>&nbsp;EEE 802.3az
+                                    </label>
+                                    
+                                </td>
+                        </tr>
+                        <tr class="custom">
+                                <th scope="row"><?cs var:Env.Var.brightness.Header ?></th>
+                                <td>
+                                        <select class="span2" name="eco_led_active">
+                                                <option value="off" <?cs if:Env.user.eco.led.active == "off" ?> selected="selected" <?cs /if ?> ><?cs var:Env.Var.off.Value ?></option>
+                                                <option value="full" <?cs if:Env.user.eco.led.active == "full" ?> selected="selected" <?cs /if ?> ><?cs var:Env.Var.high.Value ?></option>
+                                        </select>
+                                </td>
+                        </tr>
+
+                </table>
+                <button class="btn" id="dmz_submit_btn" type="submit" name="submit" value="dmz_submit"><?cs var:Button.Submit ?></button>
+                <button class="btn" type="submit" name="eco_profile" value="default"><?cs var:Button.Reinit ?></button>
+        </form>
+</div>

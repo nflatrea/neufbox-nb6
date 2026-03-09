@@ -1,0 +1,2 @@
+    <lan ip_addr="<?cs var:Env.user.lan.ipaddr ?>" netmask="<?cs var:Env.user.lan.netmask ?>" dhcp_active="<?cs var:Env.user.dhcp.active ?>" dhcp_start="<?cs var:Env.user.dhcp.start?>" dhcp_end="<?cs var:Env.user.dhcp.end?>" dhcp_lease="<?cs var:Env.user.dhcp.lease?>" />
+   

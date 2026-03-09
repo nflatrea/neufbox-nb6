@@ -1,0 +1,183 @@
+#!/bin/sh /etc/rc.common
+
+START=39
+
+DATA_PID_FILE=/run/data-wrapper.pid
+DATA_LOCK_FILE=/var/lock/data.lock
+
+[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+local topology_conf=/etc/config/topology${mode}.xml
+[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+
+boot() {
+	if [ -x /usr/sbin/fcctl ]; then
+		local devno=$(sed -n "s/^\(.*\)fcache/\1/p" /proc/devices)
+		mknod -m 666 /dev/fcache c ${devno} 0
+		fcctl config --ipv6 1
+		fcctl enable
+	fi
+	if [ -x /usr/sbin/fapctl ]; then
+		local devno=$(sed -n "s/^\(.*\)bcmfap/\1/p" /proc/devices)
+		mknod -m 666 /dev/bcmfap c ${devno} 0
+		fapctl enable
+		fapctl tm --off
+	fi
+
+	ip route replace unreachable default table lan_t
+	test -z "$(roxml -q ${topology_conf} '//interface[@service=data]/@name')" && exit 0
+	[ "$(nvram get ipv6_infra)" != "Only" ] && wrapper -t data -p ${DATA_PID_FILE}
+}
+
+
+start() {
+        lock ${DATA_LOCK_FILE}
+
+	infra=$(status get net_data_infra)
+	ifname=$(status get net_data_ifname)
+	ipaddr=$(status get net_data_ipaddr)
+	gateway=$(status get net_data_gateway)
+	dns=$(status get net_data_dns)
+	echo "${infra}" > /tmp/data.infra
+
+	if [ "$(status get net_ipv6_infra)" != "Only" ]; then
+		# filter: forward
+		iptables -A FORWARD -i ${ifname} -m state --state NEW -j WIN_FILTER
+		iptables -A FORWARD -o ${ifname} -m state --state NEW -j WIN_FILTER
+		iptables -A FORWARD -o ${ifname} -p tcp -m tcp --dport 25 -j SMTP_FILTER
+		# tcpmss
+		([ "${infra}" =  "adsl/ppp" ] || [ "${infra}" = "gprs/ppp" ]) && \
+			iptables -t mangle -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+
+		# filter: output
+		#iptables -A OUTPUT -o ${ifname} -p icmp --icmp-type port-unreachable -j LOG
+		#iptables -A OUTPUT -o ${ifname} -p icmp --icmp-type port-unreachable -j DROP
+
+		# nat: postrouting
+		eval $(ipcalc -npb $(nvram get lan_ipaddr) $(nvram get lan_netmask))
+		local ports="1024-$(( $(nvram get lan_maxport) - 1 ))"
+		if [ "${infra}" = "adsl/ppp" ] || [ "${infra}" = "gprs/ppp" ]
+		then 
+			iptables -t nat -I POSTROUTING -j MASQUERADE -o ${ifname} -s ${NETWORK}/${PREFIX}
+			iptables -t nat -I POSTROUTING -p udp -j MASQUERADE --to-ports ${ports} -o ${ifname} -s ${NETWORK}/${PREFIX}
+			iptables -t nat -I POSTROUTING -p tcp -j MASQUERADE --to-ports ${ports} -o ${ifname} -s ${NETWORK}/${PREFIX}
+		else
+			local ipalias=$(roxml -q ${topology_conf} "//interface[@ifname=\"${ifname}\"]/@ipalias"|sed 's|"||g')
+			iptables -t nat -I POSTROUTING -j SNAT --to "${ipaddr}" -o ${ifname} ${ipalias:+! -s ${ipalias}}
+			iptables -t nat -I POSTROUTING -p udp -j SNAT --to "${ipaddr}:${ports}" -o ${ifname} -s ${NETWORK}/${PREFIX}
+			iptables -t nat -I POSTROUTING -p tcp -j SNAT --to "${ipaddr}:${ports}" -o ${ifname} -s ${NETWORK}/${PREFIX}
+		fi
+
+		# nat: prerouting
+		iptables -t nat -A PREROUTING -d ${ipaddr} -j USER_NAT
+		iptables -t nat -A PREROUTING -d ${ipaddr} -j MINIUPNPD
+		iptables -t nat -A PREROUTING -d ${ipaddr} -m pkttype --pkt-type unicast -j DMZ
+
+		# setup rule from lan net
+		ip route replace default via ${gateway} table lan_t
+		# setup rule from internet
+		ip route add default via ${gateway} table data_t
+		ip rule add from ${ipaddr} table data_t
+
+		# dns route
+		for dns in ${dns}
+		do
+			ip route add ${dns} via ${gateway}
+		done
+
+	fi
+
+	/etc/init.d/guest configure_wan
+	
+	# remove ftth port from wan bridge if xdsl
+	if [ "$(status get adsl_link)" = "up" -a "$(status get ftth_port_wan)" = "in" ]; then
+		logger -t "data[$$]" "remove ftth port from wan bridge"
+		local wan_ifname=$(roxml -q ${topology_conf} "//interface[@name=wan]/@ifname")
+		local ftth_ifname=$(roxml -q ${topology_conf} "//interface[@name=wan][@name=ont]/@ifname")
+		brctl delif ${wan_ifname} ${ftth_ifname}
+		status set ftth_port_wan out
+	fi
+
+	env -i \
+		ACTION="ifup" \
+		INTERFACE="data" \
+		DEVICE="${ifname}" \
+		INFRA="${infra}" \
+		IPADDR="${ipaddr}" \
+		/sbin/hotplug-call "iface"
+
+	lock -u ${DATA_LOCK_FILE}
+}
+
+
+stop() {
+        lock ${DATA_LOCK_FILE}
+
+	infra=$(cat /tmp/data.infra)
+	ifname=$(status get net_data_ifname)
+	ipaddr=$(status get net_data_ipaddr)
+	gateway=$(status get net_data_gateway)
+	dns=$(status get net_data_dns)
+
+	env -i \
+		ACTION="ifdown" \
+		INTERFACE="data" \
+		DEVICE="${ifname}" \
+		INFRA="${infra}" \
+		IPADDR="${ipaddr}" \
+		/sbin/hotplug-call "iface"
+
+	if [ "$(status get net_ipv6_infra)" != "Only" ]; then
+		# cleanup rule from lan net
+		ip route replace unreachable default table lan_t
+		# cleanup rule from data
+		ip route del default via ${gateway} table data_t
+		ip rule del from ${ipaddr} table data_t
+		# dns route
+		for dns in ${dns}
+		do
+			ip route del ${dns} via ${gateway}
+		done
+
+		# nat: postrouting
+		eval $(ipcalc -npb $(nvram get lan_ipaddr) $(nvram get lan_netmask))
+		local ports="1024-$(( $(nvram get lan_maxport) - 1 ))"
+		if [ "${infra}" = "adsl/ppp" ] || [ "${infra}" = "gprs/ppp" ]
+		then
+			iptables -t nat -D POSTROUTING -j MASQUERADE -o ${ifname} -s ${NETWORK}/${PREFIX}
+			iptables -t nat -D POSTROUTING -p udp -j MASQUERADE --to-ports ${ports} -o ${ifname} -s ${NETWORK}/${PREFIX}
+			iptables -t nat -D POSTROUTING -p tcp -j MASQUERADE --to-ports ${ports} -o ${ifname} -s ${NETWORK}/${PREFIX}
+		else
+			local ipalias=$(roxml -q ${topology_conf} "//interface[@ifname=\"${ifname}\"]/@ipalias"|sed 's|"||g')
+			iptables -t nat -D POSTROUTING -j SNAT --to "${ipaddr}" -o ${ifname} ${ipalias:+! -s ${ipalias}}
+			iptables -t nat -D POSTROUTING -p udp -j SNAT --to "${ipaddr}:${ports}" -o ${ifname} -s ${NETWORK}/${PREFIX}
+			iptables -t nat -D POSTROUTING -p tcp -j SNAT --to "${ipaddr}:${ports}" -o ${ifname} -s ${NETWORK}/${PREFIX}
+		fi
+
+		# nat: prerouting
+		iptables -t nat -D PREROUTING -d ${ipaddr} -j USER_NAT
+		iptables -t nat -D PREROUTING -d ${ipaddr} -j MINIUPNPD
+		iptables -t nat -D PREROUTING -d ${ipaddr} -m pkttype --pkt-type unicast -j DMZ
+		
+		# filter: output
+		#iptables -D OUTPUT -o ${ifname} -p icmp --icmp-type port-unreachable -j LOG
+		#iptables -D OUTPUT -o ${ifname} -p icmp --icmp-type port-unreachable -j DROP
+		
+		# filter: forward
+		iptables -D FORWARD -i ${ifname}  -m state --state NEW -j WIN_FILTER
+		iptables -D FORWARD -o ${ifname} -m state --state NEW -j WIN_FILTER
+		iptables -D FORWARD -o ${ifname} -p tcp -m tcp --dport 25 -j SMTP_FILTER
+		# tcpmss
+		iptables -t mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+	fi
+
+	/etc/init.d/guest reset_wan
+	
+	lock -u ${DATA_LOCK_FILE}
+}
+
+
+reload() {
+	test -z "$(roxml -q ${topology_conf} '//interface[@service=data]/@name')" && exit 0
+	test -e ${DATA_PID_FILE} && local pid=$(cat ${DATA_PID_FILE})
+	test -n ${pid} && kill -HUP ${pid}
+}

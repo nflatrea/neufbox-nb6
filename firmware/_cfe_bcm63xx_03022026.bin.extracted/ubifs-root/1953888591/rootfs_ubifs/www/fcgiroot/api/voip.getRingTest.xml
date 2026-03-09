@@ -1,0 +1,1 @@
+    <voip ringtone="<?cs var:voip.ringstatus?>" />

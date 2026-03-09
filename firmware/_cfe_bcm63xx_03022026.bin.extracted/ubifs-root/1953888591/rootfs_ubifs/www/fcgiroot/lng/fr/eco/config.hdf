@@ -1,0 +1,26 @@
+Env.Page.Title = Configuration
+
+Env.Help.Text = Dans cette rubrique, vous pouvez personnaliser la configuration du mode Eco de votre Box. Régler la luminosité des voyants en façade ou encore désactiver certains services. <br /> Pour chacun des ports Ethernet, vous pouvez activer la fonction <b>EEE 802.3az</b> qui permet d'adapter automatiquement leur consommation en fonction de votre utilisation. Pour être efficace, cette fonction nécessite que votre équipement soit également compatible avec cette norme.
+Env.Section.configuration.Title = Configuration du mode ECO
+
+Env.Var.warning_led = Attention ! L'extinction des voyants en mode ECO provoquera l'absence de la notification d'appel manqué.
+Env.Var.warning_stb.part1 = Un ou plusieurs décodeurs SFR ont été détectés sur le(s) port(s)
+Env.Var.warning_stb.part2 = de votre Box, la vitesse de ces ports a donc été limitée à un minimum de 100Mbps.
+
+Env.Var.disabled.Value = Désactivé
+
+Env.Var.telephone.Header = Téléphone
+Env.Var.cpl.Header = CPL
+Env.Var.powersw.Header = Power Save Wifi
+Env.Var.port_usb.Header = Port USB
+Env.Var.ethernet_pc_tv.Header = Ethernet PC/TV
+Env.Var.brightness.Header = Luminosité des voyants
+
+Env.Var.mbps.Value = Mbps
+
+Env.Var.off.Value = Eteint
+Env.Var.low.Value = Minimum
+Env.Var.medium.Value = Moyen
+Env.Var.high.Value = Maximum
+
+Env.Var.ecolantv.Value = Les ports Ethernet à 10Mbps peuvent entrainer une dégradation de la réception TV.

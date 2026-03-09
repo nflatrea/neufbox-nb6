@@ -1,0 +1,29 @@
+Env.Page.Title = WAN
+
+Env.Help.Text << EOM
+Dans la rubrique <b>Profil</b>, vous pouvez configurer votre identifiant et mot de passe PPP.
+<br/><br/>Dans la rubrique <b>Etat des services</b>, vous retrouvez l'état des différents services réseau IPV4
+EOM
+
+Env.Section.services_status.Title = Etat des services
+Env.Section.profil.Title = Profil
+
+Env.Var.net_mode.Header = Mode
+Env.Var.net_mode.Value.Router = Routeur
+Env.Var.net_mode.Value.Bridge = Bridge
+
+Env.Var.ppp_login.Header = Identifiant PPP
+Env.Var.ppp_login.Error.value = L'identifiant doit être composé de 63 caractères maximum, et ne pas comporter d'espace, ni d'accent, ni de " ' `
+
+Env.Var.ppp_password.Header = Mot de passe PPP
+Env.Var.ppp_password.Error.value = Le mot de passe doit être composé de 63 caractères maximum, et ne pas comporter d'espace, ni d'accent, ni de \" ' `
+
+Env.Var.internet_status.Header = Internet
+Env.Var.dhcp_active.Header = DHCP
+Env.Var.upnpd_active.Header = UPnP
+Env.Var.ddns_status.Header = DynDNS
+Env.Var.dmz_active.Header = DMZ
+Env.Var.sipalg_active.Header = SIP ALG
+Env.Var.pptp_active.Header = <acronym title="Point-to-Point Tunneling Protocol">PPTP</acronym>
+Env.Var.gre_active.Header = <acronym title="Generic Routing Encapsulation">GRE</acronym>
+Env.Var.filter_mode.Header = Filtrage

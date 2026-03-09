@@ -1,0 +1,14 @@
+Env.Page.Title = UPnP - détails
+
+Env.Section.upnp_list_rules.Title = Liste des règles firewall UPnP
+
+Env.Var.proto.Header = Protocole
+Env.Var.proto.Value.tcp = TCP
+Env.Var.proto.Value.udp = UDP
+Env.Var.proto.Value.icmp = ICMP
+Env.Var.proto.Value.both = Tous
+
+Env.Var.intip.Header = Adresse IP interne
+Env.Var.extip.Header = Adresse IP externe
+Env.Var.intport.Header = Ports internes
+Env.Var.extport.Header = Ports externes

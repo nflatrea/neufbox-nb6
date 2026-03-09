@@ -1,0 +1,152 @@
+<div class="title">
+	<h1><?cs var:Env.Section.dhcp_configuration.Title ?></h1>
+</div>
+
+<div class="content">
+	<form id="form_dhcp_configuration" method="post" action="<?cs var:Env.Page.Name ?>">
+		
+        <?cs set:Var.dhcp6_active.Value = Env.user.dhcp6.active ?>
+        <?cs if:?Query.dhcp6_active ?> 
+        <?cs set:Var.dhcp6_active.Value = Query.dhcp6_active ?>
+        <?cs /if ?>
+        
+        <?cs set:Var.dhcp6_lease.Value = Env.user.dhcp6.lease ?>
+        <?cs if:?Query.dhcp6_lease ?> 
+        <?cs set:Var.dhcp6_lease.Value = Query.dhcp6_lease ?>
+        <?cs /if ?>
+        
+        <?cs set:Var.dhcp6_subnet_lan.Value = Var.dhcp6_subnet_lan.Value ?>
+        <?cs if:?Query.dhcp6_subnet_lan ?> 
+        <?cs set:Var.dhcp6_subnet_lan.Value = Query.dhcp6_subnet_lan ?>
+        <?cs /if ?>
+        
+	<table id="dhcp_configuration">
+		
+		<tr>
+			<th scope="row"><?cs call:varHeader("dhcp_active") ?></th>
+			<td>
+                            <?cs call:div_onoff("dhcp6_active", Var.dhcp6_active.Value == "on") ?>
+			</td>
+		</tr>
+		
+		<tr class="toggle" id="row_dhcp_ip" <?cs if:Var.dhcp6_active.Value == "off" ?> style="display: none;"<?cs /if?>>
+			<th scope="row"><?cs call:varHeader("dhcp6_subnet_lan") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.dhcp6_subnet_lan.Error ?>error<?cs /if ?>">
+                                <div class="input-prepend input-append">
+                                    <span class="add-on"><?cs var:Var.dhcp6_prefix_lan.Value ?>:</span>
+                                    <input type="text" id="dhcp6_subnet_lan" name="dhcp6_subnet_lan" class="text-center input-medium <?cs if:?Var.dhcp6_subnet_lan.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs var:Var.dhcp6_subnet_lan.Value ?>" />&nbsp;:
+                                    <span class="add-on">:0000 -> :ffff</span>
+                                </div>
+                                <?cs if:?Var.dhcp6_subnet_lan.Error ?>
+                                <div class="help-inline">
+                                        <?cs var:Env.Var.dhcp6_subnet_lan.Error[Var.dhcp6_subnet_lan.Error] ?>
+                                </div>
+                                <?cs /if ?>
+                            </div>
+			</td>
+		</tr>
+		
+		<tr class="toggle" id="row_dhcp6_lease"<?cs if:Var.dhcp6_active.Value == "off" ?> style="display: none;"<?cs /if?>>
+			<th scope="row"><?cs call:varHeader("dhcp_lease") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.dhcp6_lease.Error ?>error<?cs /if ?>">
+				<input type="text" id="dhcp6_lease" name="dhcp6_lease" class="input-mini <?cs if:?Var.dhcp6_lease.Error ?>error<?cs else ?>text<?cs /if ?>" size="6" maxlength="6" value="<?cs var:html_escape(Var.dhcp6_lease.Value) ?>" />
+
+				<?cs if:?Var.dhcp6_lease.Error ?>
+				<div class="help-inline">
+					<?cs var:Env.Var.dhcp_lease.Error[Var.dhcp6_lease.Error] ?>
+				</div>
+				<?cs /if ?>
+                            </div>
+			</td>
+		</tr>
+	</table>
+	
+    <div class="alert alert-warning" id="dhcp_off_warning" <?cs if:Var.dhcp6_active.Value != "off" ?>style="display:none;"<?cs /if?>>
+        <?cs var:Env.Text.dhcp_off_warning?>
+    </div>
+
+		<button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button>
+	
+        </form>
+</div>
+
+<div class="toggle" id="section_dhcp_static">
+	
+	<div class="title">
+		<h1><?cs var:Env.Section.dhcp_static.Title ?></h1>
+	</div>
+	
+	<div class="content">
+                <form method="post" action="<?cs var:Env.Page.Name ?>">
+                
+                <?cs set:Var.dhcp6_static_ip.Value = "" ?>   
+                <?cs if:?Query.dhcp6_static_ip ?> 
+                <?cs set:Var.dhcp6_static_ip.Value = Query.dhcp6_static_ip ?>
+                <?cs /if ?>  
+                
+                <?cs set:Var.dhcp6_static_macaddr.Value = "" ?>
+                <?cs if:?Query.dhcp6_static_macaddr ?> 
+                <?cs set:Var.dhcp6_static_macaddr.Value = Query.dhcp6_static_macaddr ?>
+                <?cs /if ?>  
+                    
+		<table id="dhcp_static" class="magictable">
+		       <thead>
+				<tr>
+					<th  scope="row"><?cs call:varHeader("dhcp6_static_ipaddr") ?></th>
+					<th  scope="row"><?cs call:varHeader("dhcp6_static_macaddr") ?></th>
+					<th scope="row" class="col_action" colspan="2"></th>
+				</tr>
+			</thead>
+
+			<?cs each:item = Env.user.dhcp6.static.pair ?>
+			<tbody>
+			<tr>
+				<td><?cs var:item.ipaddr ?></td>
+				<td><?cs var:item.macaddr ?></td>
+				<td class="col_action">
+                                        <button class="btn" type="submit" name="action_remove.<?cs var:name(item) ?>"><i class="icon-minus-sign icon-white"></i></button>
+				</td>
+			</tr>
+			<?cs /each ?>
+			
+			<tr>
+				<td data-title="<?cs call:varHeader("dhcp6_static_ipaddr") ?>">
+                                    <div class="control-group <?cs if:?Var.dhcp6_static_ip.Error ?>error<?cs /if ?>">
+                                        <div class="input-prepend input-append">
+                                            <span class="add-on" id="static_prefix"><?cs var:Var.dhcp6_prefix_lan.Value ?>:</span>
+                                            <input type="text" id="dhcp6_static_ip" name="dhcp6_static_ip" class="text-center input-medium <?cs if:?Var.dhcp6_static_ip.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs var:Var.dhcp6_static_ip.Value ?>" />
+                                            <button class="btn" type="button" id="button_network_dhcp6_static_ip"><i class="icon-th icon-white"></i></button>
+                                        </div>
+                                        
+					<?cs if:?Var.dhcp6_static_ip.Error ?>
+					<div class="help-inline">
+						<?cs var:Env.Var.dhcp6_static_ipaddr.Error[Var.dhcp6_static_ip.Error] ?>
+					</div>
+					<?cs /if ?>
+                                    </div>
+				</td>
+				
+				<td data-title="<?cs call:varHeader("dhcp6_static_macaddr") ?>">
+                                    <div class="control-group <?cs if:?Var.dhcp6_static_macaddr.Error ?>error<?cs /if ?>">
+                                        
+					<input type="text" id="dhcp6_static_macaddr" name="dhcp6_static_macaddr" class="input-medium <?cs if:?Var.dhcp6_static_macaddr.Error ?>error<?cs else ?>text<?cs /if ?>" size="17" maxlength="17" value="<?cs var:Var.dhcp6_static_macaddr.Value ?>" />
+					
+					<?cs if:?Var.dhcp6_static_macaddr.Error ?>
+					<div class="help-inline">
+						<?cs var:Env.Var.dhcp6_static_macaddr.Error[Var.dhcp6_static_macaddr.Error] ?>
+					</div>
+					<?cs /if ?>
+                                    </div>
+				</td>
+				
+				<td class="col_action">
+                                        <button class="btn" type="submit" name="action_add" ><i class="icon-plus-sign icon-white"></i></button>
+				</td>
+			</tr>
+			</tbody>
+		</table>
+                </form>
+	</div>
+</div>

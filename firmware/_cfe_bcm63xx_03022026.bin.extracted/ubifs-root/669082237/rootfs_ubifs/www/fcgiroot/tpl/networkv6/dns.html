@@ -1,0 +1,77 @@
+<div class="title">
+	<h1><?cs var:Env.Section.dns_configuration.Title ?></h1>
+</div>
+
+<div class="content">
+    <form method="post" action="<?cs var:Env.Page.Name ?>" >
+	<table id="dnshosts_config" class="magictable">
+		<thead>
+			<tr>
+				<th scope="col" class="col_number">#</th>
+				<th scope="col"><?cs call:varHeader("dnshosts_ip") ?></th>
+				<th scope="col"><?cs call:varHeader("dnshosts_hostname") ?></th>
+				<th scope="col" class="col_action" colspan="2"></th>
+			</tr>
+		</thead>
+		<tbody>
+			<?cs each:item = Env.user.dns.host6 ?>
+			<tr>
+				<td data-title="#" class="col_number">
+					<?cs var:name(item) ?>
+				</td>
+				
+				<td data-title="<?cs call:varHeader("dnshosts_ip") ?>">
+					<?cs var:item.ip?>
+				</td>
+
+				<td data-title="<?cs call:varHeader("dnshosts_hostname") ?>">
+					<?cs var:item.domain ?>
+				</td>
+
+				<td class="col_action" colspan="2">
+                                            <button class="btn" type="submit" name="dnsremove" value="<?cs var:name(item) ?>"><i class="icon-minus-sign icon-white"></i></button>
+				</td>
+			</tr>
+			<?cs /each?>
+
+			<tr>
+				
+				<td data-title="#" class="col_number">
+					<?cs var:subcount(Env.user.dns.host6) + #1 ?>
+				</td>
+				<td data-title="<?cs call:varHeader("dnshosts_ip") ?>" valign="top">
+                                    <div class="control-group <?cs if:?Var.dnshosts_ip.Error?>error<?cs /if ?>">
+                                        <div class="input-append">
+                                             <input class="input-large <?cs if:?Var.dnshosts_ip.Error ?>error<?cs else ?>text<?cs /if ?> ip" 
+                                               type="text" name="dnshosts_ip" id="dnshosts_ip" maxlength="39" 
+                                               value="<?cs call:varIf(Query.dnshosts_ip) ?>" />
+                                             <button class="btn" type="button" id="button_network_dnshosts_ip"><i class="icon-th icon-white"></i></button>
+                                        </div>
+					<?cs if:?Var.dnshosts_ip.Error?>
+				        <div class="help-inline">
+						<?cs var:Env.Var.dnshosts_ip.Error[Var.dnshosts_ip.Error]?>
+					</div>
+					<?cs /if ?>
+                                    </div>
+				</td>
+				<td data-title="<?cs call:varHeader("dnshosts_hostname") ?>" valign="top">
+                                    <div class="control-group <?cs if:?Var.dnshosts_hostname.Error ?>error<?cs /if ?>">
+					<input type="text" name="dnshosts_hostname" id="dnshosts_hostname" size="30" maxlength="70"
+                                            class="input-large <?cs if:?Var.dnshosts_hostname.Error?>error<?cs else ?>text<?cs /if ?>" 
+                                            value="<?cs call:varIf(Query.dnshosts_hostname) ?>" />
+					
+					<?cs if:?Var.dnshosts_hostname.Error ?>
+				        <div class="help-inline">
+						<?cs var:Env.Var.dnshosts_hostname.Error[Var.dnshosts_hostname.Error] ?>
+					</div>
+					<?cs /if ?>
+                                    </div>
+				</td>
+				<td class="col_action">
+                                        <button class="btn" type="submit" name="dnsadd" value="add"><i class="icon-plus-sign icon-white"></i></button>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+    </form>
+</div>

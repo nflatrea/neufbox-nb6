@@ -1,0 +1,16 @@
+#hotspot
+#wl0.1_ssid=hotspot_portal_mode4_ssid
+wl1.1_ssid=hotspot_portal_mode4_ssid
+
+#eap-sim
+#wl0.3_ssid=hotspot_eapsim_mode5_ssid
+#wl0.3_radacct_interiminterval=hotspot_eapsim_interiminterval
+#wl0.3_radattr_nasportid=hotspot_eapsim_nasportid
+#wl0.3_radattr_locationid=hotspot_eapsim_wisprlocationid
+#wl0.3_radattr_locationname=hotspot_eapsim_wisprlocationname
+
+wl1.3_ssid=hotspot_eapsim_mode5_ssid
+wl1.3_radacct_interiminterval=hotspot_eapsim_interiminterval
+wl1.3_radattr_nasportid=hotspot_eapsim_nasportid
+wl1.3_radattr_locationid=hotspot_eapsim_wisprlocationid
+wl1.3_radattr_locationname=hotspot_eapsim_wisprlocationname

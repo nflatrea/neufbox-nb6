@@ -1,0 +1,122 @@
+#!/bin/sh
+
+
+# log/print level :
+# 0 : nothing
+# 1 : only on error and warning
+# 2 : on error and success
+
+stdout_level=2
+syslog_level=2
+
+
+
+SAVE_POSITION="\0033[s"
+RESTORE_POSITION="\0033[u"
+
+C_CLEAR="\0033[m\033[0m"    # clear text
+C_MAIN="\0033[;1m"          # main text
+C_OTHER="\0033[1;34m"       # prefix & brackets
+C_SEPARATOR="\0033[1;30m"   # separator
+C_BUSY="\0033[;36m"         # busy
+C_FAIL="\0033[1;31m"        # failed
+C_WARN="\0033[1;33m"        # warning
+C_INFO="\0033[1;30m"        # info
+C_DONE=${C_MAIN}            # completed
+C_BKGD="\0033[1;35m"        # backgrounded
+C_H1=${C_MAIN}              # highlight text 1
+C_H2="\0033[1;36m"          # highlight text 2
+
+done="${C_OTHER}[${C_DONE}_OK_${C_CLEAR}${C_OTHER}]${C_CLEAR}"
+fail="${C_OTHER}[${C_FAIL}FAIL${C_CLEAR}${C_OTHER}]${C_CLEAR}"
+
+head_prefix="${C_OTHER}#${C_CLEAR}"
+simple_prefix="${C_OTHER}-${C_CLEAR}"
+
+bkgd="${C_OTHER}[${C_BKGD}BKGD${C_CLEAR}${C_OTHER}]${C_CLEAR}"
+info="${C_OTHER}[${C_INFO}INFO${C_CLEAR}${C_OTHER}]${C_CLEAR}"
+warn="${C_OTHER}[${C_WARN}WARN${C_CLEAR}${C_OTHER}]${C_CLEAR}"
+error="${C_OTHER}[${C_FAIL}FAIL${C_CLEAR}${C_OTHER}]${C_CLEAR}"
+
+begin_log() {
+	echo -e "${C_SEPARATOR}───── begin log ─────${C_WARN}"
+}
+end_log() {
+	echo -e "${C_SEPARATOR}─────  end log  ─────${C_CLEAR}"
+}
+
+stat_check() {
+    local out="$1"
+	  local ret=$?
+	  if [ $ret -eq 0 ]; then
+        out="${done} ${out}"
+		    [ $stdout_level -eq 2  ] && echo -e $out
+		    [ $syslog_level -eq 2  ] && echo -e $out | logger -p daemon.notice -t init 
+	  else
+		    out="${fail} ${out}"
+		    [ $stdout_level -ne 0  ] && echo -e $out
+		    [ $syslog_level -ne 0  ] && echo -e $out | logger -p daemon.notice -t init 
+	  fi
+
+	  return $ret
+}
+
+st() {
+	local out="${simple_prefix} ${1}"
+	shift
+	local tmpfile=$(mktemp -p /tmp)
+	if [ -z "$tmpfile" ]; then
+		"$@"  2>&1
+		stat_check "$out"
+		return $?
+	fi
+	"$@" >$tmpfile 2>&1
+	stat_check "$out"
+	ret=$?
+	if [ $ret -ne 0 ] && [ -s $tmpfile ];then
+		if [ $stdout_level -ne 0 ]; then
+			begin_log
+			cat $tmpfile
+			end_log
+		fi
+		[ $syslog_level -ne 0 ] && cat $tmpfile | logger -p daemon.notice -t init 
+	fi
+	rm -f $tmpfile
+	return $ret
+}
+
+chk() {
+	st "$(echo $@)" $(echo $@)
+}
+
+info() {
+	[ $syslog_level -ne 0 ] && logger -p daemon.notice -t init "info: $1"
+	[ $stdout_level -ne 0 ] && echo -e "${info} $simple_prefix $1"
+}
+
+warning() {
+	[ $syslog_level -ne 0 ] && logger -p daemon.notice -t init "warning: $1"
+	[ $syslog_level -ne 0 ] && echo -e "${warn} $simple_prefix $1"
+}
+
+error() {
+	[ $syslog_level -ne 0 ] && logger -p daemon.err -t init "error: $1"
+	[ $stdout_level -ne 0 ] && echo -e "${error} $simple_prefix $1"
+}
+
+hinfo() {
+	[ $syslog_level -ne 0 ] && logger -p daemon.notice -t init "info: $1"
+	[ $stdout_level -ne 0 ] && echo -e "${info} $head_prefix $1"
+}
+
+hwarning() {
+	[ $syslog_level -ne 0 ] && logger -p daemon.notice -t init "warning: $1"
+	[ $stdout_level -ne 0 ] && echo -e "${warn} $head_prefix $1"
+}
+
+herror() {
+	[ $syslog_level -ne 0 ] && logger -p daemon.err -t init "error: $1"
+	[ $syslog_level -ne 0 ] && echo -e "${error} $head_prefix $1"
+}
+
+

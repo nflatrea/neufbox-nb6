@@ -1,0 +1,32 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2007 OpenWrt.org
+
+start() {
+	lock /run/lock/p910nd.lock
+
+	[ -d "/sys/class/usb/lp0" ] && {
+		[ "$(nvram get p910nd_bidir)" = "on" ] && bidir=-b
+		
+		p910nd ${bidir} -f /dev/usb/lp0 &
+
+		iptables -A LAN_FILTER -m tcp -p tcp -m state --state NEW --dport 9100 -j ACCEPT
+
+		status set p910nd_status up
+	}
+
+	lock -u /run/lock/p910nd.lock
+}
+
+stop() {
+	lock /run/lock/p910nd.lock
+
+	iptables -D LAN_FILTER -m tcp -p tcp -m state --state NEW --dport 9100 -j ACCEPT
+
+	for f in $(ls /run/p910*d.pid); do kill $(cat $f); done;
+	sleep 1
+	for f in $(ls /run/p910*d.pid); do kill -KILL $(cat $f); done;
+
+	status set p910nd_status down
+
+	lock -u /run/lock/p910nd.lock
+}

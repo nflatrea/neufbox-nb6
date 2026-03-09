@@ -1,0 +1,73 @@
+#!/bin/sh /etc/rc.common
+
+START=40
+
+EXTRA_COMMANDS="pppd_start"
+
+ADSL_PID_FILE=/run/ppp_adsl-wrapper.pid
+DATA_LOCK_FILE=/var/lock/data.lock
+
+[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+local topology_conf=/etc/config/topology${mode}.xml
+[ -e ${topology_conf} ] || topology_conf=/etc/default/topology${mode}.xml
+
+boot() {
+	[ "$(nvram get ipv6_infra)" = "Only" ] && exit 0
+	test -z "$(roxml -q ${topology_conf} "//interface[@config=ppp-xdsl]/@ifname")" && exit 0
+	wrapper -t ppp_adsl -p ${ADSL_PID_FILE}
+}
+
+start() {
+	reload
+}
+
+stop() {
+	killall pppd
+	reload
+}
+
+restart() {
+	killall pppd
+	reload
+}
+
+reload() {
+	lock ${DATA_LOCK_FILE}
+	pidfile=${ADSL_PID_FILE}
+	[ -e ${pifdile} ] && kill -HUP $(cat ${pidfile})
+	true
+	lock -u ${DATA_LOCK_FILE}
+}
+
+pppd_start() {
+        lock ${DATA_LOCK_FILE}
+
+	status set ppp_adsl_login ${LOGIN}
+
+	ARGS="file /etc/ppp/options"
+	ARGS="${ARGS} $(roxml -q ${topology_conf} "//interface[@config=ppp-xdsl]/@ifname")"
+	ARGS="${ARGS} user ${LOGIN}"
+	ARGS="${ARGS} password ${PASSWORD}"
+
+	[ "$(nvram get ppp_tr101_active)" = "on" ] && {
+		ARGS="${ARGS} tr101 1"
+		ARGS="${ARGS} upstream $(dsl get adsl_rate_up)"
+		ARGS="${ARGS} downstream $(dsl get adsl_rate_down)"
+		ARGS="${ARGS} remoteid $(nvram get ppp_tr101_remoteid)"
+		ARGS="${ARGS} circuitid $(nvram get ppp_tr101_circuitid)"
+	}
+	[ "$(nvram get ppp_debug)" = "on" ] && ARGS="${ARGS} -d"
+
+	local conf=/tmp/autoconf/$(autoconf get wanservices_file)
+	[ ! -f ${conf} ] && local conf=/etc/default/autoconf/wanservices.xml
+	local timeout=$(roxml -q ${conf} '//ppp/timeout')
+	local failure=$(roxml -q ${conf} '//ppp/failure')
+	local interval=$(roxml -q ${conf} '//ppp/interval')
+	ARGS="${ARGS} child-timeout ${timeout:-20}"
+	ARGS="${ARGS} lcp-echo-failure ${failure:-3}"
+	ARGS="${ARGS} lcp-echo-interval ${interval:-20}"
+
+	lock -u ${DATA_LOCK_FILE}
+
+	exec pppd ${ARGS}
+}

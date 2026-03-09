@@ -1,0 +1,6 @@
+#!/bin/sh
+
+logger -s -t hotspot -p daemon.info "== $0 $* =="
+
+iptables -A HOTSPOT_FORWARD_PUB -s $FRAMED_IP_ADDRESS -m state --state NEW -j HOTSPOT_FORWARD_AUTH
+

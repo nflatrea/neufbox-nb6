@@ -1,0 +1,18 @@
+<rsp stat="ok">
+    <loop_detection>
+        <link_lan1 val="<?cs var:Var.link_lan1.Value?>"
+                   text="<?cs if:Var.link_lan1.Value == 'up'?><?cs var:Env.Var.port_status.up ?><?cs /if ?>
+                   <?cs if:Var.link_lan1.Value == 'down' ?><?cs var:Env.Var.port_status.down ?><?cs /if ?>"/>
+        <link_lan2 val="<?cs var:Var.link_lan2.Value?>"
+                   text="<?cs if:Var.link_lan2.Value == 'up'?><?cs var:Env.Var.port_status.up ?><?cs /if ?>
+                   <?cs if:Var.link_lan2.Value == 'down' ?><?cs var:Env.Var.port_status.down ?><?cs /if ?>"/>
+        <link_lan3 val="<?cs var:Var.link_lan3.Value?>"
+                   text="<?cs if:Var.link_lan3.Value == 'up'?><?cs var:Env.Var.port_status.up ?><?cs /if ?>
+                   <?cs if:Var.link_lan3.Value == 'down' ?><?cs var:Env.Var.port_status.down ?><?cs /if ?>"/>
+        <link_lan4 val="<?cs var:Var.link_lan4.Value?>"
+                   text="<?cs if:Var.link_lan4.Value == 'up'?><?cs var:Env.Var.port_status.up ?><?cs /if ?>
+                   <?cs if:Var.link_lan4.Value == 'down' ?><?cs var:Env.Var.port_status.down ?><?cs /if ?>"/>
+        <loop_interface val="<?cs var:Var.loop_interface.Value?>"
+                   text="<?cs if:Var.loop_interface.Value != '' ?> <?cs var:Env.Var.port_status.loop ?> <?cs /if ?>"/>
+    </loop_detection>
+</rsp>

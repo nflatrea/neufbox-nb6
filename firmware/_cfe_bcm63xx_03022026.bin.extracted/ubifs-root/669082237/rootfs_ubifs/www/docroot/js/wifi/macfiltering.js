@@ -1,0 +1,1 @@
+$(document).ready(function(){$("#button_network").click(function(){showLanPopup(completeAddAuthorizedMac,{portfilter:"wlan"});return false})});function completeAddAuthorizedMac(ip,mac,name){$("#mac_address").val(mac.toUpperCase());$("#mac_address").focus()}

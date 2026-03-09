@@ -1,0 +1,9 @@
+Env.Page.Title = xDSL information
+
+Env.Help.Text = Here you can check the statistics concerning your xDSL line.
+
+Env.Section.ADSLStat.Title = xDSL line statistics
+
+Env.Section.ADSLDiag.Title = xDSL line diagnosis
+
+Env.Btn.ShowHideDump.Value = Show / Hide the dump diagnostic

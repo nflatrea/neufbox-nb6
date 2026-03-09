@@ -1,0 +1,259 @@
+<form method="post" id="form_access_point_config" action="<?cs var:Env.Page.Name ?>">
+<div class="title">
+  <?cs if:Env.Box.Have_5GHz == "1" ?>
+  <h1><?cs var:Env.Section.configuration.Title_24GHz ?></h1>
+  <?cs else ?>
+	<h1><?cs var:Env.Section.configuration.Title ?></h1>
+  <?cs /if ?>
+</div>
+
+<div class="content">
+	<!--<form method="post" id="form_access_point_config" action="<?cs var:Env.Page.Name ?>">-->
+	<table id="access_point_config">
+
+		<tr id="row_ap_active">
+			<th scope="row"><?cs var:Env.Var.ap_active.Header ?></th>
+			<td>
+				<?cs call:div_onoff("ap_active", (Env.user.wlan.active == "on")) ?>
+			</td>
+
+		</tr>
+
+		<?cs if:?Query.ap_ssid ?>
+		<?cs set:Env.user.wlan.wl0.ssid=Query.ap_ssid ?>
+		<?cs /if ?>
+		<tr id="row_ap_ssid">
+			<th scope="row"><?cs var:Env.Var.ap_ssid.Header ?></th>
+			<td>
+                                <div class="control-group <?cs if:?Var.ap_ssid.Error ?>error<?cs /if ?>">
+                                    <input type="text" name="ap_ssid" class="<?cs if:?Var.ap_ssid.Error ?>error<?cs else ?>text<?cs /if ?>" id="ap_ssid" value="<?cs var:Env.user.wlan.wl0.ssid ?>" size="32" maxlength="32" />
+                                    <?cs if:?Var.ap_ssid.Error ?>
+                                    <div class="help-inline"><?cs var:Env.Var.ap_ssid.Error[Var.ap_ssid.Error] ?></div>
+                                    <?cs /if ?>
+                                </div>
+			</td>
+		</tr>
+
+
+		<tr id="row_ap_closed">
+			<th scope="row"><?cs var:Env.Var.ap_closed.Header ?></th>
+			<td>
+				<?cs call:div_onoff("ap_closed", (Env.user.wlan.closed=="0")) ?>
+			</td>
+		</tr>
+
+                
+		<tr id="row_ap_channel">
+			<th scope="row"><?cs var:Env.Var.ap_channel.Header ?></th>
+			<td>
+				<select name="ap_channel" id="ap_channel" class="input-small">
+					<option value="auto"<?cs if:Env.user.wlan.channel == "auto" ?> selected="selected"<?cs /if ?>>auto</option>
+					<?cs loop:chan = #1, #13, #1 ?>
+					<option value="<?cs var:chan ?>"<?cs if:#Env.user.wlan.channel == chan ?> selected="selected"<?cs /if ?>>
+						<?cs var:chan ?>
+					</option>
+					<?cs /loop ?>
+				</select><?cs if:Env.user.wlan.channel == "auto" ?>&nbsp; <a href="/wifi/acds"><?cs var:Env.Var.diag_spect ?></a><?cs /if ?>
+			</td>
+		</tr>
+
+                
+		<tr id="row_ap_mode">
+			<th scope="row"><?cs var:Env.Var.ap_mode.Header ?></th>
+			<td>
+
+				<?cs each:mode = Env.Var.ap_mode.List?>
+                                     <label for="ap_mode_<?cs var:mode.Value?>" class="radio inline" >
+                                        <input type="radio" value="<?cs var:mode.Value?>" name="ap_mode" id="ap_mode_<?cs var:mode.Value?>"<?cs if:Env.user.wlan.mode == mode.Value ?> checked="checked"<?cs /if ?> />
+                                        <?cs var:mode.Label ?>
+                                     </label>
+				<?cs /each?>
+
+			</td>
+		</tr>
+
+                
+		<tr id="row_access_point_options"<?cs if:Env.user.wlan.mode != "11n" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row" valign="top"><?cs var:Env.Var.AccessPointOption.Header?></th>
+			<td>
+                            <label for="ap_ht40" class="radio">
+				<input type="checkbox" name="ap_ht40" value="on" id="ap_ht40"<?cs if:Env.user.wlan.ht40 == "on" ?> checked="checked"<?cs /if ?> />
+				<?cs var:Env.Var.ap_ht40.Header?>
+                            </label>
+			</td>
+		</tr>
+
+	</table>
+
+  <button type="submit" name="ap_post" class="btn"><?cs var:Button.Submit ?></button>
+
+	<!--</form>-->
+</div>
+
+
+<?cs if:Env.Box.Have_5GHz == "1" ?>
+<div class="title">
+	<h1><?cs var:Env.Section.configuration.Title_5GHz ?></h1>
+</div>
+
+<div class="content">
+<!--<form method="post" id="form_access_point_config" action="<?cs var:Env.Page.Name ?>">-->
+	<table id="access_point_config">
+
+		
+		<tr id="row_ap_active_ac">
+			<th scope="row"><?cs var:Env.Var.ap_active.Header ?></th>
+			<td>
+				<?cs call:div_onoff("ap_active_ac", (Env.user.wlan.ac.active == "on")) ?>
+			</td>
+		</tr>
+
+		<tr id="row_ap_ssid_ac">
+			<th scope="row"><?cs var:Env.Var.ap_ssid.Header ?></th>
+			<td>
+			<div class="control-group <?cs if:?Var.ap_ssid_ac.Error ?>error<?cs /if ?>">
+			        <input type="text" name="ap_ssid_ac" class="<?cs if:?Var.ap_ssid_ac.Error ?>error<?cs else ?>text<?cs /if ?>" id="ap_ssid_ac" value="<?cs var:Env.user.wlan.wl0.ac.ssid ?>" size="32" maxlength="32" />
+			        <?cs if:?Var.ap_ssid_ac.Error ?>
+			        <div class="help-inline"><?cs var:Env.Var.ap_ssid.Error[Var.ap_ssid_ac.Error] ?></div>
+			        <?cs /if ?>
+			</div>
+			</td>
+		</tr>
+
+		<tr id="row_ap_closed_ac">
+			<th scope="row"><?cs var:Env.Var.ap_closed.Header ?></th>
+			<td>
+				<?cs call:div_onoff("ap_closed_ac", (Env.user.wlan.ac.closed == "0")) ?>
+			</td>
+		</tr>
+
+		
+		<tr id="row_ap_bw_ac">
+			<th scope="row"><?cs var:Env.Var.ap_bw_ac.Header ?></th>
+			<td>
+				<?cs each:mode = Env.Var.ap_bw_ac.List?>
+				<label for="ap_bw_ac_<?cs var:mode.Value?>" class="radio inline" >
+				  <input type="radio" value="<?cs var:mode.Value?>" name="ap_bw_ac" id="ap_bw_ac_<?cs var:mode.Value?>"<?cs if:Env.user.wlan.ac.bwcap == mode.Value ?> checked="checked"<?cs /if ?> />
+				  <?cs var:mode.Label ?>
+				</label>
+				  <?cs /each?>
+			</td>
+		</tr>
+
+		<?cs if:Var.ap_dfs_ac_override.Value == "on" ?>
+			
+			<tr id="row_ap_dfs_ac" style="display:none;">
+				<th scope="row"><?cs var:Env.Var.ap_dfs_ac.Header ?></th>
+				<td>
+					<?cs call:div_onoff("ap_dfs_ac", Env.user.wlan.ac.dfs=="on") ?>
+				</td>
+			</tr>
+		<?cs /if ?>
+
+
+		<tr id="row_ap_channel_ac">
+			<th scope="row"><?cs var:Env.Var.ap_channel.Header ?></th>
+			<td>
+			        <input type="hidden" name="current_ac_channel" value="<?cs var:Env.user.wlan.ac.channel ?>" />
+				<select name="ap_channel_ac" id="ap_channel_ac" class="input-small">
+					<option value="auto"<?cs if:Env.user.wlan.ac.channel == "auto" ?> selected="selected"<?cs /if ?>>auto</option>
+					<?cs loop:chan = #36, #48, #4 ?>
+					<option value="<?cs var:chan ?>"<?cs if:#Env.user.wlan.ac.channel == chan ?> selected="selected"<?cs /if ?>>
+						<?cs var:chan ?>
+					</option>
+					<?cs /loop ?>
+					
+					<?cs if:Var.ap_dfs_ac_override.Value == "on" ?>
+          <?cs loop:chan = #52, #64, #4 ?>
+					<option value="<?cs var:chan ?>"<?cs if:#Env.user.wlan.ac.channel == chan ?> selected="selected"<?cs /if ?>>
+						<?cs var:chan ?>
+					</option>
+					<?cs /loop ?>
+						<?cs loop:chan = #100, #116, #4 ?>
+						<option value="<?cs var:chan ?>"<?cs if:#Env.user.wlan.ac.channel == chan ?> selected="selected"<?cs /if ?>>
+							<?cs var:chan ?>
+						</option>
+						<?cs /loop ?>
+						<?cs loop:chan = #132, #140, #4 ?>
+						<option value="<?cs var:chan ?>"<?cs if:#Env.user.wlan.ac.channel == chan ?> selected="selected"<?cs /if ?>>
+							<?cs var:chan ?>
+						</option>
+						<?cs /loop ?>
+					<?cs /if ?>
+				</select><?cs if:Env.user.wlan.ac.channel == "auto" ?>&nbsp; <a href="/wifi/acds5"><?cs var:Env.Var.diag_spect ?></a><?cs /if ?>
+			</td>
+		</tr>
+
+		<tr id="row_ap_mode_ac" style="display:none;">
+			<th scope="row"><?cs var:Env.Var.ap_mode.Header ?></th>
+			<td>
+				<?cs each:mode = Env.Var.ap_mode_ac.List?>
+				<label for="ap_mode_ac_<?cs var:mode.Value?>" class="radio inline" >
+				<input type="radio" value="<?cs var:mode.Value?>" name="ap_mode_ac" id="ap_mode_ac_<?cs var:mode.Value?>"<?cs if:Env.user.wlan.ac.mode == mode.Value ?> checked="checked"<?cs /if ?> />
+				<?cs var:mode.Label ?>
+				</label>
+				<?cs /each?>
+			</td>
+		</tr>
+
+	</table>
+
+  <button type="submit" name="ac_post" class="btn"><?cs var:Button.Submit ?></button>
+<!--</form>-->
+
+</div>
+<?cs /if ?>
+
+<div class="title">
+	<h1><?cs var:Env.Section.configuration.Title_Guest ?></h1>
+</div>
+
+<div class="content">
+<!--<form method="post" id="form_access_point_config" action="<?cs var:Env.Page.Name ?>">-->
+	<table id="access_point_config">
+
+		
+		<tr>
+			<th scope="row"><?cs var:Env.Var.guest_active.Header ?></th>
+			<td>
+			    <?cs call:div_onoff("guest_active", (Env.user.wlan.guest.active=="on")) ?>
+			</td>
+		</tr>
+
+		<tr id="row_guest_ssid">
+			<th scope="row"><?cs var:Env.Var.ap_ssid.Header ?></th>
+			<td>
+				<div class="control-group <?cs if:?Var.ap_ssid.Error ?>error<?cs /if ?>">
+				<input type="text" name="guest_ssid" class="<?cs if:?Var.ap_ssid.Error ?>error<?cs else ?>text<?cs /if ?>" id="guest_ssid" value="<?cs var:Env.user.wlan.guest.ssid ?>" size="32" maxlength="32" />
+				<?cs if:?Var.ap_ssid.Error ?>
+					<div class="help-inline"><?cs var:Env.Var.ap_ssid.Error[Var.ap_ssid.Error] ?></div>
+				<?cs /if ?>
+				</div>
+			</td>
+		</tr>
+
+		<tr id="row_guest_closed">
+			<th scope="row"><?cs var:Env.Var.ap_closed.Header ?></th>
+			<td>
+				<?cs call:div_onoff("guest_closed", Env.user.wlan.guest.closed==0) ?>
+			</td>
+		</tr>
+
+		<tr id="row_guest_schedule" style="display: none;">
+			<th scope="row"><?cs var:Env.Var.guest_schedule.Header ?></th>
+			<td>
+			    <?cs each:mode = Env.Var.guest_schedule.List?>
+			    <label for="guest_schedule<?cs var:mode.Value?>" class="radio inline" >
+			    <input type="radio" value="<?cs var:mode.Value?>" name="guest_schedule" id="guest_schedule_<?cs var:mode.Value?>"<?cs if:Env.user.wlan.guest.schedule == mode.Value ?> checked="checked"<?cs /if ?> />
+			    <?cs var:mode.Label ?>
+			    </label>
+			    <?cs /each?>
+			</td>
+		</tr>
+
+	</table>
+  <button type="submit" name="guest_post" class="btn"><?cs var:Button.Submit ?></button>
+<!--</form>-->
+
+</div>
+</form>

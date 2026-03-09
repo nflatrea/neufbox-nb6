@@ -1,0 +1,599 @@
+#!/bin/sh /etc/rc.common
+
+EXTRA_COMMANDS="user_config devices cron reset"
+
+service=ca
+[ "${action}" != "cron" ] && logger -t "${service}[$$]" "$action"
+
+file=/etc/config/ca.xml
+autoconf=/tmp/autoconf/$(autoconf get ca_file)
+
+IPTABLES=iptables
+IP6TABLES=ip6tables
+XTABLES=xtables
+
+#-----------------------------------------------------------#
+#   HELPERS                                                 #
+#-----------------------------------------------------------#
+mystrip() {
+    echo $*;
+}
+
+
+dow() {
+    echo $1|sed -e "s,mo,1," -e "s,tu,2," -e "s,we,3," -e "s,th,4," -e "s,fr,5," -e "s,sa,6," -e "s,su,7,"
+}
+
+
+get_ip() {
+    # get IPv4
+    nslookup $(echo $1 | sed 's,http://,,') | \
+        grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | \
+        awk 'NR==3 {print}'
+}
+
+# transform 300:310 311 to 300:310 311:311
+all_ranges()
+{
+    list=""
+    for item in $*; do
+        if [ "${item/*:*/:}" == ":" ]; then
+            list="$list $item"
+        else
+            list="$list $item:$item"
+        fi
+    done
+    echo "$list"
+}
+
+
+concat_ranges()
+{
+    new_ranges=""
+    for orange in $*; do # orange = original range item in the list
+        orange_min="${orange%:*}"
+        orange_max="${orange#*:}"
+        orange_min_prev="$((orange_min-1))"
+        orange_max_next="$((orange_max+1))"
+
+        # get previous range min and max value
+        prange=$(echo "${new_ranges}" | grep -o "[0-9]*:[0-9]* \?$")
+        prange_min="${prange%:*}"
+        prange_max="${prange#*:}"
+
+        # check if current range overlaps the previous one
+        if [[ -n "${prange_min}" ]] && [[ "${prange_max}" -ge "${orange_min_prev}" ]] && [[ "${prange_min}" -le "${orange_max_next}" ]]; then
+                new_ranges=$(echo "${new_ranges}" | sed "s,${prange_max},${orange_max},")
+        elif [[ -n "${prange_min}" ]] && [[ "${prange_min}" -le "${orange_min_prev}" ]] && [[ "${prange_max}" -ge "${orange_max_next}" ]]; then
+                new_ranges=$(echo "${new_ranges}" | sed "s,${prange_min},${orange_min},")
+        else
+                new_ranges="$new_ranges $orange "
+        fi
+
+    done
+
+    # remove trailing spaces
+    new_ranges="$(mystrip $new_ranges)"
+
+    # while it remains unchecked values
+    if [ "$new_ranges" == "$*" ]; then
+        echo "$new_ranges"
+    else
+        echo "$(concat_ranges $new_ranges)"
+    fi
+}
+
+
+#-----------------------------------------------------------#
+#   API                                                     #
+#-----------------------------------------------------------#
+routing_start() {
+    echo ""
+    echo "# routing start..."
+
+    local proxy_url=$(get_ip $(roxml -q ${autoconf} '//proxy/url'))
+
+    ip route add ${proxy_url} dev $(status get net_data_ifname) via $(status get net_data_gateway)
+    ip route flush cache
+}
+
+
+routing_stop() {
+    echo ""
+    echo "# routing stop..."
+
+    local proxy_url=$(get_ip $(roxml -q ${autoconf} '//proxy/url'))
+
+    ip route del ${proxy_url} dev $(status get net_data_ifname) via $(status get net_data_gateway)
+    ip route flush cache
+}
+
+
+prerouting_start() {
+    echo ""
+    echo "# prerouting start..."
+
+    ${IPTABLES} -t nat -A PREROUTING -i $(status get lan_ifname) -m comment --comment "access_control" -j devices_list
+    ${IPTABLES} -t nat -A PREROUTING -i $(status get hotspot_ifname) -m comment --comment "access_control" -j devices_list
+
+    # do not filter multicast
+    ${IPTABLES} -t filter -I FORWARD 2 -o $(status get net_data_ifname) -m comment --comment "access_control" -j devices_list
+    ${IP6TABLES} -t filter -I FORWARD 2 -o $(status get net_ipv6_ifname) -m comment --comment "access_control" -j devices_list
+}
+
+prerouting_stop() {
+    echo ""
+    echo "# prerouting stop..."
+
+    ${IPTABLES} -t filter -D FORWARD -o $(status get net_data_ifname) -m comment --comment "access_control" -j devices_list
+    ${IP6TABLES} -t filter -D FORWARD -o $(status get net_ipv6_ifname) -m comment --comment "access_control" -j devices_list
+
+    ${IPTABLES} -t nat -D PREROUTING -i $(status get hotspot_ifname) -m comment --comment "access_control" -j devices_list
+    ${IPTABLES} -t nat -D PREROUTING -i $(status get lan_ifname) -m comment --comment "access_control" -j devices_list
+}
+
+filter_start() {
+    echo ""
+    echo "# filter start..."
+
+    # setup acls, lock, junior, ado
+    for name in $(roxml -q ${autoconf} "//redir/profile/@name") acls; do
+        ${IPTABLES} -t nat -N access_control_${name}
+        ${XTABLES} -t filter -N access_control_${name}
+    done
+
+    # build acls
+    ${IPTABLES} -t nat -A access_control_acls -d neufbox -j ACCEPT 
+    # can reach data DNS
+    for dns in $(status get net_data_dns); do
+        ${XTABLES} -t filter -A access_control_acls -d ${dns} -p udp -m udp --dport 53 -j ACCEPT
+    done
+    # can reach neufbox WUI
+    ${XTABLES} -t filter -A access_control_acls -d neufbox -j ACCEPT
+    # can reach SFR portail
+    n=1
+    for url in $(roxml -q ${autoconf} "//whitelist/access-list/url"); do
+        eval $(roxml -o ${autoconf} "//whitelist/access-list[$n]")
+        n=$(($n + 1))
+        [ "${proto}" = "all" ] && local proto="tcp udp"
+        for p in ${proto}; do
+            local port_cmd=""
+            [ -n "${port}" ] && local port_cmd="-m ${p} --dport ${port}"
+            ${IPTABLES} -t nat -A access_control_acls -p ${p} -d ${url} ${port_cmd} -j ACCEPT
+            ${XTABLES} -t filter -A access_control_acls -p ${p} -d ${url} ${port_cmd} -j ACCEPT
+        done
+    done
+
+    # Build profiles
+    for name in $(roxml -q ${autoconf} "//redir/profile/@name"); do
+        eval $(roxml -o ${autoconf} "//redir/profile[@name=${name}]")
+
+        # chains
+        ${IPTABLES} -t nat -A access_control_${name} -j access_control_acls
+        ${XTABLES} -t filter -A access_control_${name} -j access_control_acls
+
+        # if profile is 'unlock' there is neither redirection or locked ports
+        if [ "${name}" == "unlock" ]; then
+            ${IPTABLES} -t nat -A access_control_${name} -j ACCEPT
+            ${XTABLES} -t filter -A access_control_${name} -j ACCEPT
+            continue
+        fi
+
+        # Redir
+        for src in $(roxml -q ${autoconf} "//redir/profile[@name=${name}]/redirect/@src"); do
+            local port=$(roxml -q ${autoconf} "//redir/profile[@name=${name}]/redirect[@src=${src}]")
+            local addr=$(get_ip ${url}) # on IPv6, get_ip return nothing
+            ${IPTABLES} -t nat -A access_control_${name} -p tcp --dport ${src} -j DNAT --to-destination ${addr}:${port}
+            ${IPTABLES} -t nat -A access_control_${name} -p udp --dport ${src} -j DNAT --to-destination ${addr}:${port}
+            ${IPTABLES} -t filter -A access_control_${name} -d ${addr} -p tcp -m tcp --dport ${port} -j ACCEPT
+        done
+
+        # Locks (unlock only if this is literally expressed)
+        if [ "${default}" == "unlock" ]; then
+            ${IPTABLES} -t nat -A access_control_${name} -j ACCEPT
+            ${XTABLES} -t filter -A access_control_${name} -j ACCEPT
+        else
+            ${IPTABLES} -t filter -A access_control_${name} -j REJECT --reject-with icmp-admin-prohibited
+            ${IP6TABLES} -t filter -A access_control_${name} -j REJECT --reject-with icmp6-adm-prohibited
+        fi
+    done
+}
+
+filter_stop() {
+    echo ""
+    echo "# filter stop..."
+
+    for name in $(roxml -q ${autoconf} "//redir/profile/@name") lock acls; do
+        ${IPTABLES} -t nat -F access_control_${name}
+        ${IPTABLES} -t nat -X access_control_${name}
+        ${XTABLES} -t filter -F access_control_${name}
+        ${XTABLES} -t filter -X access_control_${name}
+    done
+}
+
+profile_table() {
+    local id=$1
+    local suffix=$(echo ${id}|sed "s,^\(.\{20\}\).*$,\1,")
+    echo "profile_${suffix}"
+}
+
+open_port() {
+    request="$(all_ranges $2)"
+    request_min="${request%:*}"
+    request_max="${request#*:}"
+
+    for range in $3; do
+        allowed_min="${range%:*}"
+        allowed_max="${range#*:}"
+        if [ "$request_min" -ge "$allowed_min" -a "$request_max" -le "$allowed_max" ]; then
+            ${IPTABLES} -t nat -A access_control_acls -p $1 -m $1 --dport ${request} -j ACCEPT
+            ${IPTABLES} -t filter -A access_control_acls -p $1 -m $1 --dport ${request} -j ACCEPT
+            return
+        fi
+    done
+}
+
+profile_time_lock() {
+    local id=$1
+    local range_count=$(roxml -q ${file} "//profiles/profile[@id=${id}]/week/range/@start_day"|wc -l)
+
+    # Build allowed port lists
+    n=1
+    allowed_tcp=''
+    allowed_udp=''
+    for allowed in $(roxml -q ${autoconf} "//open-port-list/port"); do
+        proto=$(roxml -q ${autoconf} "//open-port-list/port[${n}]/@proto")
+
+        if [[ -z "${proto}" || "${proto}" == "all" ]]; then
+            allowed_tcp="${allowed_tcp} ${allowed}"
+            allowed_udp="${allowed_udp} ${allowed}"
+        elif [[ "${proto}" == "tcp" ]]; then
+            allowed_tcp="${allowed_tcp} ${allowed}"
+        elif [[ "${proto}" == "udp" ]]; then
+            allowed_udp="${allowed_udp} ${allowed}"
+        fi
+        n=$((++n))
+    done
+
+    allowed_tcp="$(concat_ranges $(all_ranges ${allowed_tcp}))"
+    allowed_udp="$(concat_ranges $(all_ranges ${allowed_udp}))"
+
+    for i in $(seq ${range_count}); do
+        eval $(roxml -o ${file} "//profiles/profile[@id=${id}]/week/range[$i]/@*")
+
+        local start=$(dow ${start_day})
+        local start=${start}${start_h}
+        local start=${start}${start_m}
+
+        local stop=$(dow ${stop_day})
+        local stop=${stop}${stop_h}
+        local stop=${stop}${stop_m}
+
+        [ $now -ge $start ] && [ $now -lt $stop ] && {
+            local redir=$(roxml -q ${file} "//profiles/profile[@id=${id}]/week/range[$i]/redir")
+            if [ -z "${redir}" ] || [ "${redir}" = "null" ];then
+                # if default is unlocked all ports are already open so return now
+                echo "-m comment --comment "adult" -i $(status get lan_ifname) -j ACCEPT" # adult
+                return
+            else
+                echo "-m comment --comment "${name}" -i $(status get lan_ifname) -j access_control_${redir}"
+            fi
+
+            # open port if needed
+            n=1
+            for port in $(roxml -q ${file} "//profiles/profile[@id=${id}]/week/range[${i}]/port"); do
+                proto=$(roxml -q ${file} "//profiles/profile[@id=${id}]/week/range[${i}]/port[${n}]/@proto")
+
+                # TCP ports
+                if [ "${proto}" == "tcp" ] || [ -z "${proto}" ] || [ "${proto}" == "all" ]; then
+                    open_port "tcp" "${port}" "${allowed_tcp}"
+                fi
+
+                # UDP ports
+                if [ "${proto}" == "udp" ] || [ -z "${proto}" ] || [ "${proto}" == "all" ]; then
+                    open_port "udp" "${port}" "${allowed_udp}"
+                fi
+
+                # avoid infinite loop
+                n=$((++n))
+                [ "${n}" -gt "30" ] && break
+            done
+ 
+            return
+        }
+    done
+
+    echo "-j access_control_lock" 
+}
+
+profiles_reload() {
+    echo ""
+    echo "# profiles reload..."
+
+    now=$(date +%u%H%M)
+
+    for id in $(roxml -q ${file} "//profiles/profile/@id"); do
+        local table=$(profile_table ${id})
+        local name="$(roxml -q ${file} "//profiles/profile[@id=${id}]/name" | sed 's/ /_/g')"
+
+        ${IPTABLES} -t nat -F ${table}
+        ${XTABLES} -t filter -F ${table}
+        TARGET="$(profile_time_lock ${id})"
+        ${IPTABLES} -t nat -A ${table} -m comment --comment ${name} ${TARGET}
+        ${XTABLES} -t filter -A ${table} -m comment --comment ${name} ${TARGET}
+    done
+}
+
+profiles_start() {
+    echo ""
+    echo "# profiles start..."
+
+    for id in $(roxml -q ${file} "//profiles/profile/@id"); do
+        local table=$(profile_table ${id})
+
+        ${IPTABLES} -t nat -N ${table}
+        ${XTABLES} -t filter -N ${table}
+    done
+
+    profiles_reload
+}
+
+profiles_stop() {
+    echo ""
+    echo "# profiles stop..."
+
+    for id in $(roxml -q ${file} "//profiles/profile/@id"); do
+        local table=$(profile_table ${id})
+
+        ${IPTABLES} -t nat -F ${table}
+        ${IPTABLES} -t nat -X ${table}
+        ${XTABLES} -t filter -F ${table}
+        ${XTABLES} -t filter -X ${table}
+    done
+}
+
+device_target() {
+	case "$1" in
+	"lock")
+		echo access_control_lock
+		;;
+	"unlock")
+		echo access_control_unlock
+		;;
+	*)
+		local table=$(profile_table $1)
+		echo ${table}
+		;;
+	esac
+}
+
+devices_populate() {
+    # handle stb, femto
+    status xml lan_topology > /tmp/lan_topology.xml
+    for type in stb femto; do
+        [ -z "$(roxml -q ${autoconf} //general/lock/device=${type})" ] && continue
+        for mac in $(roxml -q /tmp/lan_topology.xml "//device[type=\"${type}\"]/macaddr")
+        do
+            ${IPTABLES} -t nat -A devices_list -m mac --mac-source ${mac} -m comment --comment "${type}" -j RETURN 
+            ${XTABLES} -t filter -A devices_list -m mac --mac-source ${mac} -m comment --comment "${type}" -j RETURN
+        done
+    done
+    rm -f /tmp/lan_topology.xml
+
+    # specified target: apply on both lan and hotspot networks
+    for mac in $(roxml -q ${file} "//devices/device/@mac"); do
+        local TARGET=$(device_target $(roxml -q ${file} "//devices/device[@mac=${mac}]/profile_access"))
+        ${IPTABLES} -t nat -A devices_list -m mac --mac-source ${mac} -j ${TARGET}
+        ${XTABLES} -t filter -A devices_list -m mac --mac-source ${mac} -j ${TARGET}
+    done
+
+    # default target: apply on lan network only: i.e. hotspot pass
+    local lan_ifname=$(status get lan_ifname)
+    local TARGET=$(device_target $(roxml -q ${file} "//general/newdeviceprofile"))
+    ${IPTABLES} -t nat -A devices_list -i ${lan_ifname} -m comment --comment "default_profile" -j ${TARGET}
+    ${XTABLES} -t filter -A devices_list -i ${lan_ifname} -m comment --comment "default_profile" -j ${TARGET}
+
+    [ -x /usr/sbin/fcctl ] && fcctl flush
+}
+
+devices_start() {
+    echo ""
+    echo "# devices start..."
+
+    ${XTABLES} -t filter -N devices_list
+    ${IPTABLES} -t nat -N devices_list
+    devices_populate
+}
+
+devices_stop() {
+    echo ""
+    echo "# devices stop..."
+
+    ${XTABLES} -t filter -F devices_list
+    ${XTABLES} -t filter -X devices_list
+    ${IPTABLES} -t nat -F devices_list
+    ${IPTABLES} -t nat -X devices_list
+}
+
+autoconf_reload() {
+    local timestamp=$(autoconf get ca_timestamp)
+
+    if [ "$(cat /var/state/ca)" != "${timestamp}" ]; then
+        echo ${timestamp} > /var/state/ca
+        autoconf set ca_portal $(roxml -q ${autoconf} '//portal')
+        autoconf set ca_proxy_RSA $(roxml -q ${autoconf} '//proxy/RSA')
+        local proxy_url=$(get_ip $(roxml -q ${autoconf} '//proxy/url'))
+        local proxy_port=$(roxml -q ${autoconf} '//proxy/port')
+
+        # WUI reconfigure
+        local proxy=/run/lighttpd-proxy.conf
+        echo 'server.modules += ( "mod_proxy" )' > ${proxy}
+        echo '$HTTP["url"] =~ "^/~ca/" {' >> ${proxy}
+        echo '  proxy.server   = ( "/" =>' >> ${proxy}
+        echo '    ((' >> ${proxy}
+        echo "      \"host\" => \"${proxy_url}\"," >> ${proxy}
+        echo "      \"port\" => \"${proxy_port}\"" >> ${proxy}
+        echo '    ))' >> ${proxy}
+        echo '  )' >> ${proxy}
+        echo '}' >> ${proxy}
+        
+        /etc/init.d/lighttpd reload
+    fi
+}
+
+enable() {
+    # autoconf
+    if [ ! -f "${autoconf}" ]; then
+        status set ca_status "autoconf disabled"
+        return 1
+    fi
+    autoconf_reload
+    if [ "$(autoconf get ca_enable)" != "true" ]
+    then
+        status set ca_status "autoconf disabled"
+        return 1
+    fi
+
+    # user conf
+    if [ ! -f "${file}" ]; then
+        status set ca_status "disabled"
+        return 1
+    fi
+    chmod a+w ${file}
+    local enable=$(roxml -q ${file} "//general/active")
+    if [ "${enable}" != "on" ]; then
+        status set ca_status "user disabled"
+        return 1
+    fi
+
+    # data
+    if [ "$(status get net_data_status)" != "up" ]; then
+        status set ca_status "data disabled"
+        return 1
+    fi
+
+    # ntp
+    if [ $(date +%Y%m%d) -lt 20120409 ]; then
+        status set ca_status "date disabled"
+        return 1
+    fi
+
+    status set ca_status "enable"
+
+    return 0
+}
+
+do_start() {
+    # must be up first.
+    # Since portail is unaccessible during the down period
+    routing_start
+    if enable; then
+        filter_start
+        profiles_start
+        devices_start
+        prerouting_start
+    else
+        # notify that ca has been disabled
+        # in case of disabled from portail
+        diaglog ca da
+    fi
+}
+
+# data up
+start() {
+    lock /run/lock/ca.lock
+
+    do_start
+
+    lock -u /run/lock/ca.lock
+}
+
+# data down
+do_stop() {
+    prerouting_stop
+    devices_stop
+    profiles_stop
+    filter_stop
+
+    # must be down last.
+    # Since portail is unaccessible during the down period
+    routing_stop
+}
+
+stop() {
+    lock /run/lock/ca.lock
+
+    do_stop
+    status set ca_status "data disabled"
+
+    lock -u /run/lock/ca.lock
+
+    # notify desactivate
+    diaglog ca da
+}
+
+# autoconf
+reload() {
+    lock /run/lock/${service}.lock
+
+    do_stop
+    do_start
+
+    lock -u /run/lock/${service}.lock
+}
+
+restart() {
+    reload
+}
+
+cron() {
+    lock /run/lock/ca.lock
+
+    if [ "$(status get ca_status)" = "enable" ]; then
+        profiles_reload
+        ip route flush cache
+    fi
+
+    lock -u /run/lock/ca.lock
+}
+
+user_config() {
+
+    lock /run/lock/ca.lock
+
+    if [ -f /tmp/ca.xml ]; then
+        do_stop
+        # get new conf
+        mv -f /tmp/ca.xml ${file}
+        chmod a+rw ${file}
+        do_start
+    fi
+
+    lock -u /run/lock/ca.lock
+}
+
+devices() {
+    lock /run/lock/ca.lock
+
+    echo ""
+    echo "# devices reload..."
+
+    ${XTABLES} -t filter -F devices_list
+    ${IPTABLES} -t nat -F devices_list
+    devices_populate
+
+    lock -u /run/lock/ca.lock
+}
+
+reset() {
+    lock /run/lock/ca.lock
+
+    if [ -f /etc/config/ca.xml ]; then
+        rm -f /etc/config/ca.xml
+    fi
+
+    lock -u /run/lock/ca.lock
+
+    # notify reset
+    diaglog ca rt
+}

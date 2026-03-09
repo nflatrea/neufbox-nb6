@@ -1,0 +1,14 @@
+<div class="title">
+	<h1><?cs var:Env.Section.wifi_stats.Title ?></h1>
+</div>
+
+<div class="content">
+	<div class="title">
+		<h1><?cs var:Env.Section.wifi_stats.wl1.Title ?></h1>
+	</div>
+	<pre><?cs var:Var.rawstats.wifi.wl1.Value?></pre>
+	<div class="title">
+		<h1><?cs var:Env.Section.wifi_stats.wl0.Title ?></h1>
+	</div>
+	<pre><?cs var:Var.rawstats.wifi.wl0.Value?></pre>
+</div>

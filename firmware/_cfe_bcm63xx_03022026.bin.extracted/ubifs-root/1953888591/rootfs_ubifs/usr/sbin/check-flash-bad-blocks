@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# A NB6VAC rootfs image is above 20MB, it is flashed on a 32MB partition. Consider a rootfs partition dead when 10MB of storage data are out of order (10MB/128K = 80 blocks)
+ROOTFS_PARTITION_BAD_BLOCKS_THRESHOLD=80
+# The NB6VAC data partition is 62MB, but less than 1MB is really used. Consider the partition dead if 20MB of storage data are out of order (20MB/128K = 160 blocks)
+DATA_PARTITION_BAD_BLOCKS_THRESHOLD=160
+
+# @param $1 : partition name
+# @param $2 : bad blocks threshold for this partition
+CheckBadBlocksCount()
+{
+	local Bad_Blocks_Count
+	
+	Bad_Blocks_Count=$(get-bad-blocks /dev/mtd-$1)
+	echo "$1 partition bad blocks count : $Bad_Blocks_Count"
+	
+	if [ $Bad_Blocks_Count -ge $2 ]
+	then
+		echo -e "\033[31m$1 partition bad blocks threshold exceeded, consider flash memory dead.\033[0m"
+	fi
+}
+
+# Check relevant partitions
+CheckBadBlocksCount rootfs-image $ROOTFS_PARTITION_BAD_BLOCKS_THRESHOLD
+CheckBadBlocksCount upgrade-image $ROOTFS_PARTITION_BAD_BLOCKS_THRESHOLD
+CheckBadBlocksCount data $DATA_PARTITION_BAD_BLOCKS_THRESHOLD

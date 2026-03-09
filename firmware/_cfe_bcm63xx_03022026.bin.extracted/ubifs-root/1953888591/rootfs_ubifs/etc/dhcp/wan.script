@@ -1,0 +1,152 @@
+#!/bin/sh
+
+service=wan
+TAG=WAN_DHCP_STATUS
+STATE="$1"
+
+net_setup() {
+	local previous_nisdomain="$(status get dhcpc_${service}_nisdomain)"
+	local cgnat_is_up=$([ $(status get net_cgnat_status) = "up" ] && echo true || echo false)
+
+	[ ! -n "$subnet" ] && {
+		logger -t "dhcp-${service}" "empty subnet"
+		exit 1
+	}
+	[ ! -n "$broadcast" ] && {
+		eval $(ipcalc -b $ip $subnet)
+		broadcast=${BROADCAST}
+	}
+	status set dhcpc_${service}_ipaddr "$ip"
+	status set dhcpc_${service}_netmask "$subnet"
+	status set dhcpc_${service}_broadcast "$broadcast"
+	status set dhcpc_${service}_gateway "$router"
+	status set dhcpc_${service}_dns "$dns"
+
+	if ! [ -n "$previous_nisdomain" -a -z "$nisdomain" ]
+	then
+		status set dhcpc_${service}_nisdomain "$nisdomain"
+	fi
+
+	status set dhcpc_${service}_lease "$lease"
+
+	if [ "$(status get dhcpc_${service}_status)" = "down" ] && ! "$cgnat_is_up"
+	then
+		local ifname=$interface
+		[ "$(nvram get net_mode)" = "bridge" ] && local mode="-bridge"
+		local topology_conf=/etc/config/topology${mode}.xml
+		[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+		local ipalias=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@ipalias")
+
+		ip -4 addr flush dev ${ifname}
+		eval $(ipcalc -p ${ip} ${subnet})
+
+		if [ "$PREFIX" = 31 ]
+		then
+			ip addr add ${ip} peer ${router} dev ${ifname}
+		else
+			ip addr add ${ip}/${PREFIX} ${broadcast:+broadcast ${broadcast}} dev ${ifname}
+		fi
+
+		[ -n "${ipalias}" ] && {
+			# Warning! Do not put scope link to ipalias. IGMP should not use ipalias
+			eval $(ipcalc -b ${ipalias})
+			ip addr add ${ipalias} broadcast ${BROADCAST} dev ${ifname} label ${ifname}:1
+		}
+		# ADSL access
+		for infra in adsl ftth ; do
+			local list=$(nvram get ${infra}_nisdomain)
+			[ "$list" = '*' ] || \
+			[ -n "$(for p in $list; do echo $nisdomain | sed -n -e "/$p/p"; done)" ] && {
+				status set dhcpc_${service}_access "$infra"
+				status set dhcpc_${service}_status "up"
+				event notify "dhcp-${service}-up"
+
+				# stop ppp-xdsl, {voip|tv}-dhcpc
+				/etc/init.d/dhcpc reload
+				/etc/init.d/ppp-xdsl reload
+			}
+		done
+	fi
+
+	for domain in $(nvram get cgnat_nisdomain) ; do
+		echo "$nisdomain" | grep -qi "$domain" && break
+	done && {
+		! "$cgnat_is_up" && event notify cgnat-up
+	}
+
+    # in case the gateway only has been updated
+    defaultroute
+
+	ip route replace ${serverid}/32 via ${router}
+	ip route replace ${siaddr}/32 via ${router}
+
+	# In case infra has changed during IAD up time, reboot
+	if [ -n "$previous_nisdomain" ] && \
+	   [ "$(status get dhcpc_${service}_nisdomain)" != "$previous_nisdomain" ]
+	then
+		diaglog event migrate
+		safe-reboot
+	fi
+
+	[ "${STATE}" = "renew" ] && event notify dhcp-wan-update
+}
+
+net_setdown() {
+	local cgnat_is_up=$([ $(status get net_cgnat_status) = "up" ] && echo true || echo false)
+
+	if [ "$(status get dhcpc_${service}_status)" = "up" ]
+	then
+		local old_ipaddr=$(status get dhcpc_${service}_ipaddr)
+		local ifname=$(status get dhcpc_${service}_ifname)
+		[ "$(nvram get net_mode)" = "bridge" ] && local mode="-bridge"
+		local topology_conf=/etc/config/topology${mode}.xml
+		[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+		local ipalias=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@ipalias")
+
+		# do no destruct IP address, prevent from IGMP leaks
+		ip -4 addr flush dev ${ifname}
+		ip addr add ${old_ipaddr}/32 dev ${ifname}
+		[ -n "${ipalias}" ] && {
+			eval $(ipcalc -b ${ipalias})
+			ip addr add ${ipalias} broadcast ${BROADCAST} dev ${ifname} label ${ifname}:1
+		}
+
+		status set dhcpc_${service}_access ""
+		status set dhcpc_${service}_status "down"
+		status set dhcpc_${service}_access ""
+		status set dhcpc_${service}_ipaddr ""
+		status set dhcpc_${service}_netmask ""
+		status set dhcpc_${service}_broadcast ""
+		status set dhcpc_${service}_gateway ""
+		status set dhcpc_${service}_dns ""
+		event notify "dhcp-${service}-down"
+
+		# restart ppp-xdsl, {voip|tv}-dhcpc
+		/etc/init.d/dhcpc reload
+		/etc/init.d/ppp-xdsl reload
+
+		defaultroute
+	fi
+
+	$cgnat_is_up && event notify cgnat-down
+}
+
+previous_answer=$(status get dhcpc_${service}_answer)
+if [ "$previous_answer" != "$STATE" ]
+then
+	logger -s -t "${TAG}" -p local1.info "[${service}] DHCP ANSWER changed [$previous_answer] -> [$STATE] ($nisdomain)"
+	logger -s -t "${TAG}" -p daemon.debug "[${service}] DHCP ANSWER changed [$previous_answer] -> [$STATE] ($nisdomain)"
+	status set dhcpc_${service}_answer $STATE
+fi
+
+case "$STATE" in
+
+	deconfig|leasefail|nak)
+		net_setdown
+	;;
+
+	bound|renew)
+		net_setup
+	;;
+
+esac

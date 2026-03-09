@@ -1,0 +1,33 @@
+#!/bin/sh /etc/rc.common
+
+START=24
+
+logger -t "hotplug[$$]" "$action"
+
+boot() {
+	sysctl -w kernel.hotplug=/sbin/hotplug-call
+
+	# another round of USB coldplugging to kick devices into operation which lacked drivers before
+	for dev in /sys/bus/usb/devices/*/usb/lp0/uevent; do
+		[ -e "$dev" ] && echo -n add > "$dev"
+	done
+	for dev in /sys/bus/usb/devices/*/usb/lp1/uevent; do
+		[ -e "$dev" ] && echo -n add > "$dev"
+	done
+
+	for dev in /sys/class/net/eth*/uevent; do
+		[ -e "$dev" ] && echo -n add > "$dev"
+	done
+
+	for dev in /sys/class/net/usb*/uevent; do
+		  [ -e "$dev" ] && echo -n add > "$dev"
+	done
+
+	for dev in /sys/class/block/sd*/uevent; do
+		[ -e "$dev" ] && echo -n add > "$dev"
+	done
+
+	for dev in /sys/class/tty/*/uevent; do
+		[ -e "$dev" ] && echo -n add > "$dev"
+	done
+}

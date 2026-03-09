@@ -1,0 +1,34 @@
+<div class="title">
+    <h1><?cs var:Env.Section.ipv6.Title ?></h1>
+</div>
+<div class="content">
+    <form method="post" id="form_net_config_ipv6" action="<?cs var:Env.Page.Name ?>">
+        <input name="action" value="form_ipv6" type="hidden" />
+        <table id="config_ipv6">
+            <?cs if:Env.user.ipv6.enable == "on" || Env.autoconf.ipv6.force == "true" ?>
+                        <?cs if:Env.status.net.ipv6.status == "up" ?>
+                                <?cs set:net_ipv6_status = "enabled" ?>
+                        <?cs else ?>
+                                <?cs set:net_ipv6_status = "unused" ?>
+                        <?cs /if ?>
+                    <?cs else ?>
+                        <?cs set:net_ipv6_status = "disabled" ?>
+            <?cs /if ?>
+            <tr>
+                <th scope="row"><?cs var:Env.Var.status_service.Value ?></th>
+                <td class="<?cs var:net_ipv6_status ?>" id="internet_status_v6">
+                        <?cs if:net_ipv6_status == "enabled" ?><?cs var:Env.Var.net_ipv6_status.up ?><?cs /if ?>
+                        <?cs if:net_ipv6_status == "unused" ?><?cs var:Env.Var.net_ipv6_status.noconnect ?><?cs /if ?>
+                        <?cs if:net_ipv6_status == "disabled" ?><?cs var:Env.Var.net_ipv6_status.down ?><?cs /if ?>
+                </td>
+            </tr>
+            <tr id="row_ipv6" <?cs if:(Env.user.net.mode == "bridge") ?> style="display: none;"<?cs /if ?>>
+                <th scope="row"><?cs var:Env.Var.mode_ipv6.Value ?></th>
+                <td>
+                    <?cs call:div_onoff("ipv6_enable",(Env.user.ipv6.enable == "on" || Env.autoconf.ipv6.force == "true")) ?>
+                </td>
+            </tr>
+        </table>
+            <button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button>
+    </form>
+</div>

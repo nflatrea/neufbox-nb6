@@ -1,0 +1,103 @@
+<div class="title">
+    <h1><?cs var:Env.Section.lan_configuration.Title ?></h1>
+</div>
+
+<div class="content">
+  
+    <form method="post" action="<?cs var:Env.Page.Name ?>" id="form_lan_configuration">
+    
+    <table id="lan_configuration">
+	<tr>  
+	    <th scope="row">
+		<?cs call:varHeader("lan_ipaddr") ?>
+	    </th>
+	    <td>
+		<input type="text"
+                       class="input-mini"
+		       name="lan_ipaddr_start_part1"
+		       id="lan_ipaddr_start_part1"
+		       size="3"
+		       maxlength="3"
+                       value="<?cs alt:Query.lan_ipaddr_start_part1 ?><?cs var:Var.lan_ipaddr_start_part1.Value ?><?cs /alt ?>"
+		       class="<?cs if:?Var.lan_ipaddr.Error ?>error<?cs else ?>text<?cs /if ?> ip"  />&nbsp;.
+        
+	       <input type="text" 
+                      class="input-mini"
+		      name="lan_ipaddr_start_part2"  
+	              id="lan_ipaddr_start_part2" 
+		      size="3" 
+		      maxlength="3" 
+		      value="<?cs alt:Query.lan_ipaddr_start_part2 ?><?cs var:Var.lan_ipaddr_start_part2.Value ?><?cs /alt ?>"
+		      class="<?cs if:?Var.lan_ipaddr.Error ?>error<?cs else ?>text<?cs /if ?> ip" />&nbsp;.
+		      
+	       <input type="text"
+                      class="input-mini"
+		      name="lan_ipaddr_start_part3"
+		      id="lan_ipaddr_start_part3"
+		      size="3"
+		      maxlength="3"
+		      value="<?cs alt:Query.lan_ipaddr_start_part3 ?><?cs var:Var.lan_ipaddr_start_part3.Value ?><?cs /alt ?>" 
+		      class="<?cs if:?Var.lan_ipaddr.Error ?>error<?cs else ?>text<?cs /if ?> ip" />&nbsp;.
+
+	       <input type="text"
+                      class="input-mini"
+		      name="lan_ipaddr_start_part4"
+		      id="lan_ipaddr_start_part4" 
+		      size="3" maxlength="3" 
+		      value="<?cs alt:Query.lan_ipaddr_start_part4 ?><?cs var:Var.lan_ipaddr_start_part4.Value ?><?cs /alt ?>"
+		      class="<?cs if:?Var.lan_ipaddr.Error ?>error<?cs else ?>text<?cs /if ?> ip"  />
+        
+	       <?cs call:varErrorDiv("lan_ipaddr")?>
+	   </td>
+       </tr>
+       <tr>
+	   <th scope="row">
+	       <?cs call:varHeader("lan_netmask") ?>
+	   </th>
+	   <td>
+	       <input type="text"
+                      class="input-mini"
+		      name="lan_netmask_start_part1"
+		      id="lan_netmask_start_part1"
+		      size="3"
+		      maxlength="3"
+		      value="<?cs alt:Query.lan_netmask_start_part1 ?><?cs var:Var.lan_netmask_start_part1.Value ?><?cs /alt ?>"
+		      class="<?cs if:?Var.lan_netmask.Error ?>error<?cs else ?>text<?cs /if ?> ip"  />&nbsp;.
+        
+	       <input type="text" 
+                      class="input-mini"
+		      name="lan_netmask_start_part2"
+		      id="lan_netmask_start_part2"
+		      size="3"
+		      maxlength="3"
+		      value="<?cs alt:Query.lan_netmask_start_part2 ?><?cs var:Var.lan_netmask_start_part2.Value ?><?cs /alt ?>"
+		      class="<?cs if:?Var.lan_netmask.Error ?>error<?cs else ?>text<?cs /if ?> ip" />&nbsp;.
+
+               <input type="text"
+                      class="input-mini"
+		      name="lan_netmask_start_part3"
+		      id="lan_netmask_start_part3"
+		      size="3"
+		      maxlength="3"
+		      value="<?cs alt:Query.lan_netmask_start_part3 ?><?cs var:Var.lan_netmask_start_part3.Value ?><?cs /alt ?>"
+		      class="<?cs if:?Var.lan_netmask.Error ?>error<?cs else ?>text<?cs /if ?> ip" />&nbsp;.
+		   
+               <input type="text"
+                      class="input-mini"
+		      name="lan_netmask_start_part4"
+		      id="lan_netmask_start_part4"
+		      size="3"
+		      maxlength="3"
+		      value="<?cs alt:Query.lan_netmask_start_part4 ?><?cs var:Var.lan_netmask_start_part4.Value ?><?cs /alt ?>"
+		      class="<?cs if:?Var.lan_netmask.Error ?>error<?cs else ?>text<?cs /if ?> ip" />
+
+	       <?cs call:varErrorDiv("lan_netmask")?>
+	   </td>
+       </tr>
+  </table>
+
+  <div class="button_submit"><button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button></div>
+  
+  </form>
+
+</div>

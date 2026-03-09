@@ -1,0 +1,13 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+boot() {
+	touch /var/state/services
+	event notify boot-succeeded
+
+if [ "$(nvram get eco_active)" = "on" ]; then
+	/etc/init.d/eco start
+fi
+	ledctl power on
+}

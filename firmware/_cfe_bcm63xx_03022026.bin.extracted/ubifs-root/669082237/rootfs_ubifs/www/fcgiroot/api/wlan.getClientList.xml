@@ -1,0 +1,5 @@
+<?cs each:item = Env.status.lan.topology.device ?>
+   <?cs if:item.port=="wl1" && item.status=="online" ?>
+   <client mac_addr="<?cs var:item.macaddr ?>" ip_addr="<?cs var:item.ipaddr ?>" />
+   <?cs /if ?>
+<?cs /each ?>

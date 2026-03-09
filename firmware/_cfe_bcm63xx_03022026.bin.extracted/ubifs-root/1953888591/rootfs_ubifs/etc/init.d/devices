@@ -1,0 +1,43 @@
+#!/bin/sh /etc/rc.common
+
+START=01
+
+system_config() {
+	hostname -F /etc/hostname
+
+	ifconfig lo 127.0.0.1
+}
+
+start() {
+	mknod /dev/initctl p 
+
+	chmod a+r /dev/random
+	chmod a+r /dev/urandom
+	chmod a+rw /dev/null
+
+	# neufbox devices
+	mknod -m 666 /dev/leds    c 10 132
+	mknod -m 666 /dev/switch0 c 160 0
+
+	system_config
+
+	# rings log devices
+	local ring_log_count=12
+
+	for i in $(seq 0 ${ring_log_count}); do
+		mknod -m 666 /dev/ring$i  c 229 $i
+	done
+
+	# hotpsot
+	mkdir /dev/net
+	mknod /dev/net/tun c 10 200
+
+	# usb printer
+	mkdir -p /dev/usb
+	ln -s /dev/lp0 /dev/usb/lp0
+	ln -s /dev/lp1 /dev/usb/lp1
+	ln -s /dev/lp2 /dev/usb/lp2
+	ln -s /dev/lp3 /dev/usb/lp3
+	# webui access inklevel
+	mknod -m 666 /dev/printer0 c 180 0
+}

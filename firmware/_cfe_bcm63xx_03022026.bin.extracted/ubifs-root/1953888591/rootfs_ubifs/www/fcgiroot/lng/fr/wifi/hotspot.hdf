@@ -1,0 +1,28 @@
+Env.Page.Title = Configuration
+
+Env.Help.Text = En activant le Hotspot (borne Wifi), vous permettez aux utilisateurs de la communauté <i>Box Wifi de SFR</i> de se connecter sans fil à Internet <i>via votre Box</i>. Pour votre sécurité ces utilisateurs ne pourront pas accéder aux équipements que vous possédez (ordinateur, décodeur TV,...) et seront authentifiés avant de pouvoir se connecter.
+
+Env.Section.hotspot_config.Title = Configuration Hotspot
+
+Env.Var.hotspot_enable.Value.false = Le service hotspot n'est pas disponible.
+Env.Var.hotspot_enable.Value.true = Le service hotspot est disponible.
+
+Env.Var.hotspot_active.Header = Activation
+Env.Var.hotspot_active.Value.on = Activé
+Env.Var.hotspot_active.Value.off = Désactivé
+Env.Var.hotspot_active.Error.value = Format incorrect
+
+Env.Var.hotspot_ssid.Header = SSID
+
+Env.Var.hotspot_status.Header = Etat
+Env.Var.hotspot_status.Value.up = Démarré
+Env.Var.hotspot_status.Value.down = Arrêté
+Env.Var.hotspot_status.Value.starting = Démarrage en cours
+Env.Var.hotspot_status.Value.stopping = Arrêt en cours
+Env.Var.hotspot_status.Value.error_maxup = Désactivé (débit montant trop faible)
+Env.Var.hotspot_status.Value.error_maxdown = Désactivé (débit descendant trop faible)
+Env.Var.hotspot_status.Value.error_conf = Erreur interne
+Env.Var.hotspot_status.Value.error_wandown = Internet non opérationnel
+Env.Var.hotspot_status.Value.error_pppdown = Internet non opérationnel
+Env.Var.hotspot_status.Value.error_adsldown = Internet non opérationnel
+Env.Var.hotspot_status.Value.error_wifidown = Wifi désactivé

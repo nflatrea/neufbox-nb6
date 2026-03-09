@@ -1,0 +1,116 @@
+Env.Page.Title = Wifi
+
+Env.Help.Text = Dans la rubrique <b>Point d'accès</b>, vous trouvez les caractéristiques de votre liaison sans fil Wifi intégrée à la Box : l'activation du Wifi, le nom de vos réseaux sans fil (SSID), si le nom de vos réseaux sans fil est diffusé, le canal, le mode radio, le mode de chiffrement des communications, la clé de chiffrement et l'activation du filtrage par adresse MAC.<br /><br />Dans la rubrique <b>Hotspot</b>, vous trouverez la configuration actuelle de votre Hotspot (borne Wifi): son état, le nom du réseau Wifi diffusé. <br/><br/> Dans la rubrique <b>Postes connectés</b>, vous trouvez la liste des équipements Wifi actuellement connectés à votre Box.
+
+Env.Section.wifi_info_2_4.Title = Point d'accès 2,4GHz
+Env.Section.wifi_info_5.Title = Point d'accès 5GHz
+Env.Section.wifi_info_guest.Title = Point d'accès invité
+
+Env.Var.wifi_status.Header = Etat
+Env.Var.wifi_status.Value.on = Activé
+Env.Var.wifi_status.Value.unused = En attente
+Env.Var.wifi_status.Value.off = Désactivé
+Env.Var.wifi_status.Value.btnoff = Désactivé par le bouton Wifi
+Env.Var.wifi_status.Value.offbysched = Désactivé par le Wifi horaire
+
+Env.Var.wifi_ssid.Header = SSID
+
+Env.Var.wifi_closed.Header = Diffusion du SSID
+Env.Var.wifi_closed.Value.0 = Activé
+Env.Var.wifi_closed.Value.1 = Désactivé
+
+Env.Var.wifi_channel.Header = Canal
+
+Env.Var.wifi_bwcap.Header = Largeur de bande
+Env.Text.MHz = MHz
+
+Env.Var.wifi_dfs.Header = Canaux DFS
+
+Env.Var.wifi_mode.Header = Mode radio
+Env.Var.wifi_mode.Value.auto = auto
+Env.Var.wifi_mode.Value.11b = 11b
+Env.Var.wifi_mode.Value.11g = 11b/g
+Env.Var.wifi_mode.Value.11ng = 11b/g/n
+Env.Var.wifi_mode.Value.11n = 11n
+
+Env.Var.wifi_encryption.Header = Chiffrement
+Env.Var.wifi_encryption.Value.OPEN = Désactivé
+Env.Var.wifi_encryption.Value.WEP = WEP
+Env.Var.wifi_encryption.Value.WPA_PSK = WPA Personnel
+Env.Var.wifi_encryption.Value.WPA2_PSK = WPA2 Personnel
+Env.Var.wifi_encryption.Value.WPA_WPA2_PSK = WPA/WPA2 Personnel
+
+Env.Var.wifi_wpaenctype.Value.tkip = TKIP
+Env.Var.wifi_wpaenctype.Value.aes = AES
+Env.Var.wifi_wpaenctype.Value.tkipaes = TKIP et AES
+
+Env.Var.wifi_key.Header = Clé
+Env.Var.wifi_key.Value.none = Aucune
+
+Env.Var.wifi_macfiltering.Header = Filtrage MAC
+Env.Var.wifi_macfiltering.Value.on = Activé
+Env.Var.wifi_macfiltering.Value.off = Désactivé
+
+Env.Var.guest_schedule.Header = Temps d'activité
+Env.Var.guest_schedule.List.1.Value = 0
+Env.Var.guest_schedule.List.1.Label = Toujours
+Env.Var.guest_schedule.List.2.Value = 1
+Env.Var.guest_schedule.List.2.Label = 1 jour
+Env.Var.guest_schedule.List.3.Value = 7
+Env.Var.guest_schedule.List.3.Label = 1 semaine
+Env.Var.guest_schedule.List.4.Value = 30
+Env.Var.guest_schedule.List.4.Label = 1 mois
+
+Env.Section.wifi_assoc.Title = Postes connectés
+
+Env.Var.wifi_assoclist_mac.Header = Adresse MAC
+Env.Var.wifi_assoclist_ip.Header = Adresse IP
+
+Env.Text.NoConnectedClients = Aucun poste connecté.
+Env.Text.Undefined = Indéfini
+Env.Text.auto = Auto
+Env.Text.currentChannel = Canal actuel
+Env.Text.ht40Enabled = Canaux larges activés
+
+Env.Var.mac_addr.Header = Adresse MAC
+Env.Var.ip_addr.Header = Adresse IP
+
+Env.Var.ssid.Header = SSID
+
+Env.Var.type.Header = Fréquence
+Env.Text.2_4 = 2.4GHz
+Env.Text.5 = 5GHz
+
+Env.Section.hotspot_info.Title = Hotspot
+
+Env.Var.hotspot_enable.Value.false = Le service hotspot n'est pas disponible.
+Env.Var.hotspot_enable.Value.true = Le service hotspot est disponible.
+
+Env.Var.hotspot_active.Value.on = Activé
+Env.Var.hotspot_active.Value.off = Désactivé
+
+Env.Var.hotspot_status.Header = Etat
+Env.Var.hotspot_status.Value.off = Désactivé
+Env.Var.hotspot_status.Value.up = Démarré
+Env.Var.hotspot_status.Value.down = Arrêté
+Env.Var.hotspot_status.Value.starting = Démarrage en cours
+Env.Var.hotspot_status.Value.stopping = Arrêt en cours
+Env.Var.hotspot_status.Value.error_maxup = Désactivé (débit montant trop faible)
+Env.Var.hotspot_status.Value.error_maxdown = Désactivé (débit descendant trop faible)
+Env.Var.hotspot_status.Value.error_conf = Erreur interne
+Env.Var.hotspot_status.Value.error_wandown = Erreur (Internet non opérationnel)
+Env.Var.hotspot_status.Value.error_pppdown = Erreur (Internet non opérationnel)
+Env.Var.hotspot_status.Value.error_adsldown = Erreur (Internet non opérationnel)
+Env.Var.hotspot_status.Value.error_wifidown = Erreur (Wifi désactivé)
+
+Env.Var.hotspot_ssid.Header = SSID
+
+Env.Section.hotspot_assoc.Title = Postes connectés
+
+Env.Var.hotspot_assoclist_mac.Header = Adresse MAC
+Env.Var.hotspot_assoclist_ip.Header = Adresse IP
+
+Env.Text.NoConnectedClients = Aucun poste connecté.
+
+Env.Var.qrcode_wifi.Header = Code QR
+Env.Text.qrcode_wifi = Scanner le QR code pour vous connecter facilement sur Smartphone. 

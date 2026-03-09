@@ -1,0 +1,18 @@
+
+Env.Section.connected_computers.Header = Postes réseaux
+
+Env.Var.name.Header = Nom d'hôte
+Env.Var.mac_addr.Header = Adresse MAC
+Env.Var.ip_addr.Header = Adresse IP
+Env.Var.port.Header = Port
+Env.Var.choice.Header = Choix
+
+Env.Text.InWifi = en Wifi
+Env.Text.Validate = Valider
+Env.Text.NoClient = Aucun poste connecté.
+
+Env.Var.portfilter.Regex = wlan
+
+Env.Var.Any = Tous
+Env.Var.Any.wan = (N'importe quelle IPv6 provenant d'Internet)
+Env.Var.Any.lan = (Toutes les adresses IPv6 du LAN)

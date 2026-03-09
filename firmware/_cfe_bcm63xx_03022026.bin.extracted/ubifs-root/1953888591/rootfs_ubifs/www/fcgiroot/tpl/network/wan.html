@@ -1,0 +1,163 @@
+<?cs if:Env.status.net.data.access != "ftth" ?>
+<div class="title">
+        <h1><?cs var:Env.Section.services_status.Title ?></h1>
+</div>
+<div class="content">
+    <table>
+        <tr>
+            <th><?cs call:varHeader("internet_status") ?></th>
+            <td class="<?cs if:Env.status.net.status == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>" id="internet_status">
+                    <?cs if:Env.status.net.status == "up" ?>
+                            <?cs var:Env.Text.Enabled  ?>
+                    <?cs else ?>
+                            <?cs var:Env.Text.Disabled  ?>
+                    <?cs /if ?>
+            </td>
+        </tr>
+        <tr>
+            <th><?cs call:varHeader("dhcp_active") ?></th>
+            <td class="<?cs if:Env.user.dhcp.active=="on" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                    <?cs if:Env.user.dhcp.active == "on" ?>
+                            <?cs var:Env.Text.Enabled  ?>
+                    <?cs else ?>
+                            <?cs var:Env.Text.Disabled  ?>
+                    <?cs /if ?>
+            </td>
+        </tr>
+        <tr>
+            <th><?cs call:varHeader("upnpd_active") ?></th>
+            <td class="<?cs if:Env.user.upnpd.active=="on" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                    <?cs if:Env.user.upnpd.active == "on" ?>
+                            <?cs var:Env.Text.Enabled  ?>
+                    <?cs else ?>
+                            <?cs var:Env.Text.Disabled  ?>
+                    <?cs /if ?>
+            </td>
+        </tr>
+        
+        <?cs if: Env.status.net.mapt.status == "down" ?>        
+        <tr>
+            <th><?cs call:varHeader("ddns_status") ?></th>
+            <td class="<?cs if:Env.user.ddns.active=="on" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                    <?cs if:Env.user.ddns.active == "on" ?>
+                            <?cs var:Env.Text.Enabled  ?>
+                    <?cs else ?>
+                            <?cs var:Env.Text.Disabled  ?>
+                    <?cs /if ?>
+            </td>
+        </tr>
+        <tr>
+            <th><?cs call:varHeader("dmz_active") ?></th>
+            <td class="<?cs if:Env.user.dmz.active=="on" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                <?cs if:Env.user.dmz.active == "on" ?>
+                        <?cs var:Env.Text.Enabled  ?>
+                <?cs else ?>
+                        <?cs var:Env.Text.Disabled  ?>
+                <?cs /if ?>
+            </td>
+        </tr>
+        <tr>
+                <th><?cs call:varHeader("sipalg_active") ?></th>
+                <td class="<?cs if:Env.user.nat.alg.sip=="on" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                <?cs if:Env.user.nat.alg.sip == "on" ?>
+                        <?cs var:Env.Text.Enabled  ?>
+                <?cs else ?>
+                        <?cs var:Env.Text.Disabled  ?>
+                <?cs /if ?>
+                </td>
+        </tr>
+        <tr>
+                <th><?cs call:varHeader("pptp_active") ?></th>
+                <td class="<?cs if:Env.user.nat.alg.pptp=="on" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                <?cs if:Env.user.nat.alg.pptp == "on" ?>
+                        <?cs var:Env.Text.Enabled  ?>
+                <?cs else ?>
+                        <?cs var:Env.Text.Disabled  ?>
+                <?cs /if ?>
+                </td>
+        </tr>
+        <tr>
+                <th><?cs call:varHeader("gre_active") ?></th>
+                <td class="<?cs if:Env.user.nat.alg.proto.gre=="on" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                <?cs if:Env.user.nat.alg.proto.gre == "on" ?>
+                        <?cs var:Env.Text.Enabled  ?>
+                <?cs else ?>
+                        <?cs var:Env.Text.Disabled  ?>
+                <?cs /if ?>
+                </td>
+        </tr>
+        <?cs /if ?>
+        <tr>
+                <th><?cs call:varHeader("filter_mode") ?></th>
+                <td class="<?cs if:Env.user.filter.mode == "simple" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                <?cs if:Env.user.filter.mode == "simple" ?>
+                        <?cs var:Env.Text.Enabled  ?>
+                <?cs else ?>
+                        <?cs var:Env.Text.Disabled  ?>
+                <?cs /if ?>
+                </td>
+        </tr>
+        
+</table>
+</div>
+<div class="title">
+    <h1><?cs var:Env.Section.profil.Title ?></h1>
+</div>
+<div class="content">
+    <form method="post" id="form_net_config" action="<?cs var:Env.Page.Name ?>">
+        <input name="action" value="form_ppp" type="hidden" />
+        <table id="net_config">
+            <?cs if:Env.status.net.mode.bridge == "on"?>
+            <tr id="row_net_mode">
+                <th scope="row"><?cs var:Env.Var.net_mode.Header ?></th>
+                <td>
+                    <input type="radio" value="router" name="net_mode" id="net_mode_router"<?cs if:Env.user.net.mode == "router" ?> checked="checked"<?cs /if ?> />
+                    <label for="net_mode_router"><?cs var:Env.Var.net_mode.Value.Router ?></label>
+                    <input type="radio" value="bridge" name="net_mode" id="net_mode_bridge"<?cs if:Env.user.net.mode == "bridge" ?> checked="checked"<?cs /if ?> />
+                    <label for="net_mode_bridge"><?cs var:Env.Var.net_mode.Value.Bridge ?></label>
+                </td>
+            </tr>
+            <?cs /if ?>
+            
+            <tr id="row_ppp_login" <?cs if:Env.user.net.mode == "bridge" ?> style="display:none;" <?cs /if ?>>
+                <th scope="row"><?cs var:Env.Var.ppp_login.Header ?></th>
+                <td>
+                    <input type="text" 
+                           name="ppp_login" 
+                           class="<?cs if:?Var.ppp_login.Error?>error<?cs else?>text<?cs /if?>"
+                           id="ppp_login" 
+                           size="63"
+                           maxlength="63"
+                           value="<?cs var:Env.user.ppp.login ?>" />
+
+                    <?cs if:?Var.ppp_login.Error ?>
+                    <div class="error">
+                        <?cs var:Env.Var.ppp_login.Error[Var.ppp_login.Error] ?>
+                    </div>
+                    <?cs /if ?>
+                </td>
+            </tr>
+            <tr id="row_ppp_password" <?cs if:Env.user.net.mode == "bridge" ?> style="display:none;" <?cs /if ?>>
+                <th scope="row"><?cs var:Env.Var.ppp_password.Header ?></th>
+                <td>
+                    <input type="password"
+                           name="ppp_password" 
+                           class="<?cs if:?Var.ppp_password.Error?>error<?cs else?>text<?cs /if?>" 
+                           id="ppp_password" 
+                           size="63"
+                           maxlength="63"
+                           value="<?cs var:Env.user.ppp.password ?>" />
+
+                    <?cs if:?Var.ppp_password.Error ?>
+                    <div class="error">
+                        <?cs var:Env.Var.ppp_password.Error[Var.ppp_password.Error] ?>
+                    </div>
+                    <?cs /if ?>
+                </td>
+            </tr>
+            
+        </table>
+            <button type="submit" name="submit" class="btn"><?cs var:Button.Submit ?></button>
+     </form>
+</div>
+<?cs /if?>

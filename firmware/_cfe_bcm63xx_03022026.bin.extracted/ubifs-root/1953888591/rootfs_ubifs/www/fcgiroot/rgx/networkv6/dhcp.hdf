@@ -1,0 +1,1 @@
+Env.Var.dhcp6_subnet_lan.Regex = ^[a-fA-F0-9:]{1,14}$

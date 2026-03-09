@@ -1,0 +1,24 @@
+Env.Page.Title = Wifi Schedule
+
+Env.Help.Text = In this section, you can set the time slots for which you want to disable the Wifi of your Box. The selected ranges correspond to periods of Wifi wave scattering stops
+
+Env.Var.wifisched_status.Header = State
+Env.Var.wifisched.Header = Wifi Schedule
+
+Env.Section.configuration.Title = Wifi Schedule
+
+Env.Var.wifisched.status.wlanstopped = Enabled (Wifi disabled)
+Env.Var.wifisched.status.sync_down = Disabled (Time unsynchronised)
+Env.Var.wifisched.status.forceoff = Disabled (Wifi button pushed)
+Env.Var.wifisched.status.up = Enabled
+Env.Var.wifisched.status.down = Disabled
+
+Env.Var.days.0 = Every Monday
+Env.Var.days.1 = Every Tuesday
+Env.Var.days.2 = Every Wednesday
+Env.Var.days.3 = Every Thursday
+Env.Var.days.4 = Every Friday
+Env.Var.days.5 = Every Saturday
+Env.Var.days.6 = Every Sunday
+
+Env.Var.legend = Periods stops broadcasting Wifi waves.

@@ -1,0 +1,41 @@
+Env.Page.Title = Fibre configuration
+Env.Section.Title = Configuration de la fibre
+
+Env.Help.Text.ONT = Dans la rubrique <b>configuration de la fibre</b>, vous pouvez saisir le mot de passe de votre boîtier fibre SFR La fibre (à n'utiliser qu'en cas de changement de boîtier fibre).
+Env.Help.Text.GPON = Dans la rubrique <b>configuration de la fibre</b>, vous pouvez saisir le mot de passe du module optique de votre Box.
+
+Env.Var.status_service.Value = Statut service
+
+Env.Var.ontpwd.Value = Mot de passe fibre
+Env.Var.ontpwd.Error.value = Format incorrect. Seuls les caractères alphanumériques, '-' et '+' sont autorisés. 
+Env.Var.ont.sync = Votre boîtier fibre est synchronisé.
+Env.Var.ont.nosync = Votre boîtier fibre est non synchronisé.
+Env.Var.ont.nosync.echecslid = La synchronisation du boîtier fibre a échoué. Veuillez saisir à nouveau votre mot de passe.
+Env.Var.ont_err_setslid.0 = Votre boîtier fibre est synchronisé.
+Env.Var.ont_err_setslid.1 = Echec de l'opération
+Env.Var.ont_err_setslid.2 = Votre boitier fibre est injoignable. Vérifier qu'il est allumé et correctement branché. 
+Env.Var.ont_err_setslid.3 = Echec de l'opération
+Env.Var.ont_err_setslid.10 = Votre boîtier fibre est déjà synchronisé.
+Env.Var.ont_err_setslid.11 = Votre boîtier fibre n'est pas synchronisé, le mot de passe est déjà présent.
+Env.Var.ont_err_setslid.12 = Votre boîtier fibre n'est pas synchronisé. Le mot de passe est déjà présent. Ne saisissez un nouveau mot de passe que sur demande du Service Client. Si vous souhaitez continuer appuyer de nouveau sur le bouton valider.
+Env.Var.ont_err_setslid.13 = 
+Env.Var.ont_err_setslid.14 = La synchronisation du boîtier fibre a échoué après plusieurs tentatives, veuillez contacter votre Service Client.
+Env.Var.ont_err_update.0 = Votre boîtier fibre est synchronisé.
+Env.Var.ont_err_update.1 = Echec de l'opération
+Env.Var.ont_err_update.2 = Votre boitier fibre est injoignable. Vérifier qu'il est allumé et correctement branché.
+Env.Var.ont_err_update.3 = Echec de l'opération
+Env.Var.ont_err_reboot.0 = Votre boîtier fibre est synchronisé.
+Env.Var.ont_err_reboot.0.aftersetslid = Votre boîtier fibre est maintenant synchronisé.
+Env.Var.ont_err_reboot.1 = Echec de l'opération
+Env.Var.ont_err_reboot.2 = Votre boitier fibre est injoignable. Vérifier qu'il est allumé et correctement branché.
+Env.Var.ont_err_reboot.3 = Echec de l'opération
+Env.Var.ont_err_reboot.10 = Votre boîtier fibre est synchronisé.
+
+Env.Var.gponpwd.Value = Mot de passe fibre
+Env.Var.gponpwd.Error.value = Format incorrect. Seuls les caractères alphanumériques, '-' et '+' sont autorisés. Longueur maximum de dix caractères.
+Env.Var.gpon_slidchange.empty = Veuillez saisir le mot de passe du module fibre de votre Box.
+Env.Var.gpon_slidchange.off = Mot de passe enregistré.
+Env.Var.gpon_slidchange.error = Echec de l'opération.
+Env.Var.gpon_slidchange.unused = Aucun mot de passe enregistré.
+Env.Var.gpon_slidchange.up = Le module optique de votre Box est opérationnel. Ne saisissez un nouveau mot de passe que sur demande du Service Client. Si vous souhaitez continuer appuyer de nouveau sur le bouton valider.
+Env.Var.gpon_slidchange.unknown = Erreur inconnue.

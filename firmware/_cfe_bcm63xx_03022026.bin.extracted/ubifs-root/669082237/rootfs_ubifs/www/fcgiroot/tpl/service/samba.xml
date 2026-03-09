@@ -1,0 +1,20 @@
+<rsp stat="ok">
+  <samba>
+<?cs set:status = "disabled" ?>
+<?cs set:text = Env.Var.samba_status.Value.down ?>
+
+<?cs if:Env.user.samba.active != "off" ?>
+    <?cs set:status = Env.status.samba.status ?>
+<?cs /if ?>
+      
+<?cs if:Env.user.samba.active != "off"?>
+    <?cs if:Env.status.samba.status == "error_unknow" && Env.status.swap.errno != "0" ?>
+    <?cs elif:?Env.Var.samba_status.Value[Env.status.samba.status] ?>
+        <?cs set:text = Env.Var.samba_status.Value[Env.status.samba.status] ?>
+    <?cs else ?>
+        <?cs set:text = Env.Var.samba_status.Value.down ?>
+    <?cs /if ?>
+<?cs /if?>
+    <status val="<?cs var:status ?>" text="<?cs var:text ?>" />
+  </samba>
+</rsp>

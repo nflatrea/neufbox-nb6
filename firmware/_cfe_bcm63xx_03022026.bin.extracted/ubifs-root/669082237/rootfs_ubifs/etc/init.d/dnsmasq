@@ -1,0 +1,223 @@
+#!/bin/sh /etc/rc.common
+
+START=52
+
+DNSMASQ_CONF="/run/dnsmasq.conf"
+DNSMASQ_LEASE="/var/dnsmasq.leases"
+DNSMASQ_LOCK="/var/dnsmasq.lock"
+DNSMASQ_PID="/run/dnsmasq.pid"
+
+logger -t "dnsmasq[$$]" "$action"
+
+boot() {
+	# The service is already started by other init scripts (hosts and ipv6), so dnsmasq ports are already bound when boot() is called. Stop the service to avoid an "address already in use" error message
+	stop
+	# Add static dhcp entries
+	ln -s /etc/resolv.conf /tmp/resolv.conf.lan
+	start
+}
+
+
+waitpid() {
+	local name=$1
+	local pid_fname="/var/run/${name}.pid"
+	local pid=""
+	local i=0
+	local timeout=60
+
+	if [ -f "${pid_fname}" ] ; then
+		pid=$(cat "${pid_fname}")
+	else
+		return 1
+	fi
+
+	[ -z "${pid}" ] && return 1
+
+	while [ -d "/proc/${pid}" ]; do
+		sleep 1
+
+		# 60s timeout in order to avoid infinite wait
+		i=$((${i} + 1))
+		if [ ${i} -gt ${timeout} ]; then
+			logger -t "dnsmasq[$$]" "waitpid ${name}: timeout"
+			kill -9 ${pid}
+			return 1
+		fi
+	done
+
+	return 0
+}
+
+
+ipv6_strip_netmask() {
+	echo $(echo $1 | sed 's|:1/64||')
+}
+
+
+update_config() {
+	# Fill dnsmasq.conf
+	cat > "${DNSMASQ_CONF}" << EOF
+domain-needed
+bogus-priv
+dhcp-authoritative
+dhcp-script=/usr/bin/dnsmasq-script
+cache-size=512
+dhcp-lease=${DNSMASQ_LEASE}
+EOF
+
+	# lan
+	local lan_ifname=$(status get lan_ifname)
+	local lan_ipaddr=$(nvram get lan_ipaddr)
+	local lan_netmask=$(nvram get lan_netmask)
+
+	if [ "$(nvram get dhcp_active)" = "on" ]; then
+		cat >> "${DNSMASQ_CONF}" << EOF
+dhcp-range=interface:${lan_ifname},$(nvram get dhcp_start),$(nvram get dhcp_end),$(nvram get dhcp_lease)
+dhcp-option=interface:${lan_ifname},option:netmask,${lan_netmask}
+dhcp-option=interface:${lan_ifname},option:router,${lan_ipaddr}
+dhcp-option=interface:${lan_ifname},option:dns-server,${lan_ipaddr}
+dhcp-option=interface:${lan_ifname},option:ntp-server,${lan_ipaddr}
+EOF
+	fi
+
+	# ipv6
+	local dhcp6_lease_lan=$(nvram get dhcp6_lease)
+	local dhcp6_lease_stb=$(nvram get ipv6_stblease)
+
+	if [ -n "$(status get net_ipv6_subnet_stb)" ]; then
+		local stb_prefix="$(ipv6_strip_netmask $(status get net_ipv6_subnet_stb))"
+		local stb_dhcp_prefix_start="$(nvram get dhcp6_prefix_stb_start)"
+		local stb_dhcp_prefix_end="$(nvram get dhcp6_prefix_stb_end)"
+
+		cat >> "${DNSMASQ_CONF}" << EOF
+dhcp-range=tag:stb,interface:${lan_ifname},${stb_dhcp_prefix_start},${stb_dhcp_prefix_end},64,${dhcp6_lease_stb}
+EOF
+
+		#prefix delegation for STB7
+		local net_ipv6_prefix=$(status get net_ipv6_prefix)
+		for i in $(seq 1 4)
+		do
+			local stb_subnet="$(ipv6_subnet_calc ${net_ipv6_prefix} $((128+$i)) 64 | cut -d'/' -f1)"
+
+		cat >> "${DNSMASQ_CONF}" << EOF
+dhcp-prefix=tag:stb,${stb_subnet},64,${dhcp6_lease_stb}
+EOF
+		done
+	fi
+
+	if [ -n "$(status get net_ipv6_subnet_lan)" ]; then
+	        local lan_prefix="$(ipv6_strip_netmask $(status get net_ipv6_subnet_lan))"
+		local lan_ip6addr="${lan_prefix}:1"
+
+			cat >> "${DNSMASQ_CONF}" << EOF
+dhcp-option=interface:${lan_ifname},option6:dns-server,${lan_ip6addr}
+dhcp-option=interface:${lan_ifname},option6:ntp-server,${lan_ip6addr}
+EOF
+
+		if [ "$(nvram get dhcp6_active)" = "on" ]; then
+		        local lan_dhcp_prefix_start="$(nvram get dhcp6_prefix_lan_start)"
+		        local lan_dhcp_prefix_end="$(nvram get dhcp6_prefix_lan_end)"
+			cat >> "${DNSMASQ_CONF}" << EOF
+dhcp-range=tag:!stb,interface:${lan_ifname},${lan_dhcp_prefix_start},${lan_dhcp_prefix_end},64,${dhcp6_lease_lan}
+EOF
+		fi
+	fi
+
+	echo "dhcp-vendorclass=set:stb,enterprise:0,NEUFTVSTB" >> "${DNSMASQ_CONF}"
+
+	# bootp
+	if [ "$(nvram get tftp_active)" = "on" ]; then
+		mkdir -p ${tftp_root}
+		cat >> "${DNSMASQ_CONF}" << EOF
+dhcp-boot=interface:${lan_ifname},${tftp_filename},$(hostname),${lan_ipaddr}
+enable-tftp=interface:${lan_ifname}
+tftp-root=interface:${lan_ifname},${tftp_root}
+EOF
+		iptables -A LAN_FILTER -p udp -m udp --dport tftp -j ACCEPT
+	fi
+
+	# Add static dhcp entries
+	local conf=/tmp/dhcp.tmp.xml
+	nvram xml dhcp > ${conf}
+	for macaddr in $(roxml -q ${conf} "//macaddr")
+	do
+		local ipaddr=$(roxml -q ${conf} "//pair[macaddr=${macaddr}]/ipaddr")
+		echo "dhcp-host=${macaddr},${ipaddr}" >> ${DNSMASQ_CONF}
+	done
+	rm -f ${conf}
+
+	# Add static dhcpv6 entries
+	local conf=/tmp/dhcp6.tmp.xml
+	nvram xml dhcp6 > ${conf}
+	for macaddr in $(roxml -q ${conf} "//macaddr")
+	do
+		local ipaddr=$(roxml -q ${conf} "//pair[macaddr=${macaddr}]/ipaddr")
+		echo "dhcp-host=${macaddr},[${ipaddr}]" >> ${DNSMASQ_CONF}
+	done
+	rm -f ${conf}
+
+	
+	local br_guest_name=$(roxml -q /etc/default/topology.xml '//interface[@service=guest]/@ifname')
+	if [ -n $br_guest_name ]; then
+	    echo "dhcp-range=interface:$br_guest_name,192.168.3.100,192.168.3.200,3600" >> ${DNSMASQ_CONF}
+	fi
+}
+
+
+start() {
+	lock "${DNSMASQ_LOCK}"
+
+	local lan_ifname=$(status get lan_ifname)
+
+	[ "$(nvram get net_mode)" = "bridge" ] && exit 0
+
+	update_config
+	
+	local br_guest_name=$(roxml -q /etc/default/topology.xml '//interface[@service=guest]/@ifname')
+	local guest_ifname=""
+	if [ -n $br_guest_name ]; then
+	    guest_ifname=" -i $br_guest_name"
+	fi
+	
+	dnsmasq -H /tmp/user.domain --clear-on-reload \
+		-i ${lan_ifname} ${guest_ifname}\
+		-r /tmp/resolv.conf.lan \
+		-C ${DNSMASQ_CONF} \
+		${LAN_SERVER_DISABLE}
+	
+	[ -x /sbin/mcu_state ] && mcu_state stb_link_ready 1
+	
+	lock -u "${DNSMASQ_LOCK}"
+}
+
+
+stop() {
+	lock "${DNSMASQ_LOCK}"
+
+	iptables -D LAN_FILTER -p udp -m udp --dport tftp -j ACCEPT > /dev/null
+
+	if [ -e "${DNSMASQ_PID}" ]; then
+	        local pid="$(cat "${DNSMASQ_PID}")"
+		kill ${pid}
+		waitpid dnsmasq
+	fi
+
+	rm -f ${DNSMASQ_CONF}
+
+	[ -x /sbin/mcu_state ] && mcu_state stb_link_ready 0
+
+	lock -u "${DNSMASQ_LOCK}"
+}
+
+
+reload() {
+	lock "${DNSMASQ_LOCK}"
+
+	if [ -e "${DNSMASQ_PID}" ]
+	then
+		update_config
+		kill -HUP $(cat "${DNSMASQ_PID}")
+	fi
+
+	lock -u "${DNSMASQ_LOCK}"
+}

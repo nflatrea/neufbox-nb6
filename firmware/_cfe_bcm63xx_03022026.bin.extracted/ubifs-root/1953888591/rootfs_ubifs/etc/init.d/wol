@@ -1,0 +1,56 @@
+#!/bin/sh /etc/rc.common
+
+START=49
+
+logger -t "wol[$$]" "$action"
+
+WOL_UDP_PORT=9
+LOCKFILE="/run/lock/wol.lock"
+
+boot() {
+    start
+}
+
+start() {
+	lock "${LOCKFILE}"
+
+	local policy=ACLS_FILTER
+	local lan_ifname=$(status get lan_ifname)
+	local net_data_ifname=$(status get net_data_ifname)
+
+	if [ -z "${net_data_ifname}" ]; then
+		net_data_ifname="wan0"
+	fi
+
+	if [ "$(nvram get wol_active)" == "on" ]; then
+		policy=ACCEPT
+	fi
+
+	iptables -A INPUT -i ${net_data_ifname} -p udp -m udp --dport ${WOL_UDP_PORT} -m state --state NEW -j ${policy}
+
+	wold ${WOL_UDP_PORT} ${lan_ifname}
+
+	lock -u "${LOCKFILE}"
+}
+
+stop() {
+	lock "${LOCKFILE}"
+
+	# delete all potential rules
+	iptables -D INPUT -i wan0 -p udp -m udp --dport ${WOL_UDP_PORT} -m state --state NEW -j ACCEPT
+	iptables -D INPUT -i wan0 -p udp -m udp --dport ${WOL_UDP_PORT} -m state --state NEW -j ACLS_FILTER
+
+	iptables -D INPUT -i ppp0 -p udp -m udp --dport ${WOL_UDP_PORT} -m state --state NEW -j ACCEPT
+	iptables -D INPUT -i ppp0 -p udp -m udp --dport ${WOL_UDP_PORT} -m state --state NEW -j ACLS_FILTER
+
+	iptables -D INPUT -i ppp1 -p udp -m udp --dport ${WOL_UDP_PORT} -m state --state NEW -j ACCEPT
+	iptables -D INPUT -i ppp1 -p udp -m udp --dport ${WOL_UDP_PORT} -m state --state NEW -j ACLS_FILTER
+
+	iptables -D INPUT -i voip0 -p udp -m udp --dport ${WOL_UDP_PORT} -m state --state NEW -j ACCEPT
+	iptables -D INPUT -i voip0 -p udp -m udp --dport ${WOL_UDP_PORT} -m state --state NEW -j ACLS_FILTER
+
+
+	killall -9 wold
+
+	lock -u "${LOCKFILE}"
+}

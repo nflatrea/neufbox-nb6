@@ -1,0 +1,6 @@
+<?xml version = "1.0"?>
+<packagesmirror version="100000000000">
+  <privatelist>
+    <url>packages.%OPERATOR_DOMAIN%</url>
+  </privatelist>
+</packagesmirror>

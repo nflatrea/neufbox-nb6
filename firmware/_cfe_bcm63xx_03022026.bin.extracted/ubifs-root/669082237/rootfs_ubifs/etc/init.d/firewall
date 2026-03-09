@@ -1,0 +1,354 @@
+#!/bin/sh /etc/rc.common
+
+START=32
+
+EXTRA_COMMANDS="acls icmp win pfs smtp stb ipv6 user_ipv6 user_icmpv6"
+
+logger -t "firewall[$$]" "$action"
+
+boot() {
+	# :: FILTER ::
+
+	# POLICIES
+	xtables -P INPUT DROP
+	iptables -P FORWARD ACCEPT
+	ip6tables -P FORWARD DROP
+	xtables -P OUTPUT ACCEPT
+
+	# acls
+	xtables -N ACLS_FILTER
+
+	# win
+	xtables -N WIN_FILTER
+
+	# pfs
+	xtables -N PFS_FILTER
+	xtables -A FORWARD -j PFS_FILTER
+
+	# smtp
+	xtables -N SMTP_FILTER
+
+	# icmp
+	xtables -N ICMP_FILTER
+	ip6tables -N ICMP_LAN_FILTER
+	ip6tables -N ICMP_LAN_IN_FILTER
+	ip6tables -N ICMP_LAN_OUT_FILTER
+	ip6tables -N ICMP_USER_FILTER
+
+	# stb
+	xtables -N STB_FILTER
+
+	# upnp
+	xtables -N MINIUPNPD
+	iptables -t nat -N MINIUPNPD
+	ip6tables -A FORWARD -j MINIUPNPD
+
+	# INPUT
+	xtables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+	xtables -A INPUT -i lo -j ACCEPT
+	xtables -A INPUT -p tcp -m multiport --dports 1287,1288 -m state --state NEW -j ACLS_FILTER
+	iptables -A INPUT -p udp -m udp --dport bootpc -m state --state NEW -j ACCEPT
+	ip6tables -A INPUT -p udp -m udp --dport dhcpv6-client -m state --state NEW -j ACCEPT
+	iptables -A INPUT -p icmp -j ICMP_FILTER
+	ip6tables -A INPUT -p icmpv6 -j ICMP_FILTER
+
+	# FORWARD
+	ip6tables -N LAN_IN_FORWARD
+	ip6tables -N LAN_OUT_FORWARD
+	ip6tables -N LAN_USER_FORWARD
+	ip6tables -N STB_IN_FORWARD
+	ip6tables -N STB_OUT_FORWARD
+	xtables -N MAPT_FILTER
+
+	# RH0 protection
+	ip6tables -A FORWARD -m rt --rt-type 0 -j DROP
+
+	iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+	# OUTPUT
+
+	start
+}
+
+start() {
+	acls
+	win
+	pfs
+	icmp
+	user_icmpv6
+	stb
+	ipv6
+	user_ipv6
+}
+
+icmp() {
+	lock /run/lock/firewall-icmp.lock
+
+	xtables -F ICMP_FILTER
+
+	if [ "$(nvram get filter_mode)" = "simple" ] && \
+		[ "$(nvram get filter_simple_icmpdrop)" = "on" ]
+	then
+		iptables -A ICMP_FILTER -p icmp --icmp-type echo-request -j ACLS_FILTER
+		ip6tables -A ICMP_FILTER -p icmpv6 --icmpv6-type echo-request -j ACLS_FILTER
+	else
+		iptables -A ICMP_FILTER -p icmp --icmp-type echo-request -j ACCEPT
+		ip6tables -A ICMP_FILTER -p icmpv6 --icmpv6-type echo-request -j ACCEPT
+	fi
+
+	ip6tables -A ICMP_FILTER -p icmpv6 --icmpv6-type neighbor-solicitation -j ACCEPT
+	ip6tables -A ICMP_FILTER -p icmpv6 --icmpv6-type neighbor-advertisement -j ACCEPT
+	ip6tables -A ICMP_FILTER -p icmpv6 --icmpv6-type router-advertisement -j ACCEPT
+	ip6tables -A ICMP_FILTER -p icmpv6 --icmpv6-type router-solicitation -j ACCEPT
+
+	# icmp v6 firewall for lan hosts
+	ip6tables -F ICMP_LAN_FILTER
+	ip6tables -A ICMP_LAN_FILTER -p icmpv6 --icmpv6-type echo-reply -j ACCEPT
+	ip6tables -A ICMP_LAN_FILTER -p icmpv6 -d ff00::/8 --icmpv6-type echo-reply -j DROP
+	ip6tables -A ICMP_LAN_FILTER -p icmpv6 --icmpv6-type destination-unreachable -j ACCEPT
+	ip6tables -A ICMP_LAN_FILTER -p icmpv6 --icmpv6-type packet-too-big -j ACCEPT
+	ip6tables -A ICMP_LAN_FILTER -p icmpv6 --icmpv6-type ttl-zero-during-transit -j ACCEPT
+	ip6tables -A ICMP_LAN_FILTER -p icmpv6 --icmpv6-type ttl-zero-during-reassembly -j ACCEPT
+	ip6tables -A ICMP_LAN_FILTER -p icmpv6 --icmpv6-type unknown-header-type -j ACCEPT
+	ip6tables -A ICMP_LAN_FILTER -p icmpv6 --icmpv6-type unknown-option -j ACCEPT
+	ip6tables -A ICMP_LAN_FILTER -j DROP
+
+	ip6tables -F ICMP_LAN_IN_FILTER
+	ip6tables -A ICMP_LAN_IN_FILTER -j ICMP_LAN_FILTER
+
+	ip6tables -F ICMP_LAN_OUT_FILTER
+	ip6tables -A ICMP_LAN_OUT_FILTER -p icmpv6 --icmpv6-type echo-request -j ACCEPT
+	ip6tables -A ICMP_LAN_OUT_FILTER -j ICMP_LAN_FILTER
+
+	lock -u /run/lock/firewall-icmp.lock
+}
+
+user_icmpv6() {
+	lock /run/lock/firewall-user-icmpv6.lock
+
+	ip6tables -F ICMP_USER_FILTER
+
+	if [ "$(nvram get filter6_icmpdrop)" = "on" ]
+	then
+		local config=/tmp/user-icmpv6.xml
+
+		nvram xml filter6_icmp > ${config}
+
+		for dstip in $(roxml -q ${config} '//icmp/dstip')
+		do
+			ip6tables -A ICMP_USER_FILTER -p icmpv6 --icmpv6-type echo-request -d ${dstip} -j ACCEPT
+		done
+
+		rm ${config}
+	else
+		ip6tables -A ICMP_USER_FILTER -p icmpv6 --icmpv6-type echo-request -j ACCEPT
+	fi
+
+	lock -u /run/lock/firewall-user-icmpv6.lock
+}
+
+win() {
+	lock /run/lock/firewall-win.lock
+
+	xtables -F WIN_FILTER
+
+	if [ "$(nvram get filter_mode)" = "simple" ] && \
+		[ "$(nvram get filter_simple_winsharedrop)" = "on" ]
+	then
+		iptables -A WIN_FILTER -p tcp -m tcp --dport 135 -j DROP
+		iptables -A WIN_FILTER -p tcp -m tcp --dport 137:139 -j DROP
+		xtables -A WIN_FILTER -p tcp -m tcp --dport 445 -j DROP
+
+	        iptables -A WIN_FILTER -p udp -m udp --dport 135 -j DROP
+		iptables -A WIN_FILTER -p udp -m udp --dport 137:139 -j DROP
+		xtables -A WIN_FILTER -p udp -m udp --dport 445 -j DROP
+	fi
+
+	lock -u /run/lock/firewall-win.lock
+}
+
+pfs() {
+	lock /run/lock/firewall-pfs.lock
+
+	xtables -F PFS_FILTER
+
+	for elem in $(nvram list pfs_ip)
+	do
+		local ip=$(echo $elem|sed 's,.*=\(.*\),\1,')
+		iptables -A PFS_FILTER -d ${ip} -j DROP
+	done
+
+	for elem in $(nvram list pfs_ip6)
+	do
+		local ip6=$(echo $elem|sed 's,.*=\(.*\),\1,')
+		ip6tables -A PFS_FILTER -d ${ip6} -j DROP
+	done
+
+	lock -u /run/lock/firewall-pfs.lock
+}
+
+smtp() {
+	lock /run/lock/firewall-smtp.lock
+
+	xtables -F SMTP_FILTER
+
+	if [ "$(nvram get filter_mode)" = "simple" ] && \
+		[ "$(nvram get filter_simple_smtpdrop)" = "on" ]
+	then
+		file=/tmp/autoconf/$(autoconf get wanservices_file)
+		[ ! -e ${file} ] && {
+			logger -t "firewall[$$]" "smtp ${file} use default"
+			file=/etc/default/autoconf/wanservices.xml
+		}
+
+		for server in $(roxml -q ${file} "//whitelist-smtp")
+		do
+			iptables -A SMTP_FILTER -d ${server} -j ACCEPT
+		done
+
+		for server6 in $(roxml -q ${file} "//whitelist-smtp-v6")
+		do
+			# iptables' resolution does not fit with our 
+			# need as we only need the prefix
+			local address="$(nslookup v6.ghostsmtp.neufbox.sfr.net |		\
+					sed -n 's/Address 1: \([:0-9a-z]*\) .*/\1\/64/p' |		\
+					awk 'NR==2 {print}')"
+			ip6tables -A SMTP_FILTER -d ${address} -j ACCEPT
+		done
+		
+		xtables -A SMTP_FILTER -j REJECT
+	fi
+
+	lock -u /run/lock/firewall-smtp.lock
+}
+
+stb() {
+	lock /run/lock/stb.lock
+
+	xtables -F STB_FILTER
+
+	status xml lan_topology > /tmp/lan.xml
+	for ipaddr in $(roxml -q /tmp/lan.xml '//device[type="stb"]/ipaddr')
+	do
+		iptables -A STB_FILTER -s ${ipaddr} -j ACCEPT
+	done
+
+	for ip6addr in $(roxml -q /tmp/lan.xml '//device[type="stb"]/ip6dhcpaddr')
+	do
+		ip6tables -A STB_FILTER -s ${ip6addr} -j ACCEPT
+	done
+
+
+	rm -f /tmp/lan.xml
+
+	lock -u /run/lock/stb.lock
+}
+
+ipv6() {
+	lock /run/lock/firewall-ipv6.lock
+
+	ip6tables -F LAN_IN_FORWARD
+	ip6tables -F LAN_OUT_FORWARD
+
+	ip6tables -A LAN_IN_FORWARD -j ICMP_USER_FILTER -p icmpv6
+	ip6tables -A LAN_IN_FORWARD -j ICMP_LAN_IN_FILTER -p icmpv6
+	ip6tables -A LAN_IN_FORWARD -j LAN_USER_FORWARD
+	ip6tables -A LAN_IN_FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+	ip6tables -A LAN_OUT_FORWARD -j ICMP_LAN_OUT_FILTER -p icmpv6
+	ip6tables -A LAN_OUT_FORWARD -j WIN_FILTER -m state --state NEW
+	ip6tables -A LAN_OUT_FORWARD -j SMTP_FILTER -p tcp -m tcp --dport 25
+	ip6tables -A LAN_OUT_FORWARD -j ACCEPT
+
+	ip6tables -A STB_IN_FORWARD -p icmpv6 --icmpv6-type echo-request -j ACLS_FILTER
+	ip6tables -A STB_IN_FORWARD -j ICMP_LAN_IN_FILTER -p icmpv6
+	ip6tables -A STB_IN_FORWARD -p tcp -m multiport --dports 22,1290,3170,8000:8003 -m state --state NEW -j ACLS_FILTER
+	ip6tables -A STB_IN_FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+	ip6tables -A STB_OUT_FORWARD -j ICMP_LAN_OUT_FILTER -p icmpv6
+	ip6tables -A STB_OUT_FORWARD -j ACCEPT
+
+	lock -u /run/lock/firewall-ipv6.lock
+}
+
+user_ipv6() {
+	local config=/tmp/firewall-user-ipv6.xml
+
+	lock /run/lock/firewall-user-ipv6.lock
+
+	ip6tables -F LAN_USER_FORWARD
+
+	nvram xml filter6 > ${config}
+
+	local n=1
+	for rule in $(roxml -q ${config} '//filter6/rule/rulename')
+	do
+		# dstport and dstip may be empty clear them in order to avoid
+		# to keep values from a previous element in the list
+		local srcip=""
+		local dstip=""
+
+		eval $(roxml -o ${config} "//filter6/rule[$n]")
+		n=$(($n + 1))
+
+		[ "${activated}" != "on" ] && continue
+
+		[ "${proto}" = "both" ] && proto="tcp udp"
+		for proto in ${proto}
+		do
+			local dstip_rule=""
+			local srcip_rule=""
+			[ -n "${srcip}" ] && srcip_rule="-s ${srcip}"
+			[ -n "${dstip}" ] && dstip_rule="-d ${dstip}"
+
+			ip6tables -A LAN_USER_FORWARD \
+				-p ${proto} -m ${proto} --dport $(echo ${dstport} | sed 's,-,:,') \
+				${srcip_rule} ${dstip_rule} \
+				-m comment --comment "${rulename}" \
+				-j ACCEPT
+		done
+	done
+
+	rm -f ${config}
+
+	lock -u /run/lock/firewall-user-ipv6.lock
+}
+
+acls() {
+	xtables -F ACLS_FILTER
+
+	iptables -A ACLS_FILTER -s 93.20.126.112/29 -j ACCEPT
+	iptables -A ACLS_FILTER -s 86.64.233.64 -j ACCEPT
+	iptables -A ACLS_FILTER -s 109.122.130.48/29 -j ACCEPT
+	iptables -A ACLS_FILTER -s 109.122.130.176/29 -j ACCEPT
+	iptables -A ACLS_FILTER -s 109.3.37.103/32 -j ACCEPT
+	iptables -A ACLS_FILTER -s 93.20.92.240/30 -j ACCEPT
+	iptables -A ACLS_FILTER -s 109.24.55.16/30 -j ACCEPT
+	#iptables -A ACLS_FILTER -s 109.0.64.160/30 -j ACCEPT
+	#iptables -A ACLS_FILTER -s 109.0.65.160/30 -j ACCEPT
+	iptables -A ACLS_FILTER -s 80.118.192.108/32 -j ACCEPT
+	iptables -A ACLS_FILTER -s 80.118.192.112/31 -j ACCEPT
+	iptables -A ACLS_FILTER -s 80.118.192.98/31 -j ACCEPT
+	iptables -A ACLS_FILTER -s 80.118.196.35/32 -j ACCEPT
+	iptables -A ACLS_FILTER -s 212.94.162.92 -j ACCEPT
+	iptables -A ACLS_FILTER -s 10.104.220.231 -j ACCEPT
+	iptables -A ACLS_FILTER -s 109.0.64.0/24 -j ACCEPT
+	iptables -A ACLS_FILTER -s 109.0.65.0/24 -j ACCEPT
+
+	#ip6tables -A ACLS_FILTER -s 2a02:8400:4:c0:5456:0:20::/112 -j ACCEPT
+	#ip6tables -A ACLS_FILTER -s 2a02:8400:4:c0:5456:0:f000::/112 -j ACCEPT
+	#ip6tables -A ACLS_FILTER -s 2a02:8400:4:180:5456:0:20::/112 -j ACCEPT
+	#ip6tables -A ACLS_FILTER -s 2a02:8400:4:180:5456:0:f000::/112 -j ACCEPT
+	ip6tables -A ACLS_FILTER -s 2a02:8400:4:c0:4143:4345:1ad::/112 -j ACCEPT
+	ip6tables -A ACLS_FILTER -s 2a02:8400:4:180:4143:4345:1ad::/112 -j ACCEPT
+	ip6tables -A ACLS_FILTER -s 2a02:8400:4:200:4143:4345:1ad::/112 -j ACCEPT
+	ip6tables -A ACLS_FILTER -s 2a02:8400:4:1b3:6f73:7300:ffff:0/112 -j ACCEPT
+
+	ip6tables -A ACLS_FILTER -s 2a02:8400:4:cb:1000::/72  -j ACCEPT
+	ip6tables -A ACLS_FILTER -s 2a02:8400:4:1cb:1000::/72 -j ACCEPT
+	ip6tables -A ACLS_FILTER -s 2a02:8400:4:18b:1000::/72 -j ACCEPT
+	ip6tables -A ACLS_FILTER -s 2a02:8400:160:73:1000::/72  -j ACCEPT
+	
+	ip6tables -A ACLS_FILTER -s 2a02:8400:4:c0:5456::/80  -j ACCEPT
+	ip6tables -A ACLS_FILTER -s 2a02:8400:4:180:5456::/80  -j ACCEPT
+}

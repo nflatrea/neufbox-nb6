@@ -1,0 +1,28 @@
+Env.Page.Title = Settings
+
+Env.Help.Text  = By enabling the hotspot service (Wifi access point), you allow other users of the <i>Box Wifi de SFR</i> communities to connect to Internet <i>via your Box</i>. For your security, these users won't have access to your equipments (computer, set-top box,...) and will be identified before being allowed to connect.
+
+Env.Section.hotspot_config.Title = Hotspot Settings
+
+Env.Var.hotspot_enable.Value.false = The hotspot service is not available.
+Env.Var.hotspot_enable.Value.true = The hotspot service is available.
+
+Env.Var.hotspot_active.Header = Activation
+Env.Var.hotspot_active.Value.on = Enabled
+Env.Var.hotspot_active.Value.off = Disabled
+Env.Var.hotspot_active.Error.value = Invalid format
+
+Env.Var.hotspot_ssid.Header = SSID
+
+Env.Var.hotspot_status.Header = Status
+Env.Var.hotspot_status.Value.up = Started
+Env.Var.hotspot_status.Value.down = Stopped
+Env.Var.hotspot_status.Value.starting = Starting
+Env.Var.hotspot_status.Value.stopping = Stopping
+Env.Var.hotspot_status.Value.error_maxup = Error : upload rate too low
+Env.Var.hotspot_status.Value.error_maxdown = Error : download rate too low
+Env.Var.hotspot_status.Value.error_conf = Internal error
+Env.Var.hotspot_status.Value.error_wandown = Internet not working
+Env.Var.hotspot_status.Value.error_pppdown = Internet is not working
+Env.Var.hotspot_status.Value.error_adsldown = Internet is not working
+Env.Var.hotspot_status.Value.error_wifidown = Wifi disabled

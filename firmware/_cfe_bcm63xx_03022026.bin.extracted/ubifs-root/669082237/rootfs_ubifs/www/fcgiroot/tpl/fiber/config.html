@@ -1,0 +1,90 @@
+<div class="title">
+    <h1><?cs var:Env.Section.Title ?></h1>
+</div>
+<div id="ont_nojs_content" class="content">
+    <?cs var:Env.Text.nojs?>
+</div>
+
+<?cs if:Env.status.gpon.mode == "on" ?>
+<?cs set:Env.Help.Text = Env.Help.Text.GPON ?>
+
+<div class="content" id="gpon-content" style="display:none;">
+
+    <?cs if:Env.status.ftth.link == "up" ?>
+    <div id="gpon_up_alert" class="alert alert-warning"><?cs var:Env.Var.gpon_slidchange.up ?></div>
+    <?cs /if ?>
+    <?cs if:Env.user.gpon.pwd == "" ?>
+        <div id="gpon_empty_alert" class="alert alert-warning"><?cs var:Env.Var.gpon_slidchange.empty ?></div>
+    <?cs /if ?>
+    <div id="password_alert" class="alert alert-warning" style="display:none;"><?cs var:Env.Var.gponpwd.Error.value ?></div>
+
+    <form method="post" id="form_net_config_gpon" action="<?cs var:Env.Page.Name ?>">
+        <table id="config_gpon">
+            <?cs if:Env.user.gpon.pwd == "" ?>
+                <?cs set:gpon_status = "unused" ?>
+            <?cs else ?>
+                <?cs if:Env.status.gpon.slidchange == "off" ?>
+                    <?cs set:gpon_status = "enabled" ?>
+                <?cs elif:Env.status.gpon.slidchange == "on" ?>
+                    <?cs set:gpon_status = "unused" ?>
+                <?cs elif:Env.status.gpon.slidchange == "error" ?>
+                    <?cs set:gpon_status = "disabled" ?>
+                <?cs /if ?>
+            <?cs /if ?>
+                <th scope="row"><?cs var:Env.Var.status_service.Value ?></th>
+                <td class="<?cs var:gpon_status ?>" id="status_gpon">
+                    <span id="pending"><img src="/img/icon_anim_loading.gif?v=3.4" alt="<?cs var:Env.Text.work_in_progress ?>" />&nbsp;<?cs var:Env.Text.work_in_progress ?> </span>
+                    <span id="state"><?cs if:gpon_status == "enabled" ?><?cs var:Env.Var.gpon_slidchange.off ?>
+                        <?cs elif:gpon_status == "unused" ?><?cs if:Env.user.gpon.pwd == "" ?><?cs var:Env.Var.gpon_slidchange.unused ?><?cs else ?><?cs var:Env.Var.gpon_slidchange.on ?><?cs /if ?>
+                        <?cs elif:gpon_status == "disabled" ?><?cs var:Env.Var.gpon_slidchange.error ?>
+                        <?cs else ?><?cs var:Env.Var.gpon_slidchange.unknown ?><?cs /if ?>
+                    </span>
+                </td>
+            </tr>
+            <tr id="row_gponpwd">
+                <th scope="row"><?cs var:Env.Var.gponpwd.Value ?></th>
+                <td>
+                    <input class="" type="text" name="gponpwd" id="gponpwd" value="<?cs var:Var.gpon_pwd.Value ?>" />
+                </td>
+            </tr>
+        </table>
+        <input type="hidden" name="gponpwd_confirm" id="gponpwd_confirm" value="" />
+        <button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button>
+    </form>
+</div>
+<?cs else ?>
+<?cs set:Env.Help.Text = Env.Help.Text.ONT ?>
+
+<?cs if:Var.gpon_config_access.Value == "allowed" ?>
+<div class="content" id="ont-content" style="display:none;">
+    
+    <div class="alert alert-warning" style="display:none;"><?cs var:Env.Var.ontpwd.Error.value ?></div>
+    
+    <form method="post" id="form_net_config_ont" action="<?cs var:Env.Page.Name ?>">
+        <table id="config_ont">
+            <?cs if:Var.ont_type.Value == "I-010" ?>
+                <?cs set:ont_status = "disabled" ?>
+                <?cs if:Env.ont.ranging == "IS" || Env.ont.ranging == "OPERATION(O5)" || Env.ont.ranging == "O5"  ?>
+                    <?cs set:ont_status = "enabled" ?>
+                <?cs /if ?>    
+            <tr>
+                <th scope="row"><?cs var:Env.Var.status_service.Value ?></th>
+                <td class="<?cs var:ont_status ?>" id="status_ont">
+                        <span id="pending"><img src="/img/icon_anim_loading.gif?v=3.4" alt="<?cs var:Env.Text.work_in_progress ?>" />&nbsp;<?cs var:Env.Text.work_in_progress ?> </span>
+                        <span id="state"><?cs if:ont_status == "enabled" ?><?cs var:Env.Var.ont.sync ?><?cs else ?><?cs var:Env.Var.ont.nosync ?><?cs /if ?></span>
+                </td>
+            </tr>
+            <?cs /if ?>    
+            <tr id="row_ontpwd">
+                <th scope="row"><?cs var:Env.Var.ontpwd.Value ?></th>
+                <td>
+                    <input class="" type="text" name="ontpwd" id="ontpwd" value="<?cs var:Var.gpon_pwd.Value ?>" />
+                </td>
+            </tr>
+        </table>
+        <input type="hidden" name="ontpwd_confirm" id="ontpwd_confirm" value="" />
+        <button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button>
+    </form>
+</div>
+<?cs /if ?>
+<?cs /if ?>

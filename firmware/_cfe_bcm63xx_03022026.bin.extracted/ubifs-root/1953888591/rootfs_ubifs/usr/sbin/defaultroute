@@ -1,0 +1,123 @@
+#!/bin/sh
+
+net_infra_reset() {
+	logger -t "defaultroute[$$]" "delete ${infra} infra"
+
+	local service=$1
+	status set net_${service}_status down
+	status set net_${service}_infra unknown
+	status set net_${service}_access 
+	status set net_${service}_ifname 
+	status set net_${service}_ipaddr 
+	status set net_${service}_netmask 
+	status set net_${service}_broadcast 
+	status set net_${service}_gateway 
+	status set net_${service}_dns 
+	status set net_${service}_ip6addr
+	status set net_${service}_resolvconf
+}
+
+net_infra_configure() {
+	[ "$(status get net_${service}_infra)" != "${infra}" ] && {
+		local service=$1
+		local type=$2
+		local name=$3
+		access=$(status get ${type}_${name}_access)
+		ifname=$(status get ${type}_${name}_ifname)
+		ipaddr=$(status get ${type}_${name}_ipaddr)
+		netmask=$(status get ${type}_${name}_netmask)
+		broadcast=$(status get ${type}_${name}_broadcast)
+		gateway=$(status get ${type}_${name}_gateway)
+		dns=$(status get ${type}_${name}_dns)
+		resolvconf=$(status get ${type}_${name}_resolvconf)
+
+		logger -t "defaultroute[$$]" "configure ${infra} infra"
+
+		status set net_${service}_status up
+		status set net_${service}_infra ${infra}
+		status set net_${service}_access ${access}
+		status set net_${service}_ifname ${ifname}
+		status set net_${service}_ipaddr ${ipaddr}
+		status set net_${service}_netmask ${netmask}
+		status set net_${service}_broadcast ${broadcast}
+		status set net_${service}_gateway ${gateway}
+		status set net_${service}_dns ${dns}
+		status set net_${service}_ip6addr
+		status set net_${service}_resolvconf ${resolvconf}
+
+		update-resolv.conf
+		ip route replace default via ${gateway}
+		ip route flush cache
+
+		diaglog poll data
+		autoconf start
+	}
+}
+
+net_infra_set_dhcpc_wan() {
+	local service=$1
+	infra="$(status get dhcpc_wan_access)/routed"
+	net_infra_configure ${service} "dhcpc" "wan"
+}
+
+net_infra_set_dhcp_voip() {
+	local service=$1
+	infra="adsl/dhcp"
+	net_infra_configure ${service} "dhcpc" "voip"
+}
+
+net_infra_set_ppp_adsl() {
+	local service=$1
+	infra="adsl/ppp"
+	net_infra_configure ${service} "ppp" "adsl"
+}
+
+net_infra_set_ppp_gprs() {
+	local service=$1
+	infra="gprs/ppp"
+	net_infra_configure ${service} "ppp" "gprs"
+}
+
+net_infra_set_ipv6_only() {
+	local access="$(status get dhcp6c_access)"
+	local infra="${access}/routed"
+
+	[ "$(status get net_autoconf_infra)" = "${infra}" ] && return
+
+	logger -t "defaultroute[$$]" "configure ${infra} infra"
+
+	status set net_autoconf_status "up"
+	status set net_autoconf_infra "${infra}"
+	status set net_autoconf_access "${access}"
+	status set net_autoconf_ifname "$(status get dhcp6c_ifname)"
+	status set net_autoconf_ipaddr
+	status set net_autoconf_netmask
+	status set net_autoconf_broadcast
+	status set net_autoconf_gateway "$(status get dhcp6c_gateway)"
+	status set net_autoconf_ip6addr "$(status get dhcp6c_ipaddr)"
+	status set net_autoconf_dns "$(status get dhcp6c_dns)"
+	status set net_autoconf_resolvconf
+
+	update-resolv.conf
+
+	diaglog poll data
+	autoconf start
+}
+
+lock /run/lock/defaultroute.lock
+
+if [ "$(status get dhcpc_wan_status)" = "up" ]; then
+	net_infra_set_dhcpc_wan "autoconf"
+elif [ -d /etc/adsl ] && [ "$(status get dhcpc_voip_status)" = "up" ]; then
+	net_infra_set_dhcp_voip "autoconf"
+elif [ -d /etc/adsl ] && [ "$(status get ppp_adsl_status)" = "up" ]; then
+	net_infra_set_ppp_adsl "autoconf"
+elif [ "$(status get ppp_gprs_status)" = "up" ]; then
+	net_infra_set_ppp_gprs "autoconf"
+elif [ "$(status get net_ipv6_status)" = "up" -a "$(status get net_ipv6_infra)" = "Only" ]; then
+	net_infra_set_ipv6_only
+else
+	net_infra_reset "autoconf"
+fi
+
+lock -u /run/lock/defaultroute.lock

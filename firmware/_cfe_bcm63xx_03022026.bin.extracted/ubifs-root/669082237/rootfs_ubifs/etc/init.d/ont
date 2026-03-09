@@ -1,0 +1,619 @@
+#!/bin/sh /etc/rc.common
+# supported ONT firmwares
+# i010-g:
+#	* XA35
+#	* XA90
+# i020-g:
+#
+# i020g is ranged if ranging = "Operation State (Auto-Disable State = Normal State)"
+# i010g is ranged if ranging = "IS" or "O5" or "OPERATION (O5)"
+
+# In order to maintain state coherency, check_slid, update, set_slid, reboot set status variables.
+# Therefore, their return codes are redefined bellow. Specific return values are documented
+# at each function definition.
+# common return codes are:
+# *  -1: cmd is executing
+# *   0: default state or cmd OK
+# *   1: cmd failed, generic
+# *   2: cmd failed, ont is unreachable
+# *   3: cmd failed, something went wrong with empty
+# * >10: cmd specific return codes
+
+START=59
+EXTRA_COMMANDS="debug_enable debug_disable debug_collect check_slid set_slid reboot update"
+logger -t "ont[$$]" "$1 $2"
+
+filename="/tmp/out.save"
+
+connect_telnet()
+{
+	killall empty
+
+	PASSWORDI010=$(nvram get ont_passwordI010)
+	PASSWORDI020=$(nvram get ont_passwordI020)
+	USERI010=$(nvram get ont_userI010)
+	USERI020=$(nvram get ont_userI020)
+	ONTIP=$(nvram get ont_ip)
+
+	# connect to GPON
+	empty -f -i /tmp/fifo.in -o /tmp/fifo.out telnet $ONTIP
+	cat /tmp/fifo.out > $filename &
+	sleep 2
+	# check telnet login because sometimes it fails
+	VAR="$(awk '{if ($0 ~ /login/) {print $0}}' $filename)"
+	LOGINI010="$(echo $VAR | grep -o 'I-010')"
+	LOGINI020="$(echo $VAR | grep -o '(none)')"
+	if [ "$LOGINI010" = "I-010" ]; then
+		empty -s -o /tmp/fifo.in "$USERI010\n"
+		# mini ONT connected
+		ont set type "I-010"
+		empty -s -o /tmp/fifo.in "$PASSWORDI010\n"
+		sleep 2
+	elif [ "$LOGINI020" = "(none)" ]; then
+		empty -s -o /tmp/fifo.in "$USERI020\n"
+		# ONT I020G/E connected
+		ont set type "I-020"
+		empty -s -o /tmp/fifo.in "$PASSWORDI020\n"
+	else
+		killall empty
+		return 1
+	fi
+	return 0
+}
+
+disconnect_telnet()
+{
+	local TYPE1="$(ont get type | grep -o 'I-010')"
+	local TYPE2="$(ont get type | grep -o 'I-020')"
+	if [ "$TYPE2" = "I-020" ]; then
+		# exit from I-020G/E
+		empty -s -o /tmp/fifo.in '9\n' 2>/dev/null
+	elif [ "$TYPE1" = "I-010" ]; then
+		# exit from mini-ONT (2 exits required, first segfault)
+		empty -s -o /tmp/fifo.in 'exit\n' 2>/dev/null
+		sleep 2
+		empty -s -o /tmp/fifo.in 'exit\n' 2>/dev/null
+	fi
+}
+
+test_ping()
+{
+	for i in $(seq 1 5)
+	do
+		if ping -c1 -w1 $(nvram get ont_ip) > /dev/null
+		then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+# Fetch gpon status
+
+ont_update()
+{
+	# test if ont is connected to the box
+	if ! test_ping
+	then
+		status set ont_status down
+		return 2
+	else
+		status set ont_status up
+		# Force net_data_access to ftth to cleanup WUI
+		[ "$(status get net_data_access)" = "unknown" ] && status set net_data_access ftth
+	fi
+
+	# begin TELNET session on ont
+	connect_telnet
+	if [ $? -eq 1 ]; then
+		disconnect_telnet
+		return 2
+	fi
+	local ONT1="$(ont get type | grep -o 'I-010')"
+	local ONT2="$(ont get type | grep -o 'I-020')"
+	if [ "$ONT1" = "I-010" ]; then
+		get_I010_info
+	elif [ "$ONT2" = "I-020" ]; then
+		get_I020_info
+	fi
+
+	if [ "$?" -eq 3 ]; then
+		return 3
+	fi
+
+	if [ "$(nvram get ont_debug)" != "on" ]; then
+		rm -f $filename
+	fi
+
+	# timestamp
+	ont set timestamp "$(date +%s)"
+
+	# increment access update counter
+	COUNTER=$(status get ont_counterupdate)
+	COUNTER=$(( ${COUNTER} + 1))
+	status set ont_counterupdate "$COUNTER"
+
+	return 0
+}
+
+get_I020_info()
+{
+	empty -s -o /tmp/fifo.in '4\n'
+	sleep 1
+	empty -s -o /tmp/fifo.in '6\n'
+	sleep 1
+	empty -s -o /tmp/fifo.in '\n'
+	disconnect_telnet
+
+	# check if file out.save exists and is not empty, otherwise exit
+	if [ ! -s "$filename" ]; then
+		return 3
+	fi
+	VAR="$(grep "Ranging State" $filename | cut -d ' ' -f 4- | sed 's/[[:cntrl:]]//g')"
+	ont set ranging "$VAR"
+	VAR="$(awk '{if ($0 ~ /ALPHANUMERIC/) {print $NF}}' $filename | sed 's/[[:cntrl:]]//g')"
+	ont set slid "$VAR"
+
+	return 0
+}
+
+get_I010_info()
+{
+	empty -s -o /tmp/fifo.in "show gpon type\nshow gpon slid\nshow gpon sn\nshow firmware version\nshow gpon RSSI\n"
+	sleep 15
+	empty -s -o /tmp/fifo.in "show led\nshow uptime\nshow download status\nshow gpon ranging state\nshow gpon status\n"
+	sleep 6
+	disconnect_telnet
+
+	# check if file out.save exists and is not empty, otherwise exit
+	if [ ! -s "$filename" ]; then
+		return 3
+	fi
+
+	# ONT type set in connect_telnet
+	ont set type "$(awk '{if ($0 ~ /ONT type/) {print $NF}}' $filename)"
+
+	# ONT SLID (ASCII)
+	VAR="$(awk '{if (($0 ~ /SLID/) && ($0 ~ /ASCII/)) {print $NF}}' $filename)"
+	if [ -n "$VAR" ]; then
+		ont set slid "$VAR"
+	fi
+	# ONT Serial Number
+	VAR="$(awk '{if (($0 ~ /Serial Number/) && ($0 ~ /ASCII/)) {print $NF}}' $filename)"
+	if [ -n "$VAR" ]; then
+		ont set sn "$VAR"
+	fi
+	# ONT Ranging (use sed here because invisible char at the end of line is present)
+	VAR="$(awk '{FS="="; if ($0 ~ /RANGING STATE/) {print $NF}}' $filename | sed 's/[[:cntrl:]]//g' | sed 's/ //g')"
+	ont set ranging "$VAR"
+	#case "$VAR" in
+		#"IS"|"OPERATION(O5)"|"O5")
+			#;;
+		#*)
+			#logger -t "ont[$$]" "ont not ranged, pushing slid to $(nvram get ont_slid)"
+			#set_slid "$(nvram get ont_slid)"
+			#;;
+	#esac
+
+	# Active version
+	ont set version_active "$(awk '{if ($0 ~ /Active software/) {print $NF}}' $filename)"
+	# Passive version
+	VAR="$(awk '{if ($0 ~ /Passive software/) {print $NF}}' $filename)"
+	if [ "$VAR" = "EMPTY" ]; then
+		ont set version_passive ""
+	else
+		ont set version_passive "$VAR"
+	fi
+	# receive RSSI
+	ont set rssi_receive "$(awk '{if ($0 ~ /receive RSSI/) {print $(NF-1)}}' $filename)"
+	# transmit RSSI
+	ont set rssi_transmit "$(awk '{if ($0 ~ /transmit RSSI/) {print $(NF-1)}}' $filename)"
+	# laser bias current
+	ont set rssi_bias "$(awk '{if ($0 ~ /Current/) {print $(NF-1)}}' $filename)"
+	# temperature
+	ont set rssi_temp "$(awk '{if ($0 ~ /Temperature/) {print $(NF-1)}}' $filename)"
+	# Voltage Vcc
+	ont set rssi_vcc "$(awk '{if ($0 ~ /Vcc/) {print $(NF-1)}}' $filename)"
+
+
+	# Gpon Status variables
+
+	ont set status_power "$(awk '{if ($0 ~ /EQUIPMENT_POWERED/) {print $NF}}' $filename)"
+	ont set status_lanlos "$(awk '{if ($0 ~ /LANLOS/) {print $NF}}' $filename)"
+	ont set status_lossframe "$(awk '{if ($0 ~ /LOSS_OF_FRAME/) {print $NF}}' $filename)"
+	ont set status_lossgem "$(awk '{if ($0 ~ /LOSS-OF_GEM/) {print $NF}}' $filename)"
+	ont set status_losssignal "$(awk '{if ($0 ~ /LOSS_OF_SIGNAL/) {print $NF}}' $filename)"
+	ont set status_errormsg "$(awk '{if ($0 ~ /MSG_ERROR_MSG/) {print $NF}}' $filename)"
+	ont set status_omcc "$(awk '{if ($0 ~ /OMCC_NOT_ASSIGNED/) {print $NF}}' $filename)"
+	ont set status_deactivate "$(awk '{if ($0 ~ /ONT_DEACTIVATE/) {print $NF}}' $filename)"
+	ont set status_ranged "$(awk '{if ($0 ~ /ONT_RANGED/) {print $NF}}' $filename)"
+	ont set status_phyerrorin "$(awk '{if ($0 ~ /PHY_EQPT_ERROR_IN/) {print $NF}}' $filename)"
+	ont set status_phyerror "$(awk '{if ($0 ~ /PHYSICALEQUIPMENTERROR/) {print $NF}}' $filename)"
+	ont set status_high "$(awk '{if ($0 ~ /PON-HIGH/) {print $NF}}' $filename)"
+	ont set status_low "$(awk '{if ($0 ~ /PON-LOW/) {print $NF}}' $filename)"
+	ont set status_rdi "$(awk '{if ($0 ~ /RDI/) {print $NF}}' $filename)"
+	ont set status_degraded "$(awk '{if ($0 ~ /SIGNAL_DEGRADED/) {print $NF}}' $filename)"
+	ont set status_failed "$(awk '{if ($0 ~ /SIGNAL_FAILED/) {print $NF}}' $filename)"
+	ont set status_failure "$(awk '{if ($0 ~ /STARTUP_FAILURE/) {print $NF}}' $filename)"
+	ont set status_dldone "$(awk '{if ($0 ~ /SW_DLD_DONE/) {print $NF}}' $filename)"
+	ont set status_dlfail "$(awk '{if ($0 ~ /SW_DLD_FAIL/) {print $NF}}' $filename)"
+	ont set status_dlidle "$(awk '{if ($0 ~ /SW_DLD_IDLE/) {print $NF}}' $filename)"
+	ont set status_dlip "$(awk '{if ($0 ~ /SW_DLD_IP/) {print $NF}}' $filename)"
+	ont set status_dlstart "$(awk '{if ($0 ~ /SW_DLD_START/) {print $NF}}' $filename)"
+
+	## Leds
+	# Puts the grep result to erase spaces
+	LEDS=$(grep COLOR $filename)
+	LEDSTATE=$(grep LEDSTATE $filename)
+
+	LEDSTATE_PON="$(echo $LEDSTATE | cut -d ' ' -f 2)"
+	LEDSTATE_MGT="$(echo $LEDSTATE | cut -d ' ' -f 3)"
+
+	if [ -z $LEDSTATE_PON ]; then
+		LEDSTATE_PON="NONE"
+	fi
+	if [ -z $LEDSTATE_MGT ]; then
+		LEDSTATE_MGT="NONE"
+	fi
+
+	# Equipment
+	ont set leds_eqpt "$(echo $LEDS | cut -d ' ' -f 2)"
+	ont set leds_eqptstate "NONE"
+	# PON
+	ont set leds_pon "$(echo $LEDS | cut -d ' ' -f 3)"
+	ont set leds_ponstate "$LEDSTATE_PON"
+	# Management
+	ont set leds_mgnt "$(echo $LEDS | cut -d ' ' -f 4)"
+	ont set leds_mgntstate "$LEDSTATE_MGT"
+	# LAN
+	ont set leds_lan "$(echo $LEDS | cut -d ' ' -f 5)"
+	ont set leds_lanstate "NONE"
+	# Alarm
+	ont set leds_alm "$(echo $LEDS | cut -d ' ' -f 6)"
+	# uptime
+	ont set uptime "$(grep system $filename | cut -d ' ' -f 6- | sed 's/[[:cntrl:]]//g'|awk '
+			{ sec=0
+			  for(i=1;i<=NF;i++)
+			  { if(i%2)
+			    { if($(i+1)=="day"){sec+=$i*3600*24}
+			      if($(i+1)=="hours"){sec+=$i*3600}
+			      if($(i+1)=="minutes"){sec+=$i*60}
+			      if($(i+1)=="seconds..."){sec+=$i}
+			    }
+			  }
+			  print sec
+			}')"
+
+	# progress of software download
+	ont set download "$(awk '{if ($0 ~ /Software/) {print $NF}}' $filename)"
+
+	return 0
+}
+
+# ont_set_slid specific return codes
+# 	10 : the ont is already in ranged state
+# 	11 : the network provided an slid
+# 	12 : an slid is already stored in the user configuration
+# 	13 : the stored slid was overwritten
+# 	14 : the slid was written more than 9 times
+
+ont_set_slid()
+{
+	connect_telnet
+	if [ $? -eq 1 ]; then
+		return 2
+	fi
+	local SLID=$(echo $1|sed 's/[-+]//g')
+	sleep 1
+	local TYPE1="$(ont get type | grep -o 'I-010')"
+	#local TYPE2="$(ont get type | grep -o 'I-020')"
+	if [ "$TYPE1" = "I-010" ]; then
+		set_slid_I010 $SLID $2
+#	elif [ "$TYPE2" = "I-020" ]; then
+#		set_slid_I020 $SLID
+	fi
+	return $?
+}
+
+set_slid_I010()
+{
+	local RETOUR=0
+	empty -s -o /tmp/fifo.in 'show gpon ranging state\n'
+	sleep 1
+	VAR="$(awk '{FS="="; if ($0 ~ /RANGING STATE/) {print $NF}}' $filename | sed 's/[[:cntrl:]]//g' | sed 's/ //g')"
+	ont set ranging "$VAR"
+	case "$VAR" in
+		"IS"|"OPERATION(O5)"|"O5")
+			disconnect_telnet
+			return 10
+			;;
+		*)
+			;;
+	esac
+
+	# slid from PFS has the priority if ONT is not ranged
+	if [ -n "$(autoconf get ont_slid)" -a "$2" != "force" ]; then
+		disconnect_telnet
+		return 11
+	fi
+
+	if [ -n "$(nvram get ont_slid)" ]; then
+		case "$2" in
+			"confirm"|"force")
+				RETOUR=13
+				;;
+
+			*)
+				RETOUR=12
+				disconnect_telnet
+				return $RETOUR
+				;;
+		esac
+	fi
+
+	ATTEMPT=$(status get ont_slidattempts)
+	if [ "$ATTEMPT" -ge 10 -a "$2" != "force" ]; then
+		return 14
+	fi
+
+	if [ "$2" != "force" ]; then
+		ATTEMPT=$(( ${ATTEMPT} + 1))
+		status set ont_slidattempts "$ATTEMPT"
+	fi
+
+	empty -s -o /tmp/fifo.in "set gpon slid ascii $1\n"
+	sleep 2
+	# confirm reboot when changing slid (required 2 times, I don't know why)
+	empty -s -o /tmp/fifo.in 'y\n' 2>/dev/null
+	sleep 2
+	empty -s -o /tmp/fifo.in 'y\n' 2>/dev/null
+	sleep 2
+	disconnect_telnet
+
+	nvram set ont_slid "$1"
+	nvram commit
+
+	return $RETOUR
+}
+
+# function coded for later
+#set_slid_I020()
+#{
+	#empty -s -o /tmp/fifo.in '6\n'
+	#sleep 1
+	#empty -s -o /tmp/fifo.in '\n'
+	#VAR="$(grep "Ranging State" $filename | cut -d ' ' -f 4- | sed 's/[[:cntrl:]]//g')"
+	#ont set ranging "$VAR"
+	#if [ "$VAR" = "Operation State (Auto-Disable State = Normal State)" ]; then
+		#disconnect_telnet
+		#return 10
+	#fi
+	#empty -s -o /tmp/fifo.in '2\n'
+	#sleep 1
+	#empty -s -o /tmp/fifo.in "$1\n"
+	#sleep 1
+	#ont set slid "$1"
+	#disconnect_telnet
+	#return 0
+#}
+
+
+# ont_check_slid specific return codes
+# 	10 : check_slid called set_slid
+
+ont_check_slid()
+{
+	local TYPE1="$(ont get type | grep -o 'I-010')"
+	local TYPE2="$(ont get type | grep -o 'I-020')"
+	RANGING="$(ont get ranging)"
+	ONT_SLID="$(ont get slid)"
+	PFS_SLID="$(autoconf get ont_slid)"
+	ONTSTATUS="$(status get ont_status)"
+	DEFSLID_I010="$(nvram get ont_defslidI010)"
+	DEFSLID_I020="$(nvram get ont_defslidI020)"
+
+	if [ -n "$PFS_SLID" ]; then
+		nvram set ont_slid "$PFS_SLID"
+				nvram commit
+			fi
+
+	if [ "$ONTSTATUS" = "down" ]; then
+		return 2
+		fi
+
+	if [ "$TYPE2" = "I-020" -a \
+	"$RANGING" = "Operation State (Auto-Disable State = Normal State)" -a \
+	"$ONT_SLID" != "$DEFSLID_I020" -a "$PFS_SLID" = "" ]; then
+		nvram set ont_slid "$ONT_SLID"
+		nvram commit
+	fi
+
+	if [ "$TYPE1" = "I-010" ]; then
+		case "$RANGING" in
+			"IS"|"OPERATION(O5)"|"O5")
+				if [ "$ONT_SLID" != "$DEFSLID_I010" -a "$PFS_SLID" = "" ]; then
+					nvram set ont_slid "$ONT_SLID"
+					nvram commit
+				fi
+				;;
+			*)
+				NVRAM_SLID="$(nvram get ont_slid)"
+				if [ -n "$NVRAM_SLID" -a "$NVRAM_SLID" != "$ONT_SLID" ]; then
+						ont_set_slid "$NVRAM_SLID" "force"
+						return 10
+				fi
+				;;
+		esac
+	fi
+	return 0
+}
+
+debug_enable()
+{
+    lock /run/lock/ont.lock
+    connect_telnet
+    if [ $? -eq 1 ]; then
+	return 2
+    fi
+    sleep 1
+    empty -s -o /tmp/fifo.in 'set gpon debug on\n'
+    sleep 1
+    empty -s -o /tmp/fifo.in 'set gpon debug level all\n'
+    sleep 1
+    empty -s -o /tmp/fifo.in 'set gpon debug off\n'
+    sleep 1
+    disconnect_telnet
+    lock -u /run/lock/ont.lock
+    return 0
+}
+
+debug_disable()
+{
+    lock /run/lock/ont.lock
+    connect_telnet
+    if [ $? -eq 1 ]; then
+	return 2
+    fi
+    sleep 1
+    empty -s -o /tmp/fifo.in 'set gpon debug level none\n'
+    sleep 1
+    disconnect_telnet
+    lock -u /run/lock/ont.lock
+    return 0
+}
+
+debug_collect()
+{
+    lock /run/lock/ont.lock
+    connect_telnet
+    if [ $? -eq 1 ]; then
+	return 2
+    fi
+    sleep 1
+    if [ "$1" = "omci" ]; then
+	empty -s -o /tmp/fifo.in 'show gpon debug level omci\n'
+	sleep 1
+    elif [ "$1" = "dhcp" ]; then
+	empty -s -o /tmp/fifo.in 'show gpon debug level dhcp\n'
+	sleep 1
+    elif [ "$1" = "arp" ]; then
+	empty -s -o /tmp/fifo.in 'show gpon debug level arp\n'
+	sleep 1
+    elif [ "$1" = "igmp" ]; then
+	empty -s -o /tmp/fifo.in 'show gpon debug level igmp\n'
+	sleep 1
+    elif [ "$1" = "all" ]; then
+	empty -s -o /tmp/fifo.in 'show gpon debug level omci\n'
+	sleep 1
+	empty -s -o /tmp/fifo.in 'show gpon debug level dhcp\n'
+	sleep 1
+	empty -s -o /tmp/fifo.in 'show gpon debug level arp\n'
+	sleep 1
+	empty -s -o /tmp/fifo.in 'show gpon debug level igmp\n'
+	sleep 1
+    fi
+
+    disconnect_telnet
+    lock -u /run/lock/ont.lock
+    return 0
+}
+
+boot()
+{
+    lock /run/lock/ont.lock
+    ont_update
+    ont_check_slid
+    lock -u /run/lock/ont.lock
+    return 0
+    
+}
+
+
+# ont_reboot specific return codes
+# 	10 : the ont is ranged
+
+ont_reboot()
+{
+	if ! test_ping
+	then
+		status set ont_status down
+		return 2
+	else
+		status set ont_status up
+		# Force net_data_access to ftth to cleanup WUI
+		[ "$(status get net_data_access)" = "unknown" ] && status set net_data_access ftth
+	fi
+
+	# set counter access to 0
+	status set ont_slidattempts "0"
+	status set ont_counterupdate "0"
+
+	connect_telnet
+	if [ $? -eq 1 ]; then
+		disconnect_telnet
+		return 2
+	fi
+	empty -s -o /tmp/fifo.in "show gpon ranging state\n"
+	sleep 1
+	VAR="$(awk '{FS="="; if ($0 ~ /RANGING STATE/) {print $NF}}' $filename | sed 's/[[:cntrl:]]//g' | sed 's/ //g')"
+	ont set ranging "$VAR"
+	case "$VAR" in
+		"IS"|"OPERATION(O5)"|"O5")
+			# ONT is ranged
+			disconnect_telnet
+			return 10
+			;;
+		*)
+			# ONT reboot
+			empty -s -o /tmp/fifo.in 'reboot\n'
+			sleep 1
+			empty -s -o /tmp/fifo.in 'y\n'
+			return 0
+			;;
+	esac
+}
+
+########################################################################
+########################################################################
+
+if [ "$(nvram get ont_active)" != "on" ]; then
+	logger -s -t "[ont]" "ont deactivated"
+	return 1
+fi
+
+RET=0
+
+# lock every function because each has to use empty and access to ont via telnet
+
+update() {
+    lock /run/lock/ont.lock
+    status set ont_return_update "-1"
+    ont_update
+    status set ont_return_update "$?"
+    lock -u /run/lock/ont.lock
+}
+
+set_slid() {
+    lock /run/lock/ont.lock
+    status set ont_return_setslid "-1"
+    ont_set_slid $1 $2
+    status set ont_return_setslid "$?"
+    lock -u /run/lock/ont.lock
+}
+
+reboot() {
+    lock /run/lock/ont.lock
+    status set ont_return_reboot "-1"
+    ont_reboot
+    status set ont_return_reboot "$?"
+    lock -u /run/lock/ont.lock
+}
+
+check_slid() {
+    lock /run/lock/ont.lock
+    status set ont_return_checkslid "-1"
+    ont_check_slid
+    status set ont_return_checkslid "$?"
+    lock -u /run/lock/ont.lock
+}

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+[ "${INTERFACE}" != "tun0" ] && exit 0
+
+[ "$(nvram get net_mode)" = "bridge" ] && local mode="-bridge"
+local topology_conf=/etc/config/topology${mode}.xml
+[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+local portail_ipaddr="$(roxml -q ${topology_conf} '//interface[@service=hotspot and @config=portail]/@ipaddr')"
+eval $(ipcalc -np ${portail_ipaddr})
+local portail_network=${NETWORK}/${PREFIX}
+
+case "$ACTION" in
+	add|register)
+		sysctl -w net.ipv6.conf.tun0.disable_ipv6=1
+		ip route add ${portail_network} dev ${INTERFACE} table hotspot_t
+	;;
+	remove|unregister)
+		ip route del ${portail_network} dev ${INTERFACE} table hotspot_t
+	;;
+esac

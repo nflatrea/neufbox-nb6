@@ -1,0 +1,35 @@
+Env.Page.Title = Réseau
+
+Env.Help.Text = Dans la rubrique <b>Etat des ports</b>, vous retrouvez l'état des différentes liaisons entre votre Box et les équipements que vous possédez (ordinateur, décodeur TV, etc.), ainsi que le nombre de connexions Wifi actives.<br /><br />Dans la rubrique <b>Postes connectés</b> est affichée la liste des équipements actuellement reliés à votre Box.
+
+Env.Section.lan_status.Header = Etat des ports
+
+Env.Var.TVStatus.Header = TV
+Env.Var.TVStatus.Value.up = Décodeur TV
+Env.Var.TVStatus.Value.down = Non utilisé
+
+Env.Var.LinkStatus.Value.up = Actif
+Env.Var.LinkStatus.Value.down = Non utilisé
+
+Env.Var.type.Value.stb = Décodeur TV
+Env.Var.type.Value.host = Hôte
+
+Env.Var.USBStatus.Header = USB PC
+Env.Var.USBStatus.Value.up = Actif
+Env.Var.USBStatus.Value.down = Non utilisé
+
+Env.Var.WifiStatus.Header = Wifi
+Env.Var.WifiStatus.Value.on = Activé
+Env.Var.WifiStatus.Value.off = Désactivé
+
+Env.Var.WifiCountClient.Value.0 = Pas de connexion active
+Env.Var.WifiCountClient.Value.1 = 1 connexion active
+Env.Var.WifiCountClient.Value.many = Connexions actives
+
+Env.Section.connected_computers.Header = Postes connectés
+
+Env.Var.hostname.Header = Nom d'hôte
+Env.Var.mac_addr.Header = Adresse MAC
+Env.Var.ip_addr.Header = Adresse IP
+Env.Var.port.Header = Port
+

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ "${TERM}" = "linux" ]; then
+	insmod $3
+else
+	insmod $1
+fi

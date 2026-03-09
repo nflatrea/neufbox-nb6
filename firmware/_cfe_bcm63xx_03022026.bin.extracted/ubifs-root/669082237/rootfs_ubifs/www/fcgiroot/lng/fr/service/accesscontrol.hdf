@@ -1,0 +1,12 @@
+Env.Page.Title = Contrôle d'accès
+Env.Section.ca.Title = Contrôle d'accès
+Env.Help.Text = Dans la rubrique <b>Contrôle d’accès</b> vous pouvez surveiller son fonctionnement et vous rendre sur la page de configuration du service.
+Env.Var.ca_status.Header = Statut du service
+Env.Var.ca_status.Value.enable = Activé
+Env.Var.ca_status.Value.disabled = Désactivé
+Env.Var.ca_status.Value.disabled_autoconf = Désactivé par le réseau
+Env.Var.ca_status.Value.disabled_user = Désactivé par l'utilisateur
+Env.Var.ca_status.Value.disabled_date = Désactivé. La Box n'arrive pas à se mettre à l'heure
+Env.Var.ca_status.Value.disabled_data = Désactivé (En attente de connexion internet)
+Env.Var.ca_access_page.Value = Accéder à la
+Env.Var.ca_access_page.Value.link = page de configuration

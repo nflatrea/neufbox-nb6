@@ -1,0 +1,21 @@
+#!/bin/sh
+
+logger -s -t PPP_STATUS -p local1.info "ppp/ipv6 UP :)"
+
+# update status
+status set ppp_ipv6_session "NC"
+status set ppp_ipv6_server "NC"
+status set ppp_ipv6_ifname "$IFNAME"
+status set ppp_ipv6_status "up"
+
+# Prevent from buggy networks which do not provide route using RA
+ip -6 route add default dev $IFNAME
+
+[ -d /etc/ppp/ip-up.d ] && {
+	for SCRIPT in /etc/ppp/ip-up.d/*
+	do
+		[ -x "$SCRIPT" ] && "$SCRIPT" "$@"
+	done
+}
+
+/etc/init.d/ipv6 reload

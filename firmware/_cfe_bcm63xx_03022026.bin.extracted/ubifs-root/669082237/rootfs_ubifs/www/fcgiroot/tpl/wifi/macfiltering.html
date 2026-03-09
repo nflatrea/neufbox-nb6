@@ -1,0 +1,111 @@
+<div class="title">
+	<h1><?cs var:Env.Section.MACFiltering.Title ?></h1>
+</div>
+
+<div class="content">
+	<form method="post" action="<?cs var:Env.Page.Name ?>" id="form_mac_filtering_activation">
+	<input type="hidden" id="show_add_my_workstation" name="show_add_my_workstation" value="<?cs call:varIf(Var.ShowAddMyWorkstation.Value) ?>" />
+    
+	<table id="mac_filtering_activation">
+		<tr>
+			<th scope="row"><?cs var:Env.Var.MACFiltering.Header ?></th>
+			<td>
+                            <?cs call:div_onoff("mac_filtering", Var.MACFiltering.Value == "whitelist") ?>
+			</td>
+		</tr>
+	</table>
+	
+	<?cs if:subcount(Var.List) == 0 && Var.MACFiltering.Value == "off"?>
+	<div class="alert alert-warning">
+	    <?cs var:Env.Text.WarningMacFiltering?>
+	</div>
+	<?cs /if?>
+	
+            <button type="submit" name="submit" class="btn"><?cs var:Button.Submit ?></button>
+	
+	</form>
+</div>
+
+<div class="title" id="title_maclist">
+	<h1><?cs var:Env.Section.MACWhiteList.Title ?></h1>
+</div>
+
+<div class="content" id="content_maclist">
+	<table id="mac_address_list" class='magictable'>
+		<thead>
+			<tr>
+				<th scope="col" class="col_number">#</th>
+				<th scope="col"><?cs var:Env.Var.mac_address.Header ?></th>
+				<th scope="col" class="col_band"><?cs var:Env.Var.mac_address.Band.header ?></th>
+				<th scope="col" class="col_action" colspan="2"></th>
+			</tr>
+		</thead>
+		<tbody>
+			<?cs each:item = Env.user.wlan.filter ?>
+			<tr>
+				<td class="col_number">
+					<?cs name:item ?>
+				</td>
+				<td>
+					<?cs var:item.mac ?>
+				</td>
+				<td>
+					<?cs var:Env.Var.mac_address.Band[item.band] ?>
+				</td>
+				<td class="col_action">
+					<form method="post" action="<?cs var:Env.Page.Name ?>">
+					<input type="hidden" name="action" value="remove" />
+					<input type="hidden" name="mac_address" value="<?cs var:item.mac ?>" />
+					<input type="hidden" name="band" value="<?cs var:item.band ?>" />
+					<button class="btn" type="submit" name="submit"><i class="icon-minus-sign icon-white"></i></button>
+					</form>
+				</td>
+			</tr>
+			<?cs /each ?>
+			<tr>
+				<form method="post" action="<?cs var:Env.Page.Name ?>" id="form_mac_addresses_list">
+				
+				<td class="col_number">
+					<?cs var:subcount(Env.user.wlan.filter) + #1 ?>
+				</td>
+				<td>
+                                    
+                                    
+                                    
+                                    <div class="control-group <?cs if:?Var.mac_address.Error ?>error<?cs /if ?>">
+                                        
+                                        <div class="input-append">
+                                            <input type="text" 
+                                               name="mac_address" 
+                                               id="mac_address" 
+                                               autocomplete="off" 
+                                               size="12" 
+                                               maxlength="17"
+                                               value="<?cs call:varIf(Var.mac_address.Value) ?>" 
+                                               class="input-large <?cs if:?Var.mac_address.Error ?>error<?cs else?>text<?cs /if?>" />
+                                            
+                                            <button class="btn" type="button" id="button_network"><i class="icon-th icon-white"></i></button>
+					</div>
+                                        
+					<?cs if:?Var.mac_address.Error ?>
+					<div class="help-inline"><?cs var:Env.Var.mac_address.Error[Var.mac_address.Error] ?></div>
+					<?cs /if ?>
+                                    </div>
+				</td>
+				<td>
+					<select class="col_band" name="band">
+						<option value="both" selected="selected"><?cs var:Env.Var.mac_address.Band.both ?></option>
+						<option value="wl1"><?cs var:Env.Var.mac_address.Band.wl1 ?></option>
+						<option value="wl0"><?cs var:Env.Var.mac_address.Band.wl0 ?></option>
+					</select>
+				</td>
+				<td class="col_action">
+					<input type="hidden" name="action" value="add" />
+					<button class="btn" type="submit" name="submit"><i class="icon-plus-sign icon-white"></i></button>
+				</td>
+				
+				</form>
+			</tr>
+		</tbody>
+	</table>
+</div>

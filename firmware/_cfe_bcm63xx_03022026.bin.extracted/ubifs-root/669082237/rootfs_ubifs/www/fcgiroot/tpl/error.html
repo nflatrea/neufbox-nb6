@@ -1,0 +1,38 @@
+<div class="title">
+	<h1><?cs var:Env.Section.page_not_found.Title ?></h1>
+</div>
+
+<div class="content">
+
+	<p><?cs var:Env.Text.PageNotFound ?></p>
+
+	<p>
+		<ul id="sitemap">
+		<?cs each:item = Env.Menu ?>
+                        <?cs set:tabDisplay="on" ?>
+                        <?cs if:?Env.MenuHidden[name(item)] && Env.MenuHidden[name(item)] == "on"?>                
+                                <?cs set:tabDisplay="off" ?>
+                        <?cs /if ?>
+                        <?cs if:tabDisplay == "on" ?>
+			<li><a href="/<?cs var:name(item) ?>"><?cs var:item.Label ?></a>
+				<?cs if:subcount(item.SubMenu) > 0 ?>
+				<ul>
+				<?cs each:subItem = item.SubMenu ?>
+                                        
+                                        <?cs set:subtabDisplay="on" ?>
+                                        <?cs if:?Env.MenuHidden[name(item)][name(subItem)] && Env.MenuHidden[name(item)][name(subItem)] == "on"?>
+                                                <?cs set:subtabDisplay="off" ?>
+                                        <?cs /if ?>
+                                        <?cs if:subtabDisplay == "on" ?>
+					<li><a href="/<?cs var:name(item) ?>/<?cs var:name(subItem)?>"><?cs var:subItem.Label ?></a></li>
+                                        <?cs /if ?>
+				<?cs /each ?>
+				</ul>
+				<?cs /if ?>
+			</li>
+                        <?cs /if ?>
+		<?cs /each ?>
+		</ul>
+	</p>
+
+</div>

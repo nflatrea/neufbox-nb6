@@ -1,0 +1,98 @@
+#!/bin/sh /etc/rc.common
+
+START=41
+
+if [ "$(nvram get ipv6_infra)" = "Only" ]; then
+	logger -t "dhcpc[$$]" "ipv6 only infra do not start dhcp"
+	exit 0
+fi
+
+logger -t "dhcpc[$$]" "$action"
+
+[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+topology_conf=/etc/config/topology${mode}.xml
+[ -e ${topology_conf} ] || topology_conf=/etc/default/topology${mode}.xml
+iptv_enable=$(autoconf get iptv_enable)
+
+pidfile() {
+	local name=$1
+
+	echo "/run/dhcpc-${name}.pid"
+}
+
+dhcp_start() {
+	local name=$1
+	local pidfile=$(pidfile ${name})
+	local ifname=$(roxml -q ${topology_conf} "//interface[@name=${name}]/@ifname")
+	local script="/etc/dhcp/${name}.script"
+	local vendorid="neufbox_$(status get productID)_$(cat /etc/efixo_release)"
+	test -d /etc/adsl && local vendorid="${vendorid}_$(status get version_dsldriver)"
+
+	status set dhcpc_${name}_ifname ${ifname}
+
+	[ "${name}" = "voip" ] && {
+		local dhcpc_wan_status=$(status get dhcpc_wan_status)
+		[ "${dhcpc_wan_status}" = "up" ] && {
+			dhcp_stop ${name}
+			return
+		}
+	}
+	[ "${name}" = "tv" ] && {
+		local dhcpc_wan_status=$(status get dhcpc_wan_status)
+		([ "${iptv_enable}" != "true" ] ||
+		[ "${dhcpc_wan_status}" = "up" ]) && {
+			dhcp_stop ${name}
+			return
+		}
+		local vendorid="NEUFTVSTB"
+	}
+	if [ ! -e ${pidfile} ]; then
+		udhcpc -b -p ${pidfile} -i ${ifname} -V ${vendorid} -s ${script}
+	else
+		[ "${action}" = "reload" ] && kill -USR1 $(cat ${pidfile})
+	fi
+}
+
+dhcp_stop() {
+	local name=$1
+	local pidfile=$(pidfile ${name})
+
+	[ -e ${pidfile} ] && {
+		pid=$(cat ${pidfile})
+		kill -USR2 ${pid}
+		sleep 3
+		kill ${pid}
+	}
+}
+
+boot() {
+	start
+}
+
+start() {
+	lock /run/lock/dhcpc.lock
+
+	for name in $(roxml -q ${topology_conf} "//interface[@config=dhcp]/@name"); do
+		dhcp_start ${name}
+	done
+
+	lock -u /run/lock/dhcpc.lock
+}
+
+stop() {
+	lock /run/lock/dhcpc.lock
+
+	for name in $(roxml -q ${topology_conf} "//interface[@config=dhcp]/@name"); do
+		dhcp_stop ${name}
+	done
+
+	lock -u /run/lock/dhcpc.lock
+}
+
+restart() {
+	start
+}
+
+reload() {
+	restart
+}

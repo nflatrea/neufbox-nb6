@@ -1,0 +1,161 @@
+#!/bin/sh /etc/rc.common
+
+START=30
+
+EXTRA_COMMANDS="switch"
+
+logger -t "eco[$$]" "$action"
+
+phy_configure() {
+	local port=$1
+	local speed=$2
+	local eee=$3
+	case "${speed}" in
+	"off")
+		rtk-switch phy power ${port} down
+		;;
+	"10")
+		rtk-switch phy power ${port} up
+		rtk-switch phy capabilities ${port} auto 10/Half 10/Full
+		;;
+	"100")
+		rtk-switch phy power ${port} up
+		rtk-switch phy capabilities ${port} auto 10/Half 10/Full 100/Half 100/Full
+		;;
+	"1000"|"*")
+		rtk-switch phy power ${port} up
+		rtk-switch phy capabilities ${port} auto 10/Half 10/Full 100/Half 100/Full 1000/Full
+		;;
+	esac
+
+	if [ "${eee}" = "on" ]; then
+		rtk-switch eee enable ${port}
+	else
+		rtk-switch eee disable ${port}
+	fi
+}
+
+
+do_stop() {
+	status set eco_status down
+	ledctl mode control
+	rtk-switch led green 2
+
+	for port in port1 port2 port3 port4; do
+		phy_configure "${port}" "1000" ""
+		sleep 0.5
+	done
+
+	test -e /run/voip-wrapper.pid && kill -HUP $(cat /run/voip-wrapper.pid)
+
+}
+
+phy_nvram_configure () {
+	local port=$1
+	local lan=$2
+	phy_configure "${port}" "$(nvram get ${path}link_${lan}_active)" "$(nvram get ${path}link_${lan}_eee)"
+}
+
+do_start() {
+	status set eco_status up
+
+	if [ "$(nvram get eco_profile)" = "default" ]; then
+		path=eco_default_
+	else
+		path=eco_
+	fi
+
+	if [ "$(nvram get ${path}led_active)" = "off" ]; then
+		ledctl mode eco
+		rtk-switch led green 0
+	else
+		ledctl mode control
+		rtk-switch led green 2
+	fi
+
+	phy_nvram_configure "port1" "lan1"
+	sleep 0.5
+	phy_nvram_configure "port2" "lan2"
+	sleep 0.5
+	phy_nvram_configure "port3" "lan3"
+	sleep 0.5
+	phy_nvram_configure "port4" "lan4"
+
+	test -e /run/voip-wrapper.pid && kill -HUP $(cat /run/voip-wrapper.pid)
+}
+
+boot() {
+	# configure MCU temperature reset and alarm triggers
+	local trigger=$(nvram get mcu_temperature_high-trigger)
+	test -n "${trigger}" && {
+		logger -t "eco[$$]" "Setup high Temperature SoC Reset to ${trigger}"
+		echo ${trigger} > /sys/mcu/threshold/temperature_reset_high_hysteresis
+	}
+	local trigger1=$(nvram get mcu_temperature_low-trigger)
+	test -n "${trigger1}" && {
+		logger -t "eco[$$]" "Setup low Temperature SoC Reset to ${trigger1}"
+		echo ${trigger1} > /sys/mcu/threshold/temperature_reset_low_hysteresis
+	}
+	local trigger2=$(nvram get mcu_temperature_alarm-major)
+	test -n "${trigger2}" && {
+		logger -t "eco[$$]" "Setup major Alarm Temperature to ${trigger2}"
+		echo ${trigger2} > /sys/mcu/threshold/temperature_major
+	}
+	local trigger3=$(nvram get mcu_temperature_alarm-critical)
+	test -n "${trigger3}" && {
+		logger -t "eco[$$]" "Setup critical Alarm Temperature to ${trigger3}"
+		echo ${trigger3} > /sys/mcu/threshold/temperature_critical
+	}
+	# configure MCU voltage reset and alarm triggers
+	local trigger4=$(nvram get mcu_power_high-trigger)
+	test -n "${trigger4}" && {
+		logger -t "eco[$$]" "Setup high Voltage SoC Reset to ${trigger4}"
+		echo ${trigger4} > /sys/mcu/threshold/voltage_reset_high_hysteresis
+	}
+	local trigger5=$(nvram get mcu_power_low-trigger)
+	test -n "${trigger5}" && {
+		logger -t "eco[$$]" "Setup low Voltage SoC Reset to ${trigger5}"
+		echo ${trigger5} > /sys/mcu/threshold/voltage_reset_low_hysteresis
+	}
+	local trigger6=$(nvram get mcu_power_alarm-major)
+	test -n "${trigger6}" && {
+		logger -t "eco[$$]" "Setup major Alarm Voltage to ${trigger6}"
+		echo ${trigger6} > /sys/mcu/threshold/voltage_major
+	}
+	local trigger7=$(nvram get mcu_power_alarm-critical)
+	test -n "${trigger7}" && {
+		logger -t "eco[$$]" "Setup critical Alarm Voltage to ${trigger7}"
+		echo ${trigger7} > /sys/mcu/threshold/voltage_critical
+	}
+}
+
+stop() {
+	lock /run/lock/eco.lock
+	do_stop
+	lock -u /run/lock/eco.lock
+}
+
+start() {
+	lock /run/lock/eco.lock
+	do_start
+	lock -u /run/lock/eco.lock
+}
+
+restart() {
+	lock /run/lock/eco.lock
+	[ "$(status get eco_status)" = "up" ] && {
+		do_stop
+		do_start
+	}
+	lock -u /run/lock/eco.lock
+}
+
+switch() {
+	lock /run/lock/eco.lock
+	if [ "$(status get eco_status)" != "up" ]; then
+		do_start
+	else
+		do_stop
+	fi
+	lock -u /run/lock/eco.lock
+}

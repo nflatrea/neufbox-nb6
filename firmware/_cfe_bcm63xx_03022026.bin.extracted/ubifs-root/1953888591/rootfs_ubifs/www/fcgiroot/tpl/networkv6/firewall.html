@@ -1,0 +1,430 @@
+<div class="title">
+	<h1><?cs var:Env.Section.nat_config.Title ?></h1>
+</div>
+
+<div class="content" >
+	<form method="post" id="form_nat" action="<?cs var:Env.Page.Name ?>">
+        <input type="hidden" name="port_list_tcp" value=":<?cs each:item = Env.user.nat.rule ?><?cs if:((item.proto == "tcp") || (item.proto == "both")) ?><?cs var:item.extport ?>:<?cs /if ?><?cs /each ?>" />
+	<input type="hidden" name="port_list_udp" value=":<?cs each:item = Env.user.nat.rule  ?><?cs if:((item.proto == "udp") || (item.proto == "both")) ?><?cs var:item.extport ?>:<?cs /if ?><?cs /each ?>" />
+	<table id="nat_config" class="magictable">
+		<thead>
+			<tr>
+				<th scope="col" ><span class="col_number">#</span></th>
+				<th scope="col"><?cs call:varHeader("nat_rulename") ?></th>
+                                <th scope="col"><?cs call:varHeader("nat_srcip") ?></th>
+				<th scope="col"><?cs call:varHeader("nat_proto") ?></th>
+				<th scope="col"><?cs call:varHeader("nat_range") ?></th>
+				<th scope="col"><?cs call:varHeader("nat_extport") ?></th>
+                                <th scope="col"><?cs call:varHeader("nat_dstip") ?></th>
+				<th scope="col"><?cs call:varHeader("nat_active") ?></th>
+				<th scope="col" class="col_action" colspan="2"></th>
+			</tr>
+		</thead>
+		<tbody>
+			<?cs each:item = Env.user.filter6.rule ?>
+			<tr>
+				<td data-title="#" class="col_number<?cs if:item.activated == "off"?> desactivated"<?cs /if?>">
+					<span class="col_number"><?cs var:name(item) ?></span>
+				</td>
+				<td data-title="<?cs call:varHeader("nat_rulename") ?>" <?cs if:item.activated == "off"?>class="desactivated"<?cs /if?>>
+					<?cs var:item.rulename ?>
+				</td>
+				
+                                <td data-title="<?cs call:varHeader("nat_srcip") ?>" <?cs if:item.activated == "off"?>class="desactivated"<?cs /if?>><?cs alt:item.srcip ?><?cs var:Env.Var.Any?><?cs /alt ?></td>
+                                
+				<td data-title="<?cs call:varHeader("nat_proto") ?>" <?cs if:item.activated == "off"?>class="desactivated"<?cs /if?>>
+					<?cs if:item.proto == "tcp" ?>
+					<?cs var:Env.Var.nat_proto.Value.tcp ?>
+					<?cs elif:item.proto == "udp" ?>
+					<?cs var:Env.Var.nat_proto.Value.udp ?>
+					<?cs elif:item.proto == "both" ?>
+					<?cs var:Env.Var.nat_proto.Value.both ?>
+					<?cs /if ?>
+				</td>
+				<td data-title="<?cs call:varHeader("nat_range") ?>" <?cs if:item.activated == "off"?>class="desactivated"<?cs /if?>>
+					<?cs if:string.find(item.extport, "-") == -1 ?>
+					<?cs var:Env.Var.nat_range.Value.false ?>
+					<?cs else ?>
+					<?cs var:Env.Var.nat_range.Value.true ?>
+					<?cs /if ?>
+				</td>
+				
+				<td data-title="<?cs call:varHeader("nat_dstport") ?>" <?cs if:item.activated == "off"?>class="desactivated"<?cs /if?>><?cs var:item.dstport ?></td>
+                                
+                                <td data-title="<?cs call:varHeader("nat_dstip") ?>" <?cs if:item.activated == "off"?>class="desactivated"<?cs /if?>>
+					<?cs alt:item.dstip ?><?cs var:Env.Var.Any?><?cs /alt ?>
+				</td>
+                                
+                               
+				<td data-title="<?cs call:varHeader("nat_active") ?>" class="col_activated<?cs if:item.activated == "off"?> desactivated"<?cs /if?>">
+                                        <input class="btn" type="submit" name="action_<?cs if:item.activated == "on"?>disable<?cs else?>enable<?cs /if?>.<?cs name:item ?>" value="<?cs if:item.activated == "on"?><?cs var:Env.Text.Disable?><?cs else?><?cs var:Env.Text.Enable?><?cs /if?>" />
+				</td>
+				<td data-title="" class="col_action">
+                                        <button class="btn" type="submit" name="action_remove.<?cs name:item ?>"><i class="icon-minus-sign icon-white"></i></button>
+				</td>
+			</tr>
+			<?cs /each ?>
+			
+			
+			<tr id="input_tr">
+				
+				
+				<td data-title="#" class="col_number">
+					<?cs var:subcount(Env.user.filter6.rule) + #1 ?>
+				</td>
+				<td data-title="<?cs call:varHeader("nat_rulename") ?>">
+                                    
+                                        <div class="control-group <?cs if:?Var.nat_rulename.Error?>error<?cs /if ?>">
+                                            <?cs if:?Query.nat_rulename ?>
+                                            <?cs set:Var.nat_rulename.Value=Query.nat_rulename ?>
+                                            <?cs /if ?>
+                                            <input type="text" id="nat_rulename" name="nat_rulename" class="input-small <?cs if:?Var.nat_rulename.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs call:varIf(Var.nat_rulename.Value) ?>" size="10" maxlength="20" />
+
+                                            <?cs if:?Var.nat_rulename.Error ?>
+                                            <div class="help-inline">
+                                            <?cs var:Env.Var.nat_rulename.Error[Var.nat_rulename.Error] ?>
+                                            </div>
+                                            <?cs /if ?>
+                                        </div>
+				</td>
+                                <td data-title="<?cs call:varHeader("nat_srcip") ?>">
+                                        <div class="control-group <?cs if:?Var.nat_srcip.Error?>error<?cs /if ?>">
+                                            <?cs if:?Query.nat_srcip ?>
+                                            <?cs set:Var.nat_srcip.Value=Query.nat_srcip ?>
+                                            <?cs /if ?>
+                                            <div class="input-append">
+                                                <input type="text" id="nat_srcip"" name="nat_srcip" class="input-medium <?cs if:?Var.nat_srcip.Error ?>error<?cs else ?>text<?cs /if ?>" size="3" maxlength="39" value="<?cs call:varIf(Var.nat_srcip.Value) ?>" />
+                                                <button class="btn" type="button" id="button_network_nat_srcip"><i class="icon-th icon-white"></i></button>
+                                            </div>
+                                            <?cs if:?Var.nat_srcip.Error ?>
+                                            <div class="help-inline">
+                                                    <?cs var:Env.Var.nat_srcip.Error[Var.nat_srcip.Error] ?>
+                                            </div>
+                                            <?cs /if ?>
+                                        </div>
+				</td>
+				<td data-title="<?cs call:varHeader("nat_proto") ?>">
+                                    <div class="control-group <?cs if:?Var.nat_proto.Error?>error<?cs /if ?>">
+                                        <?cs if:?Query.nat_proto ?>
+                                        <?cs set:Var.nat_proto.Value=Query.nat_proto ?>
+                                        <?cs /if ?>
+					<select name="nat_proto" id="nat_proto" class="input-small <?cs if:?Var.nat_proto.Error ?>error<?cs else ?>text<?cs /if ?>">
+						<option value="tcp" <?cs if:Var.nat_proto.Value == "tcp"?>selected="selected"<?cs /if?>>
+							<?cs var:Env.Var.nat_proto.Value.tcp ?>
+							</option>
+						<option value="udp" <?cs if:Var.nat_proto.Value == "udp"?>selected="selected"<?cs /if?>>
+							<?cs var:Env.Var.nat_proto.Value.udp ?>
+							</option>
+						<option value="both" <?cs if:Var.nat_proto.Value == "both"?>selected="selected"<?cs /if?>>
+							<?cs var:Env.Var.nat_proto.Value.both ?>
+							</option>
+					</select>
+					
+					<?cs if:?Var.nat_proto.Error ?>
+				        <div class="help-inline">
+						<?cs var:Env.Var.nat_proto.Error[Var.nat_proto.Error] ?>
+					</div>
+					<?cs /if ?>
+                                    </div>
+				</td>
+				<td data-title="<?cs call:varHeader("nat_range") ?>">
+                                    <div class="control-group <?cs if:?Var.nat_range.Error?>error<?cs /if ?>">
+                                        <?cs if:?Query.nat_range ?>
+                                        <?cs set:Var.nat_range.Value=Query.nat_range ?>
+                                        <?cs /if ?>
+					<select name="nat_range" id="nat_range" class="input-small <?cs if:?Var.nat_range.Error ?>error<?cs else ?>text<?cs /if ?>">
+						<option value="false" <?cs if:Var.nat_range.Value == "false"?>selected="selected"<?cs /if?>>
+							<?cs var:Env.Var.nat_range.Value.false ?>
+							</option>
+						<option value="true" <?cs if:Var.nat_range.Value == "true"?>selected="selected"<?cs /if?>>
+							<?cs var:Env.Var.nat_range.Value.true ?>
+							</option>
+					</select>
+
+					<?cs if:?Var.nat_range.Error ?>
+				        <div class="help-inline">
+						<?cs var:Env.Var.nat_range.Error[Var.nat_range.Error] ?>
+					</div>
+					<?cs /if ?>
+                                    </div>
+				</td>
+				<td data-title="<?cs call:varHeader("nat_extport") ?>">
+                                    <div id="col_nat_extport" class="control-group <?cs if:?Var.nat_extport.Error?>error<?cs /if ?>" <?cs if:Var.nat_range.Value == "true"?>style="display: none;"<?cs /if?>>
+                                        <?cs if:?Query.nat_extport ?>
+                                        <?cs set:Var.nat_extport.Value=Query.nat_extport ?>
+                                        <?cs /if ?>
+					<input type="text" id="nat_extport" name="nat_extport" class="input-mini <?cs if:?Var.nat_extport.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs call:varIf(Var.nat_extport.Value) ?>" size="5" maxlength="5" />
+					
+					<?cs if:?Var.nat_extport.Error ?>
+				        <div class="help-inline">
+						<?cs var:Env.Var.nat_extport.Error[Var.nat_extport.Error] ?>
+					</div>
+					<?cs /if ?>
+                                    </div>
+                                    
+                                    <div id="col_nat_extrange" class="control-group <?cs if:?Var.nat_extrange.Error || ?Var.nat_extrange_p0.Error || ?Var.nat_extrange_p1.Error   ?>error<?cs /if ?>" <?cs if:Var.nat_range.Value == "false" || !?Var.nat_range.Value?>style="display: none;"<?cs /if?>>
+                                        <?cs if:?Query.nat_extrange_p0 ?>
+                                        <?cs set:Var.nat_extrange_p0.Value=Query.nat_extrange_p0 ?>
+                                        <?cs /if ?>
+                                        <?cs if:?Query.nat_extrange_p1 ?>
+                                        <?cs set:Var.nat_extrange_p1.Value=Query.nat_extrange_p1 ?>
+                                        <?cs /if ?>
+					<input type="text" id="nat_extrange_p0" name="nat_extrange_p0" class="input-mini <?cs if:?Var.nat_extrange.Error || ?Var.nat_extrange_p0.Error || ?Var.nat_extrange_p1.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs call:varIf(Var.nat_extrange_p0.Value) ?>" size="5" maxlength="5" />-<input type="text" id="nat_extrange_p1" name="nat_extrange_p1" class="input-mini <?cs if:?Var.nat_extrange.Error || ?Var.nat_extrange_p1.Error || ?Var.nat_extrange_p0.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs call:varIf(Var.nat_extrange_p1.Value) ?>" size="5" maxlength="5" />
+					
+					<?cs if:?Var.nat_extrange.Error?><div class="help-inline"><?cs var:Env.Var.nat_extrange.Error[Var.nat_extrange.Error] ?></div>
+					<?cs elif:?Var.nat_extrange_p0.Error?><div class="help-inline"><?cs var:Env.Var.nat_extrange_p0.Error[Var.nat_extrange_p0.Error] ?></div>
+                                        <?cs elif:?Var.nat_extrange_p1.Error ?><div class="help-inline"><?cs var:Env.Var.nat_extrange_p1.Error[Var.nat_extrange_p1.Error] ?></div>
+					<?cs /if ?>
+                                    </div>
+				</td>
+                                <td data-title="<?cs call:varHeader("nat_dstip") ?>">
+                                        <div class="control-group <?cs if:?Var.nat_dstip.Error?>error<?cs /if ?>">
+                                            <?cs if:?Query.nat_dstip ?>
+                                            <?cs set:Var.nat_dstip.Value=Query.nat_dstip ?>
+                                            <?cs /if ?>
+                                            <div class="input-append input-prepend">
+                                                <span class="add-on"><?cs var:Var.dhcp6_prefix_lan.Value ?>:</span>
+                                                <input id="nat_dstip" name="nat_dstip" type="text" class="input-mini <?cs if:?Var.nat_dstip.Error ?>error<?cs else ?>text<?cs /if ?>" size="3" maxlength="19" value="<?cs call:varIf(Var.nat_dstip.Value) ?>" />
+                                                <button class="btn" data-prefix="<?cs var:Var.dhcp6_prefix_lan.Value ?>" type="button" id="button_network_nat_dstip"><i class="icon-th icon-white"></i></button>
+                                            </div>
+                                            <?cs if:?Var.nat_dstip.Error ?>
+                                            <div class="help-inline">
+                                                    <?cs var:Env.Var.nat_dstip.Error[Var.nat_dstip.Error] ?>
+                                            </div>
+                                            <?cs /if ?>
+                                        </div>
+				</td>
+				
+				<td data-title="<?cs call:varHeader("nat_active") ?>" class="col_activated">
+                                    <?cs if:?Query.nat_active ?>
+                                        <?cs set:Var.nat_active.Value=Query.nat_active ?>
+                                    <?cs /if ?>
+                                    <label class="checkbox"><input type="checkbox" id="nat_active" name="nat_active" value="on" <?cs if:Var.nat_active.Value == "on" || !(?Var.nat_active.Value)?>checked="checked"<?cs /if?> /><?cs var:Env.Text.Enable?></label>
+				</td>
+				<td data-title="" class="col_action" colspan="2">
+                    	<button id="btn_submit" class="btn" type="submit" name="action_add"><i class="icon-plus-sign icon-white"></i></button>
+				</td>
+				
+			</tr>
+		</tbody>
+	</table>
+        </form>
+	
+<?cs if:Var.env.errors.nat_config.msg.Value?>
+<div class="error_notice">
+	<?cs var:Var.env.errors.nat_config.msg.Value?>
+</div>
+<?cs /if?>
+
+
+</div>
+
+
+
+<div class="title">
+	<h1><?cs var:Env.Section.upnpd_config.Title ?></h1>
+</div>
+
+<div class="content">
+	<form id="form_upnpd_config" method="post" action="<?cs var:Env.Page.Name ?>">
+	<table id="upnpd_config">
+		<tr>
+			<th scope="row"><?cs call:varHeader("upnpd_active") ?></th>
+			<td>
+                            <?cs call:div_onoff("upnpd_active6", Env.user.upnpd.active6 == "on") ?>
+			</td>
+		</tr>
+		<tr id="row_upnp_nat_rules" <?cs if:Env.user.upnpd.active6 == "off" ?> style="display: none;"<?cs /if?>>
+			<th scope="row"><?cs call:varHeader("upnpd_nat_rules") ?></th>
+			<td>
+				<?cs if:Var.upnpd_rules_count.Value > 0?><a href="/networkv6/firewall/upnp"><?cs /if?>
+				<?cs var:Var.upnpd_rules_count.Value?> <?cs if:Var.upnpd_rules_count.Value > 1?><?cs var:Env.Text.rules?><?cs else?><?cs var:Env.Text.rule?><?cs /if?>
+	                        <?cs if:Var.upnpd_rules_count.Value > 0?></a><?cs /if?>
+			</td>
+		</tr>
+	</table>
+        <div class="button_submit"><button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button></div>
+        </form>
+</div>
+
+
+
+
+
+
+
+<div class="title">
+	<h1><?cs var:Env.Section.pingv6.Title ?></h1>
+</div>
+<div class="content">
+	
+	<form id="form_upnpd_config" method="post" action="<?cs var:Env.Page.Name ?>">
+	
+	<table id="ping6_config">
+		<tr>
+			<th scope="row"><?cs call:varHeader("filter6_icmpdrop") ?></th>
+			<td>
+                            <?cs call:div_onoff("ping6_active", Env.user.filter6.icmpdrop == "on") ?>
+			</td>
+		</tr>
+                
+	</table>
+
+        <button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button>
+        <input type="hidden" name="action" value="ping6"  />
+        
+        </form>
+    
+        <form id="form_ping6_config" method="post" action="<?cs var:Env.Page.Name ?>">
+            <input type="hidden" name="action" value="ping6except" />
+            <table class="magictable">
+                <thead>
+                    <tr>
+                        <th><?cs call:varHeader("ping6_except_device") ?></th>
+                        <th>&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?cs each:item = Env.user.filter6.icmp ?>
+                <tr>
+                    <td data-title="<?cs call:varHeader("ping6_except_device") ?>"><?cs var:item.dstip ?></td>
+                    <td class="col_action" colspan="2">
+                            <button class="btn" type="submit" name="ping6_except_delete.<?cs name:item ?>"><i class="icon-minus-sign icon-white"></i></button>
+                    </td>
+                </tr>
+                <?cs /each ?>
+		<tr>
+                    <td data-title="<?cs call:varHeader("ping6_except_device") ?>">
+                            
+                            <div class="control-group <?cs if:?Var.ping6_except.Error ?>error<?cs /if ?>">
+                                <div class="input-append input-prepend">
+                                    <span class="add-on" id="static_prefix"><?cs var:Var.dhcp6_prefix_lan.Value ?>:</span>
+                                    <input id="ping6_except" name="ping6_except" type="text" class="input-medium <?cs if:?Var.ping6_except.Error ?>error<?cs else ?>text<?cs /if ?>" size="3" maxlength="19" value="<?cs call:varIf(Var.ping6_except.Value) ?>" />
+                                    <button class="btn" type="button" id="button_network_ping6_dstip"><i class="icon-th icon-white"></i></button>
+                                </div>
+                                <?cs if:?Var.ping6_except.Error ?>
+                                <div class="help-inline">
+                                        <?cs var:Env.Var.ping6_except.Error[Var.ping6_except.Error] ?>
+                                </div>
+                                <?cs /if ?>
+                            </div>
+                        </td>
+                        <td class="col_action" colspan="2">
+                            <button class="btn" type="submit" name="ping6_except_add" value="add"><i class="icon-plus-sign icon-white"></i></button>
+			</td>
+		</tr>
+                </tbody>
+            </table>
+        </form>
+</div>
+
+
+
+<div class="title">
+	<h1><?cs var:Env.Section.route_config.Title ?></h1>
+</div>
+<div class="content">
+    
+        <?cs set:Var.dmz_active.Value = Env.user.ipv6.dmz.active ?>
+        <?cs if:?Query.dmz_active ?> 
+        <?cs set:Var.dmz_active.Value = Query.dmz_active ?>
+        <?cs /if ?>
+        <?cs set:Var.dmz_gateway_active.Value = Env.user.ipv6.dmz.gateway.active ?>
+        <?cs if:?Query.dmz_gateway_active ?> 
+        <?cs set:Var.dmz_gateway_active.Value = Query.dmz_gateway_active ?>
+        <?cs /if ?>
+        <?cs set:Var.dmz.Value = Env.user.ipv6.dmz.gateway.ipaddr ?>
+        <?cs if:?Query.dmz ?> 
+        <?cs set:Var.dmz.Value = Query.dmz ?>
+        <?cs /if ?>
+        
+        <form method="post" id="dmz_route_config" action="<?cs var:Env.Page.Name ?>#dmz_route_config">
+            <table id="route_config">
+                    <tbody>
+                        <tr>
+                                <th scope="row"><?cs var:Env.Text.Activation ?></th>
+                                <td>
+                                    <?cs call:div_onoff("dmz_active", Var.dmz_active.Value == "on") ?>
+                                </td>
+                        </tr>
+                        <tr>
+                                <th scope="row"><?cs var:Env.Var.dmz_used.Header ?></th>
+                                <td>
+                                    <div class="controls">
+                                        <?cs call:replace(Env.status.net.ipv6.subnet.dmz,"1/64","/64") ?>
+                                    </div>
+                                </td>
+                        </tr>
+                        <tr>
+                                <th scope="row"><?cs var:Env.Var.dmz.Header ?></th>
+                                <td>
+                                    <?cs call:div_onoff("dmz_gateway_active", Var.dmz_gateway_active.Value == "on") ?>
+                                </td>
+                        </tr>
+
+                            <tr>
+                                    <th><?cs var:Env.Var.dmz_ip.Header ?></th>
+                                    <td>
+                                        <div class="control-group <?cs if:?Var.dmz.Error ?>error<?cs /if ?>">
+                                            <input id="dmz" name="dmz" type="text" class="input-large <?cs if:?Var.dmz.Error ?>error<?cs /if ?>" size="3" maxlength="39" value="<?cs var:Var.dmz.Value ?>" />
+
+                                            <?cs if:?Var.dmz.Error ?>
+                                            <div class="help-inline">
+                                                    <?cs var:Env.Var.dmz.Error[Var.dmz.Error] ?>
+                                            </div>
+                                            <?cs /if ?>
+                                        </div>
+                                    </td>
+                            </tr>
+                    </tbody>
+            </table>
+            <input type="hidden" name="dmz6" value="dmz6" />
+            <button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button>
+        </form>
+</div>
+
+<div class="title">
+	<h1><?cs var:Env.Section.firewall.Title ?></h1>
+</div>
+
+<div class="content">
+	<form method="post" action="<?cs var:Env.Page.Name ?>" id="form_filter">
+
+	<table id="filter_configuration">
+		<tr>
+			<th scope="row">
+				<?cs call:varHeader("filter_mode") ?>
+			</th>
+			<td>
+                            <?cs call:div_onoff("filter_mode", Env.user.filter.mode == "simple") ?>
+			</td>
+		</tr>
+
+		<tr id="filter_simple" <?cs if:Env.user.filter.mode == "off"?>style="display: none;"<?cs /if?>>
+			<th scope="row" valign="top">
+				<?cs call:varHeader("filter_simple") ?>
+			</th>
+			<td>
+                                <label for="filter_simple_winsharedrop">
+				<input type="checkbox" value="on" name="filter_simple_winsharedrop" id="filter_simple_winsharedrop" <?cs if:Env.user.filter.simple.winsharedrop == "on" ?> checked="checked"<?cs /if ?> />
+				<?cs var:Env.Var.filter_simple_winsharedrop.Header ?>
+                                </label>
+				
+				<label for="filter_simple_smtpdrop">
+				<input type="checkbox" value="on" name="filter_simple_smtpdrop" id="filter_simple_smtpdrop" <?cs if:Env.user.filter.simple.smtpdrop == "on" ?> checked="checked"<?cs /if ?> />
+				<?cs var:Env.Var.filter_simple_smtpdrop.Header ?>
+                                </label>
+				
+				<label for="filter_simple_icmpdrop">
+				<input type="checkbox" value="on" name="filter_simple_icmpdrop" id="filter_simple_icmpdrop" <?cs if:Env.user.filter.simple.icmpdrop == "on" ?> checked="checked"<?cs /if ?> />
+				<?cs var:Env.Var.filter_simple_icmpdrop.Header ?>
+                                </label>
+
+			</td>
+		</tr>
+	</table>
+	
+	<button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button>
+	
+        </form>
+</div>

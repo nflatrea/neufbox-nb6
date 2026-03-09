@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Services to be disabled when cgnat is up are:
+# - miniupnpd
+# - wold
+# Further, dmz v4, algs and port redirection must be disabled
+
+
+service="00-disable-service[$$]"
+
+logger -t "$service" "cgnat is up. Disabling some services..."
+
+/etc/init.d/miniupnpd restart
+/etc/init.d/wol stop
+/etc/init.d/nat dmz
+/etc/init.d/nat user_nat
+/etc/init.d/nat algs

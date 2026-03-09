@@ -1,0 +1,83 @@
+<?cs def:date(weekday, monthday, month, year, hour) ?>
+  <?cs var:Env.Text.Weekday[weekday]?> <?cs var:monthday?> <?cs var:Env.Text.Month[month]?> <?cs var:year?> <?cs var:Env.Text.to?> <?cs var:hour?>
+<?cs /def ?>
+
+<?cs def:time(length, direction)?>
+  <?cs if:#length == -1?>
+    <?cs if:direction == "outgoing"?>
+      <b><?cs var:Env.Text.NoResponseCall?></b>
+    <?cs else?>
+      <b><?cs var:Env.Text.MissedCall?></b>
+    <?cs /if?>
+  <?cs else?>
+    <?cs if:#length / 60 > 0?>
+      <?cs set:lengthApprox = (#length + #59) / 60?>
+      ~ <?cs var:lengthApprox?> <?cs var:Env.Text.minute?><?cs if:lengthApprox > 1?>s<?cs /if?>
+    <?cs else?>
+      &lt; 1 <?cs var:Env.Text.minute?>
+    <?cs /if?>
+
+  <?cs /if?>
+<?cs /def?>
+
+<?cs if:?Env.status.voip.errnum && Env.status.voip.errnum != #0 && Env.status.voip.errnum != #101?>
+<div class="alert alert-warning">
+	<?cs var:Env.Var.voip_err.Value.generic ?>
+</div>
+<?cs /if?>
+
+<?cs if:?Env.user.eco.led.active && Env.user.eco.led.active == "off" ?>
+<div class="alert alert-warning"><?cs var:Env.Var.warning_led ?></div>
+<?cs /if ?>
+
+<div class="title">
+	<h1><?cs var:Env.Section.voip_status.Title ?></h1>
+</div>
+
+<div class="content">
+
+	<table id="voip_status">
+		<tr>
+			<th scope="row"><?cs call:varHeader("voip_linestatus") ?></th>
+			<td id="voip_linestatus" class="<?cs if:Var.voip_linestatus.Value == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                            
+                                <?cs if:Var.voip_linestatus.Value == "down" && Env.user.eco.voip.active == "off" && Env.status.eco.status=="up" ?>
+                                    <?cs call:varValue_d(Env.Var.voip_linestatus.Value.down_eco, Env.Var.voip_linestatus.Value.down)?>
+                                <?cs else ?>
+                                    <?cs call:varValue_d(Env.Var.voip_linestatus.Value[Var.voip_linestatus.Value], Env.Var.voip_linestatus.Value.down)?>
+                                <?cs /if ?>
+                            
+                                <?cs if:Var.voip_access.Value == "gprs" ?>
+                                        (<?cs var:Env.Var.voip_access.Value.gprs ?>)
+                                <?cs /if ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs call:varHeader("voip_hookstatus") ?></th>
+			<td id="voip_hookstatus" class="<?cs if:Var.voip_hookstatus.Value == "unknown" ?>unused<?cs else ?>enabled<?cs /if ?>">
+				<?cs call:varValue(Env.Var.voip_hookstatus.Value[Var.voip_hookstatus.Value])?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Section.voip_history.Title ?></th>
+			<td id="voip_history" class="<?cs if:Env.user.voip.callhistory == "off"?>disabled<?cs else ?>enabled<?cs /if ?>">
+				<?cs call:varValue(Env.Var.callhistory_active.Value[Env.user.voip.callhistory])?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Section.voip_led_notification.Title ?></th>
+			<td id="voip_missedcall" class="<?cs if:Env.user.voip.usermissedcall == "off" ?>disabled<?cs else ?>enabled<?cs /if ?>">
+				<?cs call:varValue(Env.Var.led_notification_active.Value[Env.user.voip.usermissedcall])?>
+			</td>
+		</tr>
+                <?cs if:?Env.autoconf.voip.sig && Env.autoconf.voip.sig=="sip" ?>
+		<tr>
+			<th scope="row"><?cs var:Env.Section.voip_blacklist.Title ?></th>
+			<td id="voip_blacklist" class="<?cs if:Env.user.voip.blacklist.active  == "off" ?>disabled<?cs else ?>enabled<?cs /if ?>">
+				<?cs if:Env.user.voip.blacklist.active  == "off" ?><?cs var:Env.Text.Disabled ?><?cs else ?><?cs var:Env.Text.Enabled ?><?cs /if ?>
+			</td>
+		</tr>
+                <?cs /if ?>
+	</table>
+
+</div>

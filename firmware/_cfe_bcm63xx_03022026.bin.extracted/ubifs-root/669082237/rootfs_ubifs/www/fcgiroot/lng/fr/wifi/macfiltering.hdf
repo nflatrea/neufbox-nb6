@@ -1,0 +1,22 @@
+Env.Page.Title = Filtrage MAC
+
+Env.Help.Text = En activant le filtrage MAC, vous n'autorisez que les équipements connus à se connecter sans fil à votre Box. Pour cela, la Box interdit aux équipements dont l'adresse MAC (il s'agit de l'adresse physique de la carte réseau sans fil de l'équipement) n'est pas connue de se connecter, même si l'équipement connaît la clé de cryptage.
+
+Env.Section.MACFiltering.Title = Filtrage MAC
+Env.Var.MACFiltering.Header = Activation du filtrage
+
+Env.Var.MACFiltering.Value.off = Désactivé
+
+Env.Var.MACFiltering.Value.whitelist = Activé
+
+Env.Section.MACWhiteList.Title = Adresses MAC autorisées
+
+Env.Var.mac_address.Header = Adresse MAC
+Env.Var.mac_address.Band.header = Bande de fréquence
+Env.Var.mac_address.Band.both = Les deux
+Env.Var.mac_address.Band.wl0 = 5 GHz
+Env.Var.mac_address.Band.wl1 = 2,4 GHz
+Env.Var.mac_address.Error.invalid = Cette adresse MAC n'est pas valide
+Env.Var.mac_address.Error.alreadyused = Cette adresse MAC est déjà utilisée
+
+Env.Text.WarningMacFiltering = Attention, si vous êtes en Wifi, veillez tout d'abord à ajouter l'adresse MAC de votre poste ci dessous avant d'activer le filtrage MAC.

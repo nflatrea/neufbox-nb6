@@ -1,0 +1,91 @@
+Env.Page.Title = NAT
+
+Env.Help.Text <<EOM
+In the <b>Address Filtering</b> section, you can define the rules to authorize the traffic from the Internet to one or several of your IPv6 connected devices. Some software need to be reachable directly from the Internet to work correctly (games, peer to peer, etc...). You can configure these rules here. The "*" character, depending on the case, represents all your IPv6 connected devices on the Lan (destination IP) or all the devices on the Internet (source IP).
+<br /><br />In the <b>UPnP</b> section, you can disable or enable the UPnP service of your Box. When UPnP is enabled, you don't need to configure address filtering rules for UPnP IGD v2 compatible software.
+<br /><br />In the <b>Ping v6</b> section, you can configure the ICMPv6(Echo Request) blocking policy.
+<br />By default your devices can receive them but it is possible to block them.
+<br />Once the blocking is activated you can select the devices that are authorized to receive them.
+<br /><br />In the <b>IPv6 DMZ</b> section, you can activate or deactivate the IPv6 DMZ functionality.
+<br />When the DMZ is activated, you can configure manually the devices that should be included in it using an IPv6 of the subnet provided (the used subnet).
+<br />Please note that the devices added to the DMZ will no longer be protected by the firewall of the Box.
+<br />According to your needs, you can also add a gateway (next hop).
+<br /><br />In the <b>Filtering</b> section, you can enable the protection of ports commonly under attack by Windows worms and viruses (port 445). You can also block SMTP requests which don't go through SFR mail servers. Finally you can block ping from internet to your Box. Go to the <b>Network v4</b> section on the <b>Filtering</b> page to configure the IPv4 filtering service.
+EOM
+
+Env.Section.nat_config.Title = Network address Translation
+
+Env.Var.nat_rulename.Header = Name
+Env.Var.nat_rulename.Error.value = Invalid format. Only alphanumerics caracters, '_' and '-' are allowed.
+
+Env.Var.nat_proto.Header = Protocol
+Env.Var.nat_proto.Value.tcp = TCP
+Env.Var.nat_proto.Value.udp = UDP
+Env.Var.nat_proto.Value.both = both
+Env.Var.nat_proto.Error.value = Invalid format
+Env.Var.nat_proto.Error.invalid_protocol = Invalid protocol
+
+Env.Var.nat_range.Header = Type
+Env.Var.nat_range.Value.false = Port
+Env.Var.nat_range.Value.true =  Range
+Env.Var.nat_range.Error.value = Invalid format
+
+Env.Var.nat_extport.Header = Ports
+Env.Var.nat_extport.Error.value = Invalid format
+Env.Var.nat_extport.Error.invalid_extport = Invalid external port
+Env.Var.nat_extport.Error.extport_reserved = Reserved external port(s)
+Env.Var.nat_extport.Error.extport_already_use = Port already in use
+Env.Var.nat_extrange_p0.Error.value = Invalid format
+Env.Var.nat_extrange_p1.Error.value = Invalid format
+Env.Var.nat_extrange.Error.invalid_extportrange = Invalid external port range
+Env.Var.nat_extrange.Error.extport_reserved = Reserved external port(s)
+Env.Var.nat_extrange.Error.extport_already_use = Port(s) already in use
+
+Env.Var.nat_dstip.Header = IP address destination
+Env.Var.nat_dstip.Error.invalid_ip = Invalid IP address
+Env.Var.nat_srcip.Header = IP address source
+Env.Var.nat_srcip.Error.invalid_ip = Invalid IP address
+
+Env.Var.nat_dstport.Header = Destination ports
+Env.Var.nat_dstport.Error.value = Invalid format
+Env.Var.nat_dstport.Error.invalid_dstport = Invalid destination port
+Env.Var.nat_dstrange_p0.Error.value = Invalid format
+Env.Var.nat_dstrange_p1.Error.value = Invalid format
+Env.Var.nat_dstrange.Error.invalid_dstportrange = Invalid destination port range
+
+Env.Var.nat_active.Header = Activation
+
+Env.Text.Enable = Enable
+Env.Text.Disable = Disable
+Env.Text.PrivatePortListError = You can't use the following ports
+Env.Text.rule = rule
+Env.Text.rules = rules
+
+Env.Section.upnpd_config.Title = UPnPv6
+Env.Var.upnpd_active.Header = UPnP v6 Activation
+Env.Var.upnpd_nat_rules.Header = Active UPnP v6 rules
+
+Env.Section.pingv6.Title = Ping v6
+Env.Var.filter6_icmpdrop.Header = ICMP filter
+Env.Var.ping6_except_device.Header = Except IP
+Env.Var.ping6_except.Error.invalid = Invalid format
+
+Env.Section.route_config.Title = IPv6 DMZ
+
+Env.Var.dmz.Header = Gateway 
+Env.Var.dmz_used.Header = Subnet used
+Env.Var.dmz_ip.Header = IP address
+Env.Var.dmz.Error.value = Invalid IP address
+Env.Var.dmz.Error.invalid = Invalid IP address
+
+Env.Var.Any = *
+
+Env.Section.firewall.Title = Filtering
+Env.Var.filter_mode.Header = Filtering
+Env.Var.filter_mode.Value.on = Custom
+Env.Var.filter_mode.Value.off = Disabled
+Env.Var.filter_mode.Error.value = Invalid format
+Env.Var.filter_simple.Header = Settings
+Env.Var.filter_simple_winsharedrop.Header = Protect your Windows computers from the Internet
+Env.Var.filter_simple_smtpdrop.Header = Allow sending mail only via SFR mail servers
+Env.Var.filter_simple_icmpdrop.Header = Block incoming ping

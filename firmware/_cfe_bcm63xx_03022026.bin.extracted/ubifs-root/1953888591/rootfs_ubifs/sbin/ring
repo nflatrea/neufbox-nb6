@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ ! -e /tmp/ring_phone_is_initialized ]
+then
+	# Is the SIP client started ?
+	if [ "$(pgrep clientSip)" != "" ]
+	then
+		echo "Waiting for the SIP client to shutdown..."
+		/etc/init.d/voip stop-sip
+		while [ "$(pgrep clientSip)" != "" ]
+		do
+			true
+		done
+	fi
+
+	vSStest resetResult
+	vSStest initTest
+	vSStest initScript
+
+	touch /tmp/ring_phone_is_initialized
+fi
+
+vSStest ring
+sleep 12
+

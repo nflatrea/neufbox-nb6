@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<topology>
+	<!-- lan -->
+	<interface service="lan" ipv6="lan" type="bridge" ifname="lan0" config="user" ipalias="172.16.255.254/30">
+		<interface mac="0" type="ethernet" ifname="eth1"/>
+		<interface type="wireless" ifname="wl0" bss="0" config="user"/>
+		<interface type="wireless" ifname="wl1" bss="0" config="user"/>
+	</interface>
+	<!-- guest -->
+	<interface type="bridge" ifname="guest0" service="guest">
+	  <interface type="wireless" ifname="wl1.2" bss="2" />
+	</interface>
+	<!-- hotpsot -->
+	<interface type="ifb" ifname="ifb0" interface="lan0" interface="hotspot0"/>
+	<interface service="hotspot" type="virtual" interface="hotspot0" config="hotspot" ipaddr="192.168.2.1/24">
+		<interface service="hotspot" type="tun" ifname="tun0" interface="hotspot0" config="portail" ipaddr="192.168.2.65/26"/>
+		<interface service="hotspot" type="bridge" ifname="hotspot0" config="eapsim" ipaddr="192.168.2.129/25">
+		  <interface type="wireless" ifname="wl1.1" bss="1" config="portail"/>
+		  <interface type="wireless" ifname="wl1.3" bss="3" config="eapsim"/>
+		</interface>
+	</interface>
+	<!-- xdsl -->
+	<interface mac="21" type="atm" pvcid="8.35" qos="1" queues="1 3 7" ifname="nas_8_35"/>
+	<interface service="data" mac="3" type="macvlan" interface="nas_8_35" multicast="off" ifname="mv2" config="ppp-xdsl"/>
+	<interface mac="25" type="ptm" ptm="1" qos="1" queues="1 3 7" ifname="ptm0"/>
+	<interface name="voip" service="voip" type="bridge" ifname="voip0" config="dhcp">
+		<interface mac="2" type="macvlan" interface="nas_8_35" multicast="off" ifname="mv0"/>
+		<interface mac="16" type="atm" pvcid="0.65" queues="7" ifname="nas_0_65"/>
+	</interface>
+	<interface name="tv" service="iptv" type="bridge" ifname="tv0" config="dhcp">
+		<interface mac="1" type="macvlan" interface="nas_8_35" ifname="mv1"/>
+		<interface mac="15" type="atm" pvcid="0.48" queues="7" ifname="nas_0_48"/>
+		<interface mac="11" type="atm" pvcid="0.49" queues="7" ifname="nas_0_49"/>
+		<interface mac="12" type="atm" pvcid="0.50" queues="7" ifname="nas_0_50"/>
+		<interface mac="13" type="atm" pvcid="0.51" queues="7" ifname="nas_0_51"/>
+		<interface mac="14" type="atm" pvcid="0.52" queues="7" ifname="nas_0_52"/>
+		<interface mac="17" type="atm" pvcid="0.53" queues="7" ifname="nas_0_53"/>
+		<interface mac="18" type="atm" pvcid="0.54" queues="7" ifname="nas_0_54"/>
+		<interface mac="19" type="atm" pvcid="0.55" queues="7" ifname="nas_0_55"/>
+	</interface>
+	<!-- wan -->
+	<interface name="wan" ipv6="dhcp6" service="data" service="voip" service="iptv" service="ont" type="bridge" ifname="wan0" config="dhcp" ipalias="192.168.4.1/24">
+		<interface mac="24" type="atm" pvcid="8.36" qos="1" queues="1 3 7" ifname="nas_8_36"/>
+		<interface mac="-1" type="macvlan" interface="ptm0" ifname="mv4"/>
+		<interface mac="0" type="ethernet" ifname="eth0" name="ont" />
+	</interface>
+</topology>

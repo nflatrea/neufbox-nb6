@@ -1,0 +1,32 @@
+#!/bin/sh
+
+service=cgnat-config[$$]
+logger -t "$service" "$1"
+
+ipt_file=/tmp/ipt-cgnat.save
+cgnat_if=$(status get dhcpc_wan_ifname)
+cgnat_ip=$(status get dhcpc_wan_ipaddr)
+cgnat_gw=$(status get dhcpc_wan_gateway)
+
+lan_ip=$(nvram get lan_ipaddr)
+lan_netmask=$(nvram get lan_netmask)
+eval $(ipcalc -npb $lan_ip $lan_netmask)
+
+# Save rules for future deletion
+cat << EOF > $ipt_file
+-t nat -A POSTROUTING -s ${NETWORK}/${PREFIX} -o $cgnat_if -j SNAT --to $cgnat_ip
+-A FORWARD -o $cgnat_if -m state --state INVALID -j DROP
+-A FORWARD -i $cgnat_if -m state --state NEW -j WIN_FILTER
+-A FORWARD -o $cgnat_if -m state --state NEW -j WIN_FILTER
+-A FORWARD -o $cgnat_if -p tcp -m tcp --dport 25 -j SMTP_FILTER
+-A FORWARD -d 192.168.2.0/24 -j REJECT --reject-with icmp-net-prohibited
+-A FORWARD -d 192.168.3.0/24 -j REJECT --reject-with icmp-net-prohibited
+-A FORWARD -d 192.168.4.0/24 -j REJECT --reject-with icmp-net-prohibited
+EOF
+
+# Apply new rules
+while read rule ; do
+	iptables $rule
+done < $ipt_file
+
+ip route replace default via $cgnat_gw dev $cgnat_if table lan_t

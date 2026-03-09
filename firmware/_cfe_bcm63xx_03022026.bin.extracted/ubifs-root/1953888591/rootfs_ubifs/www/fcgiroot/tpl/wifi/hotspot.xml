@@ -1,0 +1,8 @@
+<rsp stat="ok">
+  <hotspot>
+    <enable val="<?cs call:varIf(Env.autoconf.hotspot.enable) ?>" text="<?cs call:varValue_d(Env.Var.hotspot_enable.Value[Env.autoconf.hotspot.enable], Env.Var.hotspot_enable.Value.true)?>" />
+    <active val="<?cs var:Env.user.hotspot.active?>" text="<?cs call:varValue_d(Env.Var.hotspot_active.Value[Env.user.hotspot.active], Env.Var.hotspot_active.Value.off)?>" />
+    <status val="<?cs var:Env.status.hotspot.status?>" text="<?cs call:varValue_d(Env.Var.hotspot_status.Value[Env.status.hotspot.status], Env.Var.hotspot_status.Value.down)?>" />
+    <ssid text="<?cs var:Env.status.hotspot.ssids ?>" />
+  </hotspot>
+</rsp>

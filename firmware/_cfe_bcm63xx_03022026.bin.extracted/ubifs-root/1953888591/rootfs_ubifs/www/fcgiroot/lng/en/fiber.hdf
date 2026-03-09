@@ -1,0 +1,32 @@
+Env.Page.Title = Fiber
+
+Env.Help.Text << EOM
+In the <b>Fiber Information</b> section, you can find the following information about your Fiber : model, main firmware and rescue version, uptime, the last date on which he was interrogated, serial number, rank, the intensity, of signal transmitted and received, the BIAS, its temperature and its voltage.
+EOM
+
+Env.Section.ont.Title = Fiber information
+Env.Var.ont_model.Header = Model
+Env.Var.ont_version_active.Header = Main version
+Env.Var.ont_version_passive.Header = Rescue version
+Env.Var.ont_uptime.Header = Uptime
+Env.Var.ont_refresh.Header = Refresh
+Env.Var.ont_sn.Header = Serial Number
+Env.Var.ont_ranging.Header = Ranging
+Env.Var.ont_rssi_receive.Header = Optical signal strength received
+Env.Var.ont_rssi_transmit.Header = Optical signal strength transmitted
+Env.Var.ont_rssi_bias.Header = BIAS
+Env.Var.ont_rssi_temp.Header = Chip temperature
+Env.Var.ont_rssi_vcc.Header = Vcc voltage
+Env.Var.ont.unavailable = Data unavailable
+
+Env.Section.gpon.Title = Informations <acronym title="Gigabit Passive Optical Network">GPON</acronym>
+Env.Var.gpon_model.Header = Hardware version
+Env.Var.gpon_sn.Header = Serial Number
+Env.Var.gpon_uptime.Header = Uptime
+Env.Var.gpon_ranging.Header = Optical module state
+Env.Var.gpon_rssi_receive.Header = Optical signal strength received
+Env.Var.gpon_rssi_transmit.Header = Optical signal strength transmitted
+Env.Var.gpon_rssi_bias.Header = BIAS
+Env.Var.gpon_rssi_temp.Header = Chip temperature
+Env.Var.gpon_rssi_vcc.Header = Vcc voltage
+Env.Var.gpon.unavailable = Data unavailable

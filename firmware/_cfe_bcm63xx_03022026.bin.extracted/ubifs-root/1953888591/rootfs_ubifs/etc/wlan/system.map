@@ -1,0 +1,16 @@
+#wl0.3_net_reauth=wlan_eapsim_sessiontimeout
+#wl0.3_net_idleto=wlan_eapsim_idletimeout
+#wl0.3_net_dnstimeout=wlan_eapsim_raddnstimeout
+wl1.3_net_reauth=wlan_eapsim_sessiontimeout
+wl1.3_net_idleto=wlan_eapsim_idletimeout
+wl1.3_net_dnstimeout=wlan_eapsim_raddnstimeout
+
+wps_aplockdown_cap=wlan_wps_aplockdown_enabled
+wps_aplockdown_count=wlan_wps_aplockdown_maxwrongpin
+wps_aplockdown_duration=wlan_wps_aplockdown_duration
+wps_aplockdown_ageout=wlan_wps_aplockdown_ageout
+wps_wer_mode=wlan_wps_wermode
+wl0_acs_pol_idx=wlan_acs_policy
+wl1_acs_pol_idx=wlan_acs_policy
+#wl0.2_ap_isolate=wlan_guest_isolate
+wl1.2_ap_isolate=wlan_guest_isolate

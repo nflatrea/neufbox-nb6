@@ -1,0 +1,40 @@
+<?xml version = "1.0"?>
+<wanservices version="100000000000">
+  <ppp>
+    <timeout>20</timeout>
+    <failure>3</failure>
+    <interval>20</interval>
+  </ppp>
+  <whitelist-smtp>
+    <url>ghostsmtp.%OPERATOR_DOMAIN%</url>
+  </whitelist-smtp>
+  <ntp>
+    <server>ntp.%OPERATOR_DOMAIN%</server>
+    <serverv6>v6.ntp.%OPERATOR_DOMAIN%</serverv6>
+    <timezone>CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00</timezone>
+  </ntp>
+  <pushlog>
+	<data>
+		<server>data.stats.%OPERATOR_DOMAIN%</server>
+		<interval>3600</interval>
+	</data>
+	<voip>
+		<server>voip.stats.%OPERATOR_DOMAIN%</server>
+		<interval>3600</interval>
+	</voip>
+	<tv>
+		<server>tv.stats.%OPERATOR_DOMAIN%</server>
+		<interval>3600</interval>
+	</tv>
+	<event>
+		<server>events.stats.%OPERATOR_DOMAIN%</server>
+		<MinInterval>600</MinInterval>
+	</event>
+	<error>
+		<server>errors.stats.%OPERATOR_DOMAIN%</server>
+		<MinInterval>600</MinInterval>
+	</error>
+  </pushlog>
+  <infraAccess />
+  <routing />
+</wanservices>

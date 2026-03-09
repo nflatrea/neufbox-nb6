@@ -1,0 +1,80 @@
+#!/bin/sh
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+	echo "usage: downgrade firmware to the older version already stocked into mtd-upgrade-image"
+	echo "  -f, --force    force downgrade"
+	exit 127
+fi
+
+if [ "$1" = "-f" ] || [ "$1" = "--force" ]; then
+	FORCE=1
+else
+	FORCE=0
+fi
+
+abort() {
+	local code=$2
+
+	echo "$1 [code=${code}] Abort..."
+	logger -t "downgrade[$$]" "$1 [code=${code}] Abort..."
+	ledctl mode control
+	autoconf set status ""
+	lock -u /run/lock/downgrade.lock
+	exit $2
+}
+
+lock /run/lock/downgrade.lock
+
+echo "downgrade..."
+ledctl mode burning
+autoconf set status burning
+
+RELEASE="$(cat /tmp/upgrade_release)"
+if [ $RELEASE = "none" ] && [ $FORCE = 0 ] ;then
+	abort "attempt to downgrading to an invalid firmware, force downgrade with '-f'" 1
+else
+	echo "downgrade to release: $RELEASE"
+fi
+
+OLD_FIRMWARE="/tmp/old_firmware"
+echo "temporary backup old firmware under /tmp..."
+if ! nanddump -q --bb=skipbad /dev/mtd-upgrade-image  > $OLD_FIRMWARE; then
+	abort "nanddump -q --bb=skipbad /dev/mtd-upgrade-image|sha256sum|awk '{print $1}' failed!" 2
+fi
+
+echo "compute old firmware sha256 checksum..."
+SHA256SUM=$(sha256sum ${OLD_FIRMWARE} |awk '{print $1}')
+
+echo "flash erase..."
+if ! flash_eraseall -j /dev/mtd-upgrade-image; then
+	rm -f $OLD_FIRMWARE
+	abort "flash_eraseall -j /dev/mtd-upgrade-image failed!" 3
+fi
+
+echo "update sequence number..."
+if ! nandseq -u /dev/mtd-upgrade-image /dev/mtd-rootfs-image -c 0 -l 0; then
+	rm -f $OLD_FIRMWARE
+	abort "nandseq -u /dev/mtd-upgrade-image /dev/mtd-rootfs-image -c 0 -l 0 failed!" 4
+fi
+
+echo "nandwrite..."
+if ! nandwrite -m -q /dev/mtd-upgrade-image $OLD_FIRMWARE; then
+	flash_eraseall -j /dev/mtd-upgrade-image
+	rm -f $OLD_FIRMWARE
+	abort "nandwrite -m -q /dev/mtd-upgrade-image $OLD_FIRMWARE failed!" 5
+fi
+
+echo "compute sha256 to check..."
+FLASH=$(nanddump --bb=skipbad /dev/mtd-upgrade-image|sha256sum|awk '{print $1}')
+if [ "${SHA256SUM}" != "${FLASH}" ]; then
+	flash_eraseall -j /dev/mtd-upgrade-image
+	rm -f $OLD_FIRMWARE
+	abort "mismatch sha256sum old_firmware:${SHA256SUM} flash:${FLASH}" 6
+fi
+
+echo "done !"
+ledctl mode control
+autoconf set status ""
+rm -f $OLD_FIRMWARE
+
+lock -u /run/lock/downgrade.lock

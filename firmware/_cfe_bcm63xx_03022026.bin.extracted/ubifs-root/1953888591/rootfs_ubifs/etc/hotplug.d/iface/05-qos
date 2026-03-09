@@ -1,0 +1,12 @@
+#!/bin/sh
+
+[ "${INTERFACE}" != "data" ] && exit 0
+
+case ${ACTION} in
+	ifup)
+		/etc/init.d/qos start
+		;;
+	ifdown)
+		/etc/init.d/qos stop
+		;;
+esac

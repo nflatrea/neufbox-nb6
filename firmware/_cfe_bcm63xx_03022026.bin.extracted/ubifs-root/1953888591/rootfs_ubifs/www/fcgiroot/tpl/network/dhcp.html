@@ -1,0 +1,200 @@
+<div class="title">
+	<h1><?cs var:Env.Section.dhcp_configuration.Title ?></h1>
+</div>
+
+<div class="content">
+	<form id="form_dhcp_configuration" method="post" action="<?cs var:Env.Page.Name ?>">
+		
+        <?cs set:Var.dhcp_active.Value = Env.user.dhcp.active ?>
+        <?cs if:?Query.dhcp_active ?> 
+        <?cs set:Var.dhcp_active.Value = Query.dhcp_active ?>
+        <?cs /if ?>
+        
+        <?cs set:Var.dhcp_lease.Value = Env.user.dhcp.lease ?>
+        <?cs if:?Query.dhcp_lease ?> 
+        <?cs set:Var.dhcp_lease.Value = Query.dhcp_lease ?>
+        <?cs /if ?>
+        
+        <?cs set:Var.dhcp_start.Value = Var.dhcp_start_p3.Value ?>
+        <?cs if:?Query.dhcp_start_p3 ?> 
+        <?cs set:Var.dhcp_start.Value = Query.dhcp_start_p3 ?>
+        <?cs /if ?>
+        
+        <?cs set:Var.dhcp_end.Value = Var.dhcp_end_p3.Value ?>
+        <?cs if:?Query.dhcp_end_p3 ?> 
+        <?cs set:Var.dhcp_end.Value = Query.dhcp_end_p3 ?>
+        <?cs /if ?>
+            
+	<table id="dhcp_configuration">
+		
+		<tr>
+			<th scope="row"><?cs call:varHeader("dhcp_active") ?></th>
+			<td>
+                            <?cs call:div_onoff("dhcp_active", Var.dhcp_active.Value == "on") ?>
+			</td>
+		</tr>
+		
+		<tr class="toggle" id="row_dhcp_start">
+			<th scope="row"><?cs call:varHeader("dhcp_start") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.dhcp_start_p3.Error ?>error<?cs /if ?>">
+                                
+                                <div class="input-prepend">
+                                    <input type="hidden" id="dhcp_start_p0" name="dhcp_start_p0" class="input-mini readonly" size="3" maxlength="3" value="<?cs var:Var.dhcp_start_p0.Value ?>" />
+                                    <input type="hidden" id="dhcp_start_p1" name="dhcp_start_p1" class="input-mini readonly" size="3" maxlength="3" value="<?cs var:Var.dhcp_start_p1.Value ?>" />
+                                    <input type="hidden" id="dhcp_start_p2" name="dhcp_start_p2" class="input-mini readonly" size="3" maxlength="3" value="<?cs var:Var.dhcp_start_p2.Value ?>" />
+                                    <span class="add-on"><?cs var:Var.dhcp_start_p0.Value ?>.<?cs var:Var.dhcp_start_p1.Value ?>.<?cs var:Var.dhcp_start_p2.Value ?>.</span>
+                                    <input type="text" id="dhcp_start_p3" name="dhcp_start_p3" class="input-mini <?cs if:?Var.dhcp_start_p3.Error ?>error<?cs else ?>text<?cs /if ?>" size="3" maxlength="3" value="<?cs var:html_escape(Var.dhcp_start.Value) ?>" />
+                                </div>
+                                
+				<?cs if:?Var.dhcp_start_p3.Error ?>
+				<div class="help-inline">
+					<?cs var:Env.Var.dhcp_start_p3.Error[Var.dhcp_start_p3.Error] ?>
+				</div>
+				<?cs /if ?>
+                            </div>
+			</td>
+		</tr>
+		
+		<tr class="toggle" id="row_dhcp_end">
+			<th scope="row"><?cs call:varHeader("dhcp_end") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.dhcp_end_p3.Error ?>error<?cs /if ?>">
+                                
+                                <div class="input-prepend">
+                                    <input type="hidden" id="dhcp_end_p0" name="dhcp_end_p0" class="input-mini readonly" size="3" maxlength="3" value="<?cs var:Var.dhcp_end_p0.Value ?>" readonly="readonly" />
+                                    <input type="hidden" id="dhcp_end_p1" name="dhcp_end_p1" class="input-mini readonly" size="3" maxlength="3" value="<?cs var:Var.dhcp_end_p1.Value ?>" readonly="readonly" />
+                                    <input type="hidden" id="dhcp_end_p2" name="dhcp_end_p2" class="input-mini readonly" size="3" maxlength="3" value="<?cs var:Var.dhcp_end_p2.Value ?>" readonly="readonly" />
+                                    <span class="add-on"><?cs var:Var.dhcp_end_p0.Value ?>.<?cs var:Var.dhcp_end_p1.Value ?>.<?cs var:Var.dhcp_end_p2.Value ?>.</span>
+                                    <input type="text" id="dhcp_end_p3" name="dhcp_end_p3" class="input-mini <?cs if:?Var.dhcp_end_p3.Error ?>error<?cs else ?>text<?cs /if ?>" size="3" maxlength="3" value="<?cs var:html_escape(Var.dhcp_end.Value) ?>" />
+                                </div>
+                                
+				<?cs if:?Var.dhcp_end_p3.Error ?>
+				<div class="help-inline">
+					<?cs var:Env.Var.dhcp_end_p3.Error[Var.dhcp_end_p3.Error] ?>
+				</div>
+				<?cs /if ?>
+                            </div>
+			</td>
+		</tr>
+		
+		<tr class="toggle" id="row_dhcp_lease">
+			<th scope="row"><?cs call:varHeader("dhcp_lease") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.dhcp_lease.Error ?>error<?cs /if ?>">
+				<input type="text" id="dhcp_lease" name="dhcp_lease" class="input-mini <?cs if:?Var.dhcp_lease.Error ?>error<?cs else ?>text<?cs /if ?>" size="6" maxlength="6" value="<?cs var:html_escape(Var.dhcp_lease.Value) ?>" />
+
+				<?cs if:?Var.dhcp_lease.Error ?>
+				<div class="help-inline">
+					<?cs var:Env.Var.dhcp_lease.Error[Var.dhcp_lease.Error] ?>
+				</div>
+				<?cs /if ?>
+                            </div>
+			</td>
+		</tr>
+		
+	</table>
+	
+    <div class="alert alert-warning" id="dhcp_off_warning" <?cs if:Var.dhcp_active.Value != "off" ?>style="display:none;"<?cs /if?>>
+        <?cs var:Env.Text.dhcp_off_warning?>
+    </div>
+
+		<button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button>
+	
+        </form>
+</div>
+
+<div class="toggle" id="section_dhcp_static">
+	
+	<div class="title">
+		<h1><?cs var:Env.Section.dhcp_static.Title ?></h1>
+	</div>
+	
+	<div class="content">
+                <form method="post" action="<?cs var:Env.Page.Name ?>">
+                    
+                <?cs if:?Query.dhcp_static_ipaddr_p3 ?> 
+                <?cs set:Var.dhcp_static_ipaddr_p3.Value = Query.dhcp_static_ipaddr_p3 ?>
+                <?cs /if ?>  
+                
+                <?cs if:?Query.dhcp_static_macaddr_p0 ?> 
+                <?cs set:Var.dhcp_static_macaddr_p0.Value = Query.dhcp_static_macaddr_p0 ?>
+                <?cs /if ?>  
+                <?cs if:?Query.dhcp_static_macaddr_p1 ?> 
+                <?cs set:Var.dhcp_static_macaddr_p1.Value = Query.dhcp_static_macaddr_p1 ?>
+                <?cs /if ?>  
+                <?cs if:?Query.dhcp_static_macaddr_p2 ?> 
+                <?cs set:Var.dhcp_static_macaddr_p2.Value = Query.dhcp_static_macaddr_p2 ?>
+                <?cs /if ?>  
+                <?cs if:?Query.dhcp_static_macaddr_p3 ?> 
+                <?cs set:Var.dhcp_static_macaddr_p3.Value = Query.dhcp_static_macaddr_p3 ?>
+                <?cs /if ?>  
+                <?cs if:?Query.dhcp_static_macaddr_p4 ?> 
+                <?cs set:Var.dhcp_static_macaddr_p4.Value = Query.dhcp_static_macaddr_p4 ?>
+                <?cs /if ?>  
+                <?cs if:?Query.dhcp_static_macaddr_p5 ?> 
+                <?cs set:Var.dhcp_static_macaddr_p5.Value = Query.dhcp_static_macaddr_p5 ?>
+                <?cs /if ?>
+                    
+                <table id="dhcp_static" class="magictable">
+		       <thead>
+				<tr>
+					<th scope="row"><?cs call:varHeader("dhcp_static_ipaddr") ?></th>
+					<th scope="row"><?cs call:varHeader("dhcp_static_macaddr") ?></th>
+					<th scope="row" class="col_action" colspan="2"></th>
+				</tr>
+			</thead>
+
+			<?cs each:item = Env.user.dhcp.static.pair ?>
+			<tbody>
+			<tr>
+				<td data-title="<?cs call:varHeader("dhcp_static_ipaddr") ?>"><?cs var:item.ipaddr ?></td>
+				<td data-title="<?cs call:varHeader("dhcp_static_macaddr") ?>"><?cs var:item.macaddr ?></td>
+				<td data-title="" class="col_action">
+                                        <button class="btn" type="submit" name="action_remove.<?cs var:name(item) ?>"><i class="icon-minus-sign icon-white"></i></button>
+				</td>
+			</tr>
+			<?cs /each ?>
+			
+			<tr>
+				<td data-title="<?cs call:varHeader("dhcp_static_ipaddr") ?>">
+                                    <div class="control-group <?cs if:?Var.dhcp_static_ipaddr.Error ?>error<?cs /if ?>">
+                                        
+                                        <div class="input-prepend input-append">
+                                            <input type="hidden" id="dhcp_static_ipaddr_p0" name="dhcp_static_ipaddr_p0" class="input-mini readonly" size="3" maxlength="3" value="<?cs var:Var.dhcp_static_ipaddr_p0.Value ?>" readonly="readonly" />
+                                            <input type="hidden" id="dhcp_static_ipaddr_p1" name="dhcp_static_ipaddr_p1" class="input-mini readonly" size="3" maxlength="3" value="<?cs var:Var.dhcp_static_ipaddr_p1.Value ?>" readonly="readonly" />
+                                            <input type="hidden" id="dhcp_static_ipaddr_p2" name="dhcp_static_ipaddr_p2" class="input-mini readonly" size="3" maxlength="3" value="<?cs var:Var.dhcp_static_ipaddr_p2.Value ?>" readonly="readonly" />
+                                            <span class="add-on"><?cs var:Var.dhcp_static_ipaddr_p0.Value ?>.<?cs var:Var.dhcp_static_ipaddr_p1.Value ?>.<?cs var:Var.dhcp_static_ipaddr_p2.Value ?>.</span>
+                                            <input type="text" id="dhcp_static_ipaddr_p3" name="dhcp_static_ipaddr_p3" class="input-mini <?cs if:?Var.dhcp_static_ipaddr.Error ?>error<?cs else ?>text<?cs /if ?>" size="3" maxlength="3" value="<?cs var:html_escape(Var.dhcp_static_ipaddr_p3.Value) ?>" />
+                                            <button class="btn" type="button" id="button_network"><i class="icon-th icon-white"></i></button>
+                                        </div>
+                                        
+					<?cs if:?Var.dhcp_static_ipaddr.Error ?>
+					<div class="help-inline">
+						<?cs var:Env.Var.dhcp_static_ipaddr.Error[Var.dhcp_static_ipaddr.Error] ?>
+					</div>
+					<?cs /if ?>
+                                    </div>
+				</td>
+				
+				<td data-title="<?cs call:varHeader("dhcp_static_macaddr") ?>">
+                                    <div class="control-group <?cs if:?Var.dhcp_static_macaddr.Error ?>error<?cs /if ?>">
+					<input type="text" id="dhcp_static_macaddr" name="dhcp_static_macaddr" class="input-large <?cs if:?Var.dhcp_static_macaddr.Error ?>error<?cs else ?>text<?cs /if ?>" size="17" maxlength="17" value="<?cs var:html_escape(Var.dhcp_static_macaddr.Value) ?>" />
+					
+					<?cs if:?Var.dhcp_static_macaddr.Error ?>
+					<div class="help-inline">
+						<?cs var:Env.Var.dhcp_static_macaddr.Error[Var.dhcp_static_macaddr.Error] ?>
+					</div>
+					<?cs /if ?>
+                                    </div>
+				</td>
+				
+				<td data-title="" class="col_action">
+                                        <button class="btn" type="submit" name="action_add"><i class="icon-plus-sign icon-white"></i></button>
+				</td>
+			</tr>
+			</tbody>
+		</table>
+                </form>
+	</div>
+</div>

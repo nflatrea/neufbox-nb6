@@ -1,0 +1,116 @@
+Env.Page.Title = Wifi
+
+Env.Help.Text = In the <b>Access point</b> section, you can find the settings used by your wireless networks of your Box : Wifi status, the name of your wireless networks (SSID), if the name of your wireless networks are broadcast, the channel, the radio mode, the encryption system, the encryption key and the activation of MAC filtering.<br /><br /> In the <b>Hotspot</b> section, you can see your hotspot (Wifi access point): its status, the Wifi name which is broadcasted.<br /><br /> In the <b>Connected hosts</b> section, you can find the list of the Wifi equipments currently connected to your Box.
+
+Env.Section.wifi_info_2_4.Title = Access point 2,4GhZ
+Env.Section.wifi_info_5.Title = Access point 5GHz
+Env.Section.wifi_info_guest.Title = Access point guest
+
+Env.Var.wifi_status.Header = Status
+Env.Var.wifi_status.Value.on = Enabled
+Env.Var.wifi_status.Value.unused = Waiting
+Env.Var.wifi_status.Value.off = Disabled
+Env.Var.wifi_status.Value.btnoff = Disabled by Wifi button
+Env.Var.wifi_status.Value.offbysched = Disabled by Wifi schedule
+
+Env.Var.wifi_ssid.Header = SSID
+
+Env.Var.wifi_closed.Header = SSID broadcasting
+Env.Var.wifi_closed.Value.0 = Enabled
+Env.Var.wifi_closed.Value.1 = Disabled
+
+Env.Var.wifi_channel.Header = Channel
+
+Env.Var.wifi_bwcap.Header = Bandwidth
+Env.Text.MHz = MHz
+
+Env.Var.wifi_dfs.Header = DFS channels
+
+Env.Var.wifi_mode.Header = Radio mode
+Env.Var.wifi_mode.Value.auto = auto
+Env.Var.wifi_mode.Value.11b = 11b
+Env.Var.wifi_mode.Value.11g = 11b/g
+Env.Var.wifi_mode.Value.11ng = 11b/g/n
+Env.Var.wifi_mode.Value.11n = 11n
+
+Env.Var.wifi_encryption.Header = Encryption
+Env.Var.wifi_encryption.Value.OPEN = Disabled
+Env.Var.wifi_encryption.Value.WEP = WEP
+Env.Var.wifi_encryption.Value.WPA_PSK = WPA Personal
+Env.Var.wifi_encryption.Value.WPA2_PSK = WPA2 Personal
+Env.Var.wifi_encryption.Value.WPA_WPA2_PSK = WPA/WPA2 Personal
+
+Env.Var.wifi_wpaenctype.Value.tkip = TKIP
+Env.Var.wifi_wpaenctype.Value.aes = AES
+Env.Var.wifi_wpaenctype.Value.tkipaes = TKIP and AES
+
+Env.Var.wifi_key.Header = Key
+Env.Var.wifi_key.Value.none = None
+
+Env.Var.wifi_macfiltering.Header = MAC filtering
+Env.Var.wifi_macfiltering.Value.on = Enabled
+Env.Var.wifi_macfiltering.Value.off = Disabled
+
+Env.Var.guest_schedule.Header = Activity time
+Env.Var.guest_schedule.List.1.Value = 0
+Env.Var.guest_schedule.List.1.Label = Always
+Env.Var.guest_schedule.List.2.Value = 1
+Env.Var.guest_schedule.List.2.Label = 1 day
+Env.Var.guest_schedule.List.3.Value = 7
+Env.Var.guest_schedule.List.3.Label = 1 week
+Env.Var.guest_schedule.List.4.Value = 30
+Env.Var.guest_schedule.List.4.Label = 1 month
+
+Env.Section.wifi_assoc.Title = Connected hosts
+
+Env.Var.wifi_assoclist_mac.Header = MAC address
+Env.Var.wifi_assoclist_ip.Header = IP address
+
+Env.Var.ssid.Header = SSID
+
+Env.Var.type.Header = Frequency
+Env.Text.2_4 = 2.4GHz
+Env.Text.5 = 5GHz
+
+Env.Text.NoConnectedClients = No connected hosts
+Env.Text.Undefined = Undefined
+Env.Text.auto = Auto
+Env.Text.currentChannel = Current channel
+Env.Text.ht40Enabled = Wide channels enabled
+
+Env.Var.mac_addr.Header = MAC address
+Env.Var.ip_addr.Header = IP address
+
+Env.Section.hotspot_info.Title = Hotspot
+
+Env.Var.hotspot_enable.Value.false = The hotspot service is not available.
+Env.Var.hotspot_enable.Value.true = The hotspot service is available.
+
+Env.Var.hotspot_active.Value.on = Enabled
+Env.Var.hotspot_active.Value.off = Disabled
+
+Env.Var.hotspot_status.Header = Status
+Env.Var.hotspot_status.Value.off = Disabled
+Env.Var.hotspot_status.Value.up = Started
+Env.Var.hotspot_status.Value.down = Stopped
+Env.Var.hotspot_status.Value.starting = Starting
+Env.Var.hotspot_status.Value.stopping = Stopping
+Env.Var.hotspot_status.Value.error_maxup = Stopped (upload rate too low)
+Env.Var.hotspot_status.Value.error_maxdown = Stopped  (upload rate too low)
+Env.Var.hotspot_status.Value.error_conf = Internal error
+Env.Var.hotspot_status.Value.error_wandown = Error (Internet not working)
+Env.Var.hotspot_status.Value.error_pppdown = Error (Internet not working)
+Env.Var.hotspot_status.Value.error_adsldown = Error (Internet not working)
+Env.Var.hotspot_status.Value.error_wifidown = Error (Wifi disabled)
+
+Env.Var.hotspot_ssid.Header = SSID
+
+Env.Section.hotspot_assoc.Title = Connected hosts
+
+Env.Var.hotspot_assoclist_mac.Header = MAC address
+Env.Var.hotspot_assoclist_ip.Header = IP address
+
+Env.Text.NoConnectedClients = No connected host
+
+Env.Var.qrcode_wifi.Header = QR Code
+Env.Text.qrcode_wifi = Scan and connect easily with your Smartphone.

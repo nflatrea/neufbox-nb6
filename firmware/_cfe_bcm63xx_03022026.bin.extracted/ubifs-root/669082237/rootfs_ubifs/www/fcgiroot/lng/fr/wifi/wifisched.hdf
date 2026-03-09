@@ -1,0 +1,24 @@
+Env.Page.Title = Wifi Horaire
+
+Env.Help.Text = Dans cette rubrique, vous pouvez définir les plages horaires pour lesquelles vous désirez éteindre le Wifi de votre Box. Les plages sélectionnées correspondent aux périodes d’arrêts de diffusion des ondes Wifi.
+
+Env.Var.wifisched_status.Header = Etat
+Env.Var.wifisched.Header = Wifi horaire
+
+Env.Section.configuration.Title = Wifi horaire
+
+Env.Var.wifisched.status.wlanstopped = Activé (Wifi désactivé)
+Env.Var.wifisched.status.sync_down = Désactivé (heure non synchronisée)
+Env.Var.wifisched.status.forceoff = Désactivé (Appui bouton Wifi)
+Env.Var.wifisched.status.up = Activé
+Env.Var.wifisched.status.down = Désactivé
+
+Env.Var.days.0 = Tous les lundis
+Env.Var.days.1 = Tous les mardis
+Env.Var.days.2 = Tous les mercredis
+Env.Var.days.3 = Tous les jeudis
+Env.Var.days.4 = Tous les vendredis
+Env.Var.days.5 = Tous les samedis
+Env.Var.days.6 = Tous les dimanches
+
+Env.Var.legend = Périodes d'arrêts de diffusion des ondes Wifi.

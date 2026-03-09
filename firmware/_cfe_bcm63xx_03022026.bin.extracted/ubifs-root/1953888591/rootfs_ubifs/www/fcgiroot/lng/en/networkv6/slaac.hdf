@@ -1,0 +1,10 @@
+Env.Page.Title = Prefix Announcement SLAAC
+
+Env.Help.Text <<EOM
+IPv6-compatible devices get their IP address via an auto-configuration system named <b>SLAAC</b> (Stateless Address Auto-configuration).
+<br /><br />You can active or deactivate this mechanism. However, deactivating it will cause the loss of IPv6 connectivity on your devices that only support the IPv6 adressing system.
+EOM
+
+Env.Var.dhcp_slaac.Header = Prefix Announcement (<abbr title="Stateless address autoconfiguration">SLAAC</abbr>)
+
+Env.Text.slaac_off_warning = Warning: if you change some settings, you may cause a loss of service of your IPV6-connected devices; this section is for expert users.

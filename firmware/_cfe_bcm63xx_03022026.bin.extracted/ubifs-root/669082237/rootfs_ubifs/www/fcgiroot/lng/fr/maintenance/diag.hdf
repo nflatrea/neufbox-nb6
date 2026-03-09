@@ -1,0 +1,227 @@
+Env.Page.Title = Diagnostic
+
+Env.Help.Text << EOM
+Dans la rubrique <b>Diagnostic téléphonie</b> vous pourrez lancer une série de tests afin de vérifier le bon fonctionnement de la partie téléphonie de votre Box.<br /><br />Pour cela cliquez sur <i>Etape 1</i> et suivez les indications.<br /><br /><i>Initialisation</i>: avec ce test, vérifiez la bonne configuration téléphonique de votre Box.<br /><i>Matériel</i>: avec ce test, vérifiez le bon état du circuit électrique utilisé dans la Box.<br /><i>Sonnerie</i>: avec ce test, vérifiez que votre Box fait sonner votre poste téléphonique.<br /><i>Tonalité</i>: avec ce test, vérifiez que votre Box communique avec votre poste téléphonique.<br /><i>Numérotation</i>: avec ce test, vérifiez le bon fonctionnement des touches de votre poste téléphonique.
+<br/><br/>Dans la rubrique <b>Diagnostic général</b>, sur demande d'un technicien SFR vous pouvez générer ici un rapport d'état utile à la résolution de problème technique complexe.
+<br/><br/>Dans la rubrique <b>Diagnostic modem xDSL</b>, vous pourrez procéder à un diagnostic automatique pour vérifier si le modem xDSL de votre Box est opérationnel. Veillez à bien brancher le bouchon xDSL pour avoir un résultat pertinent.
+EOM
+
+Env.Section.DiagPhone.Title = Diagnostic téléphonie
+
+Env.Var.InitResult.Header = Initialisation
+Env.Var.InitResult.Value.success = Effectué
+Env.Var.initResult.Value.not_launched = Non effectué
+
+Env.Var.InitError.Value.check_hook = Erreur : vérifiez que votre téléphone est bien raccroché
+Env.Var.InitError.Value.unknown = Erreur
+
+Env.Var.Gr909Result.Header = Matériel
+Env.Var.Gr909Result.Value.success = Effectué
+Env.Var.Gr909Result.Value.error = Erreur
+Env.Var.Gr909Result.Value.not_launched = Non effectué
+
+Env.Var.Gr909Error.Value.error_voltage = Echec: défaillance de tension détectée.
+Env.Var.Gr909Error.Value.error_resist = Echec: défaillance de resistance détectée.
+Env.Var.Gr909Error.Value.error_offhook = Erreur: votre téléphone est décroché, veuillez le raccrocher.
+Env.Var.Gr909Error.Value.error_loadline = Erreur: problème de charge sur la ligne.
+
+Env.Var.RingResult.Header = Sonnerie
+Env.Var.RingResult.Value.success = Effectué
+Env.Var.RingResult.Value.error = Erreur
+Env.Var.RingResult.Value.not_launched = Non effectué
+
+Env.Var.HookntoneResult.Header = Tonalité
+Env.Var.HookntoneResult.Value.success = Effectué
+Env.Var.HookntoneResult.Value.error = Erreur
+Env.Var.HookntoneResult.Value.not_launched = Non effectué
+
+Env.Var.HookntoneError.Value.pick_up = Erreur: décroché non détecté
+Env.Var.HookntoneError.Value.hang_up = Erreur: raccroché non détecté
+Env.Var.HookntoneError.Value.ft_standard = Erreur: votre combiné ne respecte pas les normes FT, des dysfonctionnements sont possibles
+
+Env.Var.DtmfResult.Header = Numérotation
+Env.Var.DtmfResult.Value.success = Effectué
+Env.Var.DtmfResult.Value.error = Erreur
+Env.Var.DtmfResult.Value.not_launched = Non effectué
+
+Env.Var.DtmfError.Value.press_0 = Appui sur la touche 0 non détecté.
+Env.Var.DtmfError.Value.release_0 = Relache de la touche 0 non détecté.
+Env.Var.DtmfError.Value.press_1 = Appui sur la touche 1 non détecté.
+Env.Var.DtmfError.Value.release_1 = Relache de la touche 1 non détecté.
+Env.Var.DtmfError.Value.press_2 = Appui sur la touche 2 non détecté.
+Env.Var.DtmfError.Value.release_2 = Relache de la touche 2 non détecté.
+Env.Var.DtmfError.Value.press_3 = Appui sur la touche 3 non détecté.
+Env.Var.DtmfError.Value.release_3 = Relache de la touche 3 non détecté.
+Env.Var.DtmfError.Value.press_4 = Appui sur la touche 4 non détecté.
+Env.Var.DtmfError.Value.release_4 = Relache de la touche 4 non détecté.
+Env.Var.DtmfError.Value.press_5 = Appui sur la touche 5 non détecté.
+Env.Var.DtmfError.Value.release_5 = Relache de la touche 5 non détecté.
+Env.Var.DtmfError.Value.press_6 = Appui sur la touche 6 non détecté.
+Env.Var.DtmfError.Value.release_6 = Relache de la touche 6 non détecté.
+Env.Var.DtmfError.Value.press_7 = Appui sur la touche 7 non détecté.
+Env.Var.DtmfError.Value.release_7 = Relache de la touche 7 non détecté.
+Env.Var.DtmfError.Value.press_8 = Appui sur la touche 8 non détecté.
+Env.Var.DtmfError.Value.release_8 = Relache de la touche 8 non détecté.
+Env.Var.DtmfError.Value.press_9 = Appui sur la touche 9 non détecté.
+Env.Var.DtmfError.Value.release_9 = Relache de la touche 9 non détecté.
+
+Env.Button.Init = Lancer l'étape 1
+Env.Button.ReInit = Relancer l'étape 1
+Env.Text.Init = Cette étape permet de vérifier que la téléphonie de la Box est correctement initialisée.
+
+Env.Button.Gr909 = Lancer l'étape 2
+Env.Button.ReGr909 = Relancer l'étape 2
+Env.Text.Gr909 = Cette étape permet de vérifier le circuit électrique utilisé pour la téléphonie. La sollicitation particulière du circuit peut engendrer un bruit audible au niveau de la Box. Ce comportement est normal. N'interagissez pas avec votre combiné téléphonique en cours de test. 
+
+Env.Button.Ring = Lancer l'étape 3
+Env.Button.ReRing = Relancer l'étape 3
+Env.Text.Ring = Cette étape permet de vérifier que la Box fait correctement sonner votre poste téléphonique.
+
+Env.Button.Hookntone = Lancer l'étape 4
+Env.Button.ReHookntone = Relancer l'étape 4
+Env.Text.Hookntone = Cette étape permet de vérifier que vous entendez correctement la tonalité de votre poste téléphonique. Cliquez sur le bouton, puis décrochez votre combiné, écoutez la tonalité, et enfin raccrochez.
+
+Env.Button.Dtmf = Lancer l'étape 5
+Env.Button.ReDtmf = Relancer l'étape 5
+Env.Text.Dtmf = Cette étape permet de vérifier que les actions sur les touches de votre poste téléphonique sont correctement reconnues par la Box. Cliquez sur le bouton, puis décrochez votre combiné, appuyez sur les touches de 0 à 9 dans l'ordre et enfin raccrochez.
+
+Env.Button.CancelAndReboot = Annuler et redémarrer
+Env.Text.Warning = Attention ! Vous devrez redémarrer votre Box après le diagnostic pour que la téléphonie fonctionne normalement.
+Env.Text.Info = Le diagnostic coupera toute communication téléphonique en cours.
+
+Env.Section.dsltest.Title = Diagnostic modem xDSL
+
+Env.Text.dsltest_instruction = Branchez le bouchon de test sur le port "DSL" de votre Box et cliquez sur le bouton "Tester". La procédure de test dure 20 secondes.
+Env.Text.dsltest_living = Test modem DSL en cours
+
+Env.Var.dsltest_result.Header = Résultat du test
+Env.Var.dsltest_result.Value.OK = Modem OK
+Env.Var.dsltest_result.Value.KO_HIGH = Problème sur le modem
+Env.Var.dsltest_result.Value.KO_LOW = Problème sur le modem
+
+Env.Button.Test = Tester
+
+Env.Text.not_launched = Non effectué
+
+Env.Section.DiagReport.Title = Diagnostic général
+
+Env.Text.ExportDiagReport = Exporter le rapport de diagnostic
+
+Env.Var.pendingDiag.Value = Diagnostic en cours...
+
+Env.Section.ont.Title = Information <acronym title="Optical Network Terminal">ONT</acronym>
+Env.Var.ont_model.Header = Modèle
+Env.Var.ont_version_active.Header = Version principale
+Env.Var.ont_version_passive.Header = Version de secours
+Env.Var.ont_uptime.Header = Temps de service
+Env.Var.ont_refresh.Header = Date de rafraîchissement
+Env.Var.ont_sn.Header = Numéro de série
+Env.Var.ont_ranging.Header = Rangement de l'ONT sur PON
+Env.Var.ont_rssi_receive.Header = Intensité signal optique reçue (dBm)
+Env.Var.ont_rssi_transmit.Header = Intensité signal optique transmise (dBm)
+Env.Var.ont_rssi_bias.Header = BIAS (mA)
+Env.Var.ont_rssi_temp.Header = Température (°C)
+Env.Var.ont_rssi_vcc.Header = Tension Vcc
+
+Env.Section.ont_leds.Title = Etat des voyants de l'<acronym title="Optical Network Terminal">ONT</acronym>
+Env.Var.ont_leds_eqpt.Header = Equipement
+Env.Var.ont_leds_pon.Header = PON
+Env.Var.ont_leds_mgnt.Header = Gestion et administration
+Env.Var.ont_leds_lan.Header = Liaison Ethernet
+Env.Var.ont_leds_alm.Header = Alarmes
+Env.Var.ont_leds_info.down = Non branché
+Env.Var.ont_leds_info.ras = RAS
+Env.Var.ont_leds_info.dysfunction = Dysfonctionnement
+Env.Var.ont_leds_info.up = Opérationnel
+
+Env.Section.ont_details.Title = Informations détaillées de l'<acronym title="Optical Network Terminal">ONT</acronym>
+Env.Var.ont_status_power.Header = Alimentation Electrique de l'ONT
+Env.Var.ont_status_lanlos.Header = Liaison Ethernet entre l'ONT et la Box
+Env.Var.ont_status_lossframe.Header = Perte de paquets sur la fibre
+Env.Var.ont_status_lossgem.Header = Problème lors du traitement des paquets
+Env.Var.ont_status_losssignal.Header = Perte du signal optique
+Env.Var.ont_status_errormsg.Header = Message d'erreur sur la couche physique
+Env.Var.ont_status_omcc.Header = Perte ou problème de communication sur la fibre
+Env.Var.ont_status_deactivate.Header = Echec de désactivation de l'ONT
+Env.Var.ont_status_ranged.Header = ONT rangé sur le PON
+Env.Var.ont_status_phyerror.Header = ONT hors service
+Env.Var.ont_status_highlow.Header = Puissance du signal optique émis
+Env.Var.ont_status_rdi.Header = Erreurs dans le signal reçu par l'ONT
+Env.Var.ont_status_degraded.Header = Signal dégradé
+Env.Var.ont_status_failed.Header = Perte de signal, seuil d'erreur
+Env.Var.ont_status_failure.Header = Problème d'initialisation
+Env.Var.ont_status_dl.Header = Téléchargement de la version logicielle
+
+Env.Var.ont_details_powered.up = Alimentation OK
+Env.Var.ont_details_powered.down = Problème d'alimentation électrique
+Env.Var.ont_details_lanlos.up = Active
+Env.Var.ont_details_lanlos.down = Perte de liaison Ethernet
+Env.Var.ont_details_lossframe.up = Aucune perte de paquets
+Env.Var.ont_details_lossframe.down = Perte de paquets
+Env.Var.ont_details_lossgem.up = Aucun défaut de constaté
+Env.Var.ont_details_lossgem.down = Problème détecté
+Env.Var.ont_details_losssignal.up = Aucune perte de signal constatée
+Env.Var.ont_details_losssignal.down = Perte de signal constatée
+Env.Var.ont_details_errormsg.up = Aucun message d'erreur
+Env.Var.ont_details_errormsg.down = Présence d'un message d'erreur
+Env.Var.ont_details_omcc.up = Aucun problème de communication constaté
+Env.Var.ont_details_omcc.down = Défaut de communication constaté
+Env.Var.ont_details_deactivate.up = Pas d'erreur constatée
+Env.Var.ont_details_deactivate.down = Erreur de désactivation constatée
+Env.Var.ont_details_ranged.up = L'ONT rangé sur le PON
+Env.Var.ont_details_ranged.down = L'ONT n'est pas rangé sur le PON
+Env.Var.ont_details_phyerror.up = L'ONT fonctionne
+Env.Var.ont_details_phyerror.down = L'ONT est hors service
+Env.Var.ont_details_highlow.high = La puissance du signal optique émis est trop élevée
+Env.Var.ont_details_highlow.low = La puissance du signal optique émis est trop faible
+Env.Var.ont_details_highlow.undef = Remontées incohérentes
+Env.Var.ont_details_highlow.ok = La puissance du signal optique émis est normale
+Env.Var.ont_details_rdi.up = Aucune erreur détectée
+Env.Var.ont_details_rdi.down = Erreurs détectées
+Env.Var.ont_details_degraded.up = Signal reçu OK
+Env.Var.ont_details_degraded.down = Signal reçu dégradé
+Env.Var.ont_details_failed.up = Aucune perte de signal
+Env.Var.ont_details_failed.down = Perte de signal
+Env.Var.ont_details_failure.up = Pas de problème détecté
+Env.Var.ont_details_failure.down = L'ONT n'a pas réussi à initialiser son processus de "ranging"
+Env.Var.ont_details_dl.done = Logiciel de l'ONT téléchargé avec succès
+Env.Var.ont_details_dl.fail = Le téléchargement du logiciel de l'ONT a échoué
+Env.Var.ont_details_dl.idle = Le logiciel de l'ONT est à jour
+Env.Var.ont_details_dl.ip = Une mise à jour du logiciel de l'ONT est en cours, ne pas débrancher l'ONT
+Env.Var.ont_details_dl.start = Une mise à jour du logiciel de l'ONT est en cours, ne pas débrancher l'ONT
+Env.Var.ont_details_dl.undef = Remontées incohérentes
+
+Env.Var.ont.disconnected = Mini-ONT déconnecté
+Env.Var.ont.unavailable = Mini-ONT indisponible
+
+Env.Var.ont.reboot = Redémarrer l'ONT
+Env.Var.ont.rebooting.0 = Commande envoyée avec succès
+Env.Var.ont.rebooting.1 = Echec de l'opération
+Env.Var.ont.rebooting.2 = Echec de l'opération
+Env.Var.ont.rebooting.10 =  L’ONT est en service, le reboot n’est pas autorisé.
+
+Env.Var.ont.leds.eqpt.GREEN.NONE = Le Mini boîtier ONT est correctement alimenté. 
+Env.Var.ont.leds.eqpt.RED.NONE = = Le Mini boîtier ONT est hors service.
+Env.Var.ont.leds.eqpt.OFF.NONE = Remontée incohérente.
+
+Env.Var.ont.leds.pon.GREEN.NONE = Le software du Mini boîtier ONT est obsolète. 
+Env.Var.ont.leds.pon.GREEN.SOLID = Le Mini boîtier ONT est synchronisé. 
+Env.Var.ont.leds.pon.GREEN.BLINKING = Remontée incohérente. 
+Env.Var.ont.leds.pon.RED.NONE = Le software du Mini boîtier ONT est obsolète.
+Env.Var.ont.leds.pon.RED.SOLID = Vérifier que la fibre optique est bien insérée. 
+Env.Var.ont.leds.pon.RED.BLINKING = Le Mini boîtier ONT ne peut pas se synchroniser. 
+Env.Var.ont.leds.pon.ORANGE.NONE = Le software du Mini boîtier ONT est obsolète. 
+Env.Var.ont.leds.pon.ORANGE.SOLID = La synchronisation du Mini boîtier ONT a échoué. 
+Env.Var.ont.leds.pon.ORANGE.BLINKING = le Mini-boitier ONT est en cours de synchronisation. 
+Env.Var.ont.leds.pon.OFF.NONE = Remontée incohérente. 
+
+Env.Var.ont.leds.mgnt.GREEN.NONE = Le software du Mini boîtier ONT est obsolète. 
+Env.Var.ont.leds.mgnt.GREEN.SOLID = Le software du Mini boîtier ONT est à jour.
+Env.Var.ont.leds.mgnt.GREEN.BLINKING = Une mise à jour software du Mini boîtier ONT est en cours. 
+Env.Var.ont.leds.mgnt.OFF.NONE = Le Mini boîtier ONT est hors service.
+
+Env.Var.ont.leds.lan.GREEN.NONE = Le Mini boitier ONT est correctement raccordé à la Box.
+Env.Var.ont.leds.lan.GREEN.SOLID = Le Mini boitier ONT est correctement raccordé à la Box.
+Env.Var.ont.leds.lan.GREEN.BLINKING = Transfert de donnée en cours. 
+Env.Var.ont.leds.lan.OFF.NONE = Remontée incohérente.
+

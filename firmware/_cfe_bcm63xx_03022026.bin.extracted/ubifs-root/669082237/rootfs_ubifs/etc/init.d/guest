@@ -1,0 +1,97 @@
+#!/bin/sh /etc/rc.common
+
+START=56
+
+service=guest
+logger -t "${service}[$$]" "$action"
+
+. /etc/wlan/wlan.sh
+
+ifname=$(roxml -q /etc/default/topology.xml '//interface[@service=guest]/@ifname')
+if [ -z $ifname ]; then
+    exit 0
+fi
+
+ipaddr=$(nvram get wlan_guest_networkv4_ipaddr)
+netmask=$(nvram get wlan_guest_networkv4_netmask)
+eval $(ipcalc -bnp $ipaddr $netmask)
+network=${NETWORK}/${PREFIX}
+broadcast=${BROADCAST}
+prefix=${PREFIX}
+EXTRA_COMMANDS="configure_wan reset_wan"
+wan_ifname=$(status get net_data_ifname)
+
+boot() {
+    ipt -N GUEST_INPUT
+    ipt -N GUEST_FORWARD
+    
+    ipt -t nat -N GUEST_PAT
+    ipt -t nat -A GUEST_PAT -j ACCEPT
+
+    ip route replace unreachable default table guest_t
+    local prio=1000
+    ip rule add priority ${prio} from ${network} dev ${ifname} lookup guest_t
+    ip addr add ${ipaddr}/${prefix} dev ${ifname}
+    ip route add ${network} dev ${ifname}
+    ip route add ${network} dev ${ifname} table guest_t
+
+    ipt -A GUEST_INPUT -p udp -m udp --dport bootps -j ACCEPT
+    ipt -A GUEST_INPUT -p udp -m udp --dport 53 -j ACCEPT
+    
+    ipt -I INPUT -i ${ifname} -m state --state NEW -j GUEST_INPUT
+
+    ipt -F GUEST_FORWARD
+    ipt -A GUEST_FORWARD -d 192.168.1.0/24 -j REJECT --reject-with icmp-net-prohibited
+    ipt -A GUEST_FORWARD -d 192.168.4.0/24 -j REJECT --reject-with icmp-net-prohibited
+    ipt -A FORWARD -s ${network} -m state --state NEW -j GUEST_FORWARD
+    
+    start
+}
+
+
+reset_wan() {
+    # unreachable default route
+    ip route replace unreachable default table guest_t
+}
+
+configure_wan() {
+	local infra=$(status get net_data_infra)
+	local ports="1024-$(( $(nvram get lan_maxport) - 1 ))"
+	local gateway wan_ip
+
+    if [ "$(status get net_cgnat_status)" != "up" ]; then
+		gateway=$(status get net_data_gateway)
+		wan_ip=$(status get net_data_ipaddr)
+	else
+		gateway=$(status get dhcpc_wan_gateway)
+		wan_ip=$(status get dhcpc_wan_ipaddr)
+	fi
+
+	ipt -t nat -F GUEST_PAT
+	if [ "${infra}" = "adsl/ppp" ] || [ "${infra}" = "gprs/ppp" ]; then
+	    ipt -t nat -A GUEST_PAT -p tcp -j MASQUERADE --to-ports ${ports} -o ${wan_ifname} -s ${network}
+	    ipt -t nat -A GUEST_PAT -p udp -j MASQUERADE --to-ports ${ports} -o ${wan_ifname} -s ${network}
+	    ipt -t nat -A GUEST_PAT -j MASQUERADE -o ${wan_ifname} -s ${network}
+	else
+	    ipt -t nat -A GUEST_PAT -p tcp -j SNAT --to "$wan_ip:$ports" -o ${wan_ifname} -s ${network}
+	    ipt -t nat -A GUEST_PAT -p udp -j SNAT --to "$wan_ip:$ports" -o ${wan_ifname} -s ${network}
+	    ipt -t nat -A GUEST_PAT -s ${network} -j SNAT --to $wan_ip -o ${wan_ifname}
+	fi
+
+	ipt -t nat -D POSTROUTING -s ${network} -o $wan_ifname -j GUEST_PAT
+	ipt -t nat -I POSTROUTING -s ${network} -o $wan_ifname -j GUEST_PAT
+
+	ip route replace default via $gateway table guest_t
+}
+
+start() {
+    if [ "$(status get net_data_status)" = "up" ]; then
+		configure_wan
+    fi
+}
+
+
+
+stop() {
+    reset_wan
+}

@@ -1,0 +1,3 @@
+<?cs each:item = Var.system.interfaces ?>
+    <interface name="<?cs name:item ?>" mac="<?cs var:item.Value ?>">
+<?cs /each ?>   

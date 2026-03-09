@@ -1,0 +1,103 @@
+<div class="title">
+	<h1><?cs var:Env.Section.route_config.Title ?></h1>
+</div>
+
+<div class="content">
+
+	<table id="route_config" class="magictable">
+
+		<thead>
+			<tr>
+				<th scope="col" class="col_number">#</th>
+				<th scope="col"><?cs call:varHeader("route_destination") ?></th>
+				<th scope="col"><?cs call:varHeader("route_genmask") ?></th>
+				<th scope="col"><?cs call:varHeader("route_gateway") ?></th>
+				<th scope="col" class="col_action"></th>
+			</tr>
+		</thead>
+
+		<tbody>
+
+			<?cs each:item = Env.user.route.rule ?>
+			<tr>
+				<td class="col_number" data-title="#"><?cs name:item ?></td>
+				<td data-title="<?cs call:varHeader("route_destination") ?>"><?cs var:item.destination ?></td>
+				<td data-title="<?cs call:varHeader("route_genmask") ?>"><?cs var:item.genmask ?></td>
+				<td data-title="<?cs call:varHeader("route_gateway") ?>"><?cs var:item.gateway ?></td>
+				<td class="col_action">
+					<form method="post" action="<?cs var:Env.Page.Name ?>">
+						<input type="hidden" name="action" value="remove" />
+						<input type="hidden" name="row" value="<?cs name:item ?>" />
+                                                <button class="btn" type="submit" name="submit"><i class="icon-minus-sign icon-white"></i></button>
+					</form>
+				</td>
+			</tr>
+			<?cs /each ?>
+
+			<tr>
+				<form method="post" action="<?cs var:Env.Page.Name ?>" id="form_route">
+
+					<td data-title="#" class="col_number">
+						<?cs var:subcount(Env.user.route.rule) + #1 ?>
+					</td>
+
+					<td data-title="<?cs call:varHeader("route_destination") ?>">
+                                            <div class="control-group <?cs if:?Var.route_destination.Error ?>error<?cs /if ?>">
+                                                <?cs if:?Query.route_destination ?>
+                                                <?cs set:Var.route_destination.Value=Query.route_destination ?>
+                                                <?cs /if ?>
+                                                
+						<input type="text" name="route_destination" class="input-medium <?cs if:?Var.route_destination.Error ?>error<?cs else ?>text<?cs /if ?>" id="route_destination"  maxlength="15" value="<?cs call:varIf(Var.route_destination.Value) ?>" />
+
+						<?cs if:?Var.route_destination.Error ?>
+						<div class="help-inline">
+							<?cs var:Env.Var.route_destination.Error[Var.route_destination.Error] ?>
+						</div>
+						<?cs /if ?>
+                                            </div>
+					</td>
+
+					<td data-title="<?cs call:varHeader("route_genmask") ?>">
+                                            <div class="control-group <?cs if:?Var.route_genmask.Error ?>error<?cs /if ?>">
+                                                <?cs if:?Query.route_genmask ?>
+                                                <?cs set:Var.route_genmask.Value=Query.route_genmask ?>
+                                                <?cs /if ?>
+						<input type="text" id="route_genmask" name="route_genmask" class="input-medium <?cs if:?Var.route_genmask.Error ?>error<?cs else ?>text<?cs /if ?>" maxlength="15" value="<?cs call:varIf(Var.route_genmask.Value) ?>" />
+
+						<?cs if:?Var.route_genmask.Error ?>
+						<div class="help-inline">
+							<?cs var:Env.Var.route_genmask.Error[Var.route_genmask.Error] ?>
+						</div>
+						<?cs /if ?>
+                                            </div>
+					</td>
+
+					<td data-title="<?cs call:varHeader("route_gateway") ?>">
+                                            <div class="control-group <?cs if:?Var.route_gateway.Error ?>error<?cs /if ?>">
+                                                <?cs if:?Query.route_gateway_p3 ?>
+                                                <?cs set:Var.route_gateway_p3.Value=Query.route_gateway_p3 ?>
+                                                <?cs /if ?>
+						
+                                                <div class="input-prepend">
+                                                    <span class="add-on"><?cs var:Var.route_gateway_p0.Value ?>.<?cs var:Var.route_gateway_p1.Value ?>.<?cs var:Var.route_gateway_p2.Value ?>.</span>
+                                                    <input type="text" id="route_gateway_p3" name="route_gateway_p3" class="input-mini <?cs if:?Var.route_gateway_p3.Error || ?Var.route_gateway.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs call:varIf(Var.route_gateway_p3.Value) ?>" size="3" maxlength="3" />
+                                                </div>
+                                                
+						<?cs if:?Var.route_gateway.Error ?>
+						<div class="help-inline"><?cs var:Env.Var.route_gateway.Error[Var.route_gateway.Error] ?></div>
+						<?cs /if ?>
+                                            </div>
+					</td>
+
+					<td class="col_action">
+						<input type="hidden" name="action" value="add" />
+						<input type="hidden" name="row" value="<?cs var:subcount(Env.user.route.rule) + #1 ?>" />
+						<button class="btn" type="submit" name="submit"><i class="icon-plus-sign icon-white"></i></button>
+					</td>
+
+				</form>
+			</tr>
+		</tbody>
+	</table>
+
+</div>

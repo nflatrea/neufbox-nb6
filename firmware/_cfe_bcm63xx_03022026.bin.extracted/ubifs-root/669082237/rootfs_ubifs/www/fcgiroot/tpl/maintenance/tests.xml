@@ -1,0 +1,3 @@
+<rsp stat="ok">
+  <cmd status="<?cs alt:Var.cmd_status.Value ?><?cs /alt ?>"><![CDATA[<?cs alt:Var.cmd_output.Value ?><?cs /alt ?>]]></cmd>
+</rsp>

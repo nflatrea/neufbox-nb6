@@ -1,0 +1,17 @@
+<rsp stat="ok">
+  <status>
+    <?cs if:Env.user.ipv6.enable == "on" || Env.autoconf.ipv6.force == "true" ?>
+        <?cs if:Env.status.net.ipv6.status == "up" ?>
+            <?cs set:net_ipv6_status = "enabled" ?>
+        <?cs else ?>
+            <?cs set:net_ipv6_status = "unused" ?>
+        <?cs /if ?>
+    <?cs else ?>
+        <?cs set:net_ipv6_status = "disabled" ?>
+    <?cs /if ?>
+    <?cs if:net_ipv6_status == "enabled" ?><?cs set:net_ipv6_value=Env.Var.net_ipv6_status.up ?><?cs /if ?>
+    <?cs if:net_ipv6_status == "unused" ?><?cs set:net_ipv6_value=Env.Var.net_ipv6_status.noconnect ?><?cs /if ?>
+    <?cs if:net_ipv6_status == "disabled" ?><?cs set:net_ipv6_value=Env.Var.net_ipv6_status.down ?><?cs /if ?>
+    <wan val="<?cs var:net_ipv6_status ?>" text="<?cs var:net_ipv6_value ?>" />
+  </status>
+</rsp>

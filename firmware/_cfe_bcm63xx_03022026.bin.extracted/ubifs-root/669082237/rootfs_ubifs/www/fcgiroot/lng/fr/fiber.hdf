@@ -1,0 +1,32 @@
+Env.Page.Title = La Fibre
+
+Env.Help.Text << EOM
+Dans la rubrique <b>Information Fibre</b>, retrouvez les informations suivantes concernant votre fibre : le modèle, la version principale et de secours de son firmware, le temps de service, la dernière date à laquelle il a été interrogé, le numéro de série, le rang, l'intensité du signal émis et reçu, le BIAS, sa température ainsi que sa tension électrique.
+EOM
+
+Env.Section.ont.Title = Informations <acronym title="Optical Network Terminal">ONT</acronym>
+Env.Var.ont_model.Header = Modèle
+Env.Var.ont_version_active.Header = Version principale
+Env.Var.ont_version_passive.Header = Version de secours
+Env.Var.ont_uptime.Header = Temps de service
+Env.Var.ont_refresh.Header = Date de rafraîchissement
+Env.Var.ont_sn.Header = Numéro de série
+Env.Var.ont_ranging.Header = Rangement de l'ONT sur PON
+Env.Var.ont_rssi_receive.Header = Intensité signal optique reçue
+Env.Var.ont_rssi_transmit.Header = Intensité signal optique transmise
+Env.Var.ont_rssi_bias.Header = BIAS
+Env.Var.ont_rssi_temp.Header = Température de la puce
+Env.Var.ont_rssi_vcc.Header = Tension Vcc
+Env.Var.ont.unavailable = Information indisponible
+
+Env.Section.gpon.Title = Informations <acronym title="Gigabit Passive Optical Network">GPON</acronym>
+Env.Var.gpon_model.Header = Modèle de la carte
+Env.Var.gpon_sn.Header = Numéro de série
+Env.Var.gpon_uptime.Header = Temps de service
+Env.Var.gpon_ranging.Header = État du module optique
+Env.Var.gpon_rssi_receive.Header = Puissance de réception du laser
+Env.Var.gpon_rssi_transmit.Header = Puissance d'émission du laser
+Env.Var.gpon_rssi_bias.Header = Courant BIAS du laser
+Env.Var.gpon_rssi_temp.Header = Température du laser
+Env.Var.gpon_rssi_vcc.Header = Tension d'alimentation du laser
+Env.Var.gpon.unavailable = Information indisponible

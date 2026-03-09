@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<ca version="100000000000">
+    <!-- Parametres du CA  -->
+    <general>
+        <!-- Autorisation blocage flux tele -->
+        <lock>
+            <device>stb</device>
+            <device>femto</device>
+        </lock>
+    </general>
+    <!-- Notification -->
+    <notification>
+        <server>http://notif.controle-acces.sfr.fr</server>
+    </notification>
+    <!-- Portail -->
+    <portal>http://controle-acces.sfr.fr</portal>
+    <!-- Proxy -->
+    <proxy>
+        <url>http://controle-acces.sfr.fr</url>
+        <port>80</port>
+        <!-- Securite -->
+        <RSA>C65EA19C47F7277BF25F681CE56E356FCF67A195830CFB3AEBDDA41ABD81B82DB821B00AC4C552D282ECB4157A3E85DEA3D6F680CEF3C0D0D87B0E0D4960CA644BFA1F3BC3713FD378423C0F2157B4C1964854B39F1768DEF6012EE91A38D98B09D2CDB33B715947B1A6291D2275364630DE0286A30834516EAF7C65E50415B5</RSA>
+    </proxy>
+    <!-- profiles -->
+    <redir>
+        <!-- unlock -->
+        <profile name="unlock"> 
+            <default>lock</default>
+            <redirect src="80">80</redirect>
+            <redirect src="443">443</redirect>
+        </profile>
+        <!-- lock -->
+        <profile name="lock">
+            <url>filtre-block.controle-acces.sfr.fr</url>
+            <default>lock</default>
+            <redirect src="80">8186</redirect>
+            <redirect src="443">8486</redirect>
+        </profile>
+        <!-- enfant -->
+        <profile name="enfant">
+            <url>filtre-enfant.controle-acces.sfr.fr</url>
+            <default>lock</default>
+            <redirect src="80">8187</redirect>
+            <redirect src="443">8487</redirect>
+        </profile>
+        <!-- ado -->
+        <profile name="ado">
+            <url>filtre-ado.controle-acces.sfr.fr</url>
+            <default>lock</default>
+            <redirect src="80">8188</redirect>
+            <redirect src="443">8488</redirect>
+        </profile>
+        <!-- open-port-list -->
+        <open-port-list>
+            <port>21:25</port>
+            <port>110</port>
+            <port>123</port>
+            <port>143</port>
+            <port>220</port>
+            <port>1500</port>
+            <port>2001</port>
+            <port>2179</port>
+            <port>3005</port>
+            <port>3101</port>
+            <port>4000</port>
+            <port>4500</port>
+            <port>4995</port>
+            <port>28910</port>
+            <port>28960</port>
+            <port>64738</port>
+        </open-port-list>
+    </redir>
+    <!-- Liste blanche filtrage: eviter blocage utilisateur -->
+    <whitelist>
+        <!-- Port 80 -->
+        <access-list>
+            <url>controle-acces.sfr.fr</url>
+            <port>80</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>www.sfr.fr</url>
+            <port>80</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>img.s-sfr.fr</url>
+            <port>80</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>s1.s-sfr.fr</url>
+            <port>80</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>s2.s-sfr.fr</url>
+            <port>80</port>
+            <proto>tcp</proto>
+        </access-list>
+        <!-- Port 443 -->
+        <access-list>
+            <url>www.sfr.fr</url>
+            <port>443</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>img.s-sfr.fr</url>
+            <port>443</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>s1.s-sfr.fr</url>
+            <port>443</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>s2.s-sfr.fr</url>
+            <port>443</port>
+            <proto>tcp</proto>
+        </access-list>
+        <!-- Site Mobile SFR -->
+        <access-list>
+            <url>m.sfr.fr</url>
+            <port>80</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>mist.m.sfr.fr</url>
+            <port>443</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>static.s-sfr.fr </url>
+            <port>80</port>
+            <proto>tcp</proto>
+        </access-list>
+        <!-- Portail SRR -->
+        <access-list>
+            <url>authentification.sfr.re</url>
+            <port>80</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>authentification.sfr.re</url>
+            <port>443</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>s3.s-sfr.fr</url>
+            <port>443</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>s4.s-sfr.fr</url>
+            <port>443</port>
+            <proto>tcp</proto>
+        </access-list>
+        <access-list>
+            <url>monprofil.srr.fr</url>
+            <port>443</port>
+            <proto>tcp</proto>
+        </access-list>
+    </whitelist>
+<!--  -->
+</ca>

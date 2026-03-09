@@ -1,0 +1,1 @@
+<?cs include:"tpl/defs.cst" ?><?cs if:Env.has_layout == "1" ?><?cs include:"tpl/header.html" ?><?cs /if ?><?cs include: Env.current_template?><?cs if:Env.has_layout == "1" ?><?cs include:"tpl/footer.html" ?><?cs /if ?>

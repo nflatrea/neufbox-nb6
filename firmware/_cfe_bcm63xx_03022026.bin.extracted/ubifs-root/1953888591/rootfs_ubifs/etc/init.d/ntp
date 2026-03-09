@@ -1,0 +1,73 @@
+#!/bin/sh /etc/rc.common
+
+EXTRA_COMMANDS="step stratum periodic"
+
+NTPD_CONF="/etc/ntpd.conf"
+NTPD_PIDFILE="/run/ntpd.pid"
+
+[ "$action" != "periodic" ] && [ "$action" != "stratum" ] && logger -t "ntp[$$]" "$action"
+
+start() {
+	autoconf_file=/tmp/autoconf/$(autoconf get wanservices_file)
+	if [ ! -f ${autoconf_file} ]; then
+		logger -t "ntp[$$]" "autoconf not ready"
+		return
+	fi
+
+	ntp_server_xml="//ntp/server"
+	if [ "$(status get net_ipv6_infra)" = "Only" ]; then
+		ntp_server_xml="//ntp/serverv6"
+	fi
+
+	ntp_server=$(roxml -q ${autoconf_file} "${ntp_server_xml}")
+	if [ -z "${ntp_server}" ]; then
+		logger -t "ntp[$$]" "autoconf incomplete (missing ${ntp_server_xml}) use default"
+		autoconf_file=${autoconf_default}
+		ntp_server=$(roxml -q ${autoconf_default} "${ntp_server_xml}")
+	fi
+
+	ntp_timezone=$(roxml -q ${autoconf_file} "//ntp/timezone")
+	if [ -z "${ntp_timezone}" ]; then
+		logger -t "ntp[$$]" "autoconf incomplete (missing //ntp/timezone) use default"
+		ntp_timezone=$(roxml -q ${autoconf_default} "//ntp/timezone")
+	fi
+	echo ${ntp_timezone} > /etc/TZ
+
+	ntpd -l -p ${ntp_server} -S /etc/init.d/ntp
+
+	xtables -A LAN_FILTER -p udp --dport 123 -j ACCEPT
+}
+
+stop() {
+	xtables -D LAN_FILTER -p udp --dport 123 -j ACCEPT
+
+	killall ntpd
+}
+
+step() {
+	test -x /etc/init.d/ca && {
+		[ "$(status get ca_status)" = "date disabled" ] && /etc/init.d/ca restart
+	}
+
+
+	# reload wifisched each time ntp is resynchronized
+	[ "$(nvram get wifisched_active)" = "on" ] && /etc/init.d/wifisched reload
+
+	# update daily firewall, firmware cron tasks
+	local sec=$(echo ${offset}|awk -F\. '{print $1}')
+	local min=$(( $(( ${sec} / 60 )) % 60 ))
+	local hrs=$(( $(( ${sec} / 3600 )) % 24 ))
+	lock /run/lock/cron.lock
+	awk -v m=${min} -v h=${hrs} \
+		'{if($0~/firewall|firmware/){print($1+m)%60" "($2+h)%24" "$3" "$4" "$5" "$6" "$7} else {print $0}}' \
+		/run/crontabs/root | crontab -u root -
+	lock -u /run/lock/cron.lock
+}
+
+stratum() {
+	true
+}
+
+periodic() {
+	true
+}

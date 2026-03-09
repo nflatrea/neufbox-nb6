@@ -1,0 +1,29 @@
+Env.Page.Title = Mode ECO
+
+Env.Help.Text = Dans la rubrique <b>Mode ECO</b> vous retrouvez le statut du mode "économie d'énergie" de la Box.
+
+Env.Section.eco.Title = Mode ECO
+
+Env.Var.eco_status.Header = Etat
+Env.Var.eco_status.Value.up = Activé
+Env.Var.eco_status.Value.down = Désactivé
+
+Env.Var.telephone.Header = Téléphone
+Env.Var.cpl.Header = CPL
+Env.Var.wifi_horaire.Header = Wifi Horaire
+Env.Var.powersw.Header = Power Save Wifi
+Env.Var.ethernet_pc_tv.Header = Ethernet PC/TV
+Env.Var.ethernet_lan.Header = Ethernet LAN
+Env.Var.brightness.Header = Luminosité des voyants
+
+Env.Var.mbps.Value = Mbps
+
+Env.Var.leds.off = Eteint
+Env.Var.leds.low = Minimum
+Env.Var.leds.half = Moyen
+Env.Var.leds.full = Maximum
+
+Env.Var.ethernet.off = Désactivé
+Env.Var.ethernet.10 = 10 Mbps
+Env.Var.ethernet.100 = 100 Mbps
+Env.Var.ethernet.1000 = 1000 Mbps

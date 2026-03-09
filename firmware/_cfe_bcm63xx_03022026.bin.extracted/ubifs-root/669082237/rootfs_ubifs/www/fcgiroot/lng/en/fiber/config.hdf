@@ -1,0 +1,41 @@
+Env.Page.Title = Fiber configuration
+Env.Section.ont.Title = ONT Settings
+
+Env.Help.Text.ONT = In the <b>ONT Settings</b> section, you can configure the password of your ONT device (only if the ONT was replaced).
+Env.Help.Text.GPON = In the <b>GPON Settings</b> section, you can configure the optical device password of your Box.
+
+Env.Var.status_service.Value = Service status
+
+Env.Var.ontpwd.Value = ONT Password
+Env.Var.ontpwd.Error.value = Incorrect format. Only alphanumeric characters, '-' and '+' are allowed.
+Env.Var.ont.sync = Optical Network Termination synchronized
+Env.Var.ont.nosync = Optical Network Termination unsynchronized
+Env.Var.ont.nosync.echecslid = Optical Network Termination synchronization failed
+Env.Var.ont_err_setslid.0 = Optical Network Termination is synchronized
+Env.Var.ont_err_setslid.1 = Operation failed
+Env.Var.ont_err_setslid.2 = Optical Network Termination is unreachable. Check plug and led
+Env.Var.ont_err_setslid.3 = Operation failed
+Env.Var.ont_err_setslid.10 = Optical Network Termination is already synchronized
+Env.Var.ont_err_setslid.11 = Optical Network Termination is not synchronized. Password is already present
+Env.Var.ont_err_setslid.12 = Optical Network Termination is not synchronized. Password is already present. Only enter a new password upon request of Customer Service. If you want to carry on press again the submit button
+Env.Var.ont_err_setslid.13 = 
+Env.Var.ont_err_setslid.14 = After several attempts Optical Network Termination syncrhonization failed. Please contact the Customer Service.
+Env.Var.ont_err_update.0 = Optical Network Termination is now synchronized
+Env.Var.ont_err_update.1 = Operation failed
+Env.Var.ont_err_update.2 = Optical Network Termination is unreachable. Check plug and led
+Env.Var.ont_err_update.3 = Operation failed
+Env.Var.ont_err_reboot.0 = Optical Network Termination is synchronized
+Env.Var.ont_err_reboot.0.aftersetslid = Optical Network Termination is now synchronized.
+Env.Var.ont_err_reboot.1 = Operation failed
+Env.Var.ont_err_reboot.2 = Optical Network Termination is unreachable. Check plug and led
+Env.Var.ont_err_reboot.3 = Operation failed
+Env.Var.ont_err_reboot.10 = Optical Network Termination is synchronized
+
+Env.Var.gponpwd.Value = GPON password
+Env.Var.gponpwd.Error.value = Incorrect format. Only alphanumeric characters, '-' and '+' are allowed. Maximum allowed length is 10 characters.
+Env.Var.gpon_slidchange.empty = Please enter the fiber password of your Box.
+Env.Var.gpon_slidchange.off = Password saved.
+Env.Var.gpon_slidchange.error = Operation failed.
+Env.Var.gpon_slidchange.unused = No password saved.
+Env.Var.gpon_slidchange.up = Optical Network Unit is in Operation state. Only enter a new password upon request of Customer Service. If you want to carry on press again the submit button.
+Env.Var.gpon_slidchange.unknown = Unknown error.

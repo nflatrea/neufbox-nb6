@@ -1,0 +1,19 @@
+Env.Page.Title = Maintenance
+
+Env.Help.Text = You can find here different tools useful for the maintenance of your Box.
+
+Env.Section.maintenance.Title = Maintenance
+
+Env.Text.AccessProtect = Protect the access to the interface
+Env.Text.Activated = Enabled
+Env.Text.Desactivated = Disabled
+Env.Text.auth_passwd = Password identification
+Env.Text.auth_button = Button identification
+Env.Text.auth_all = Password and button identification
+
+Env.Text.ADSLprofil = xDSL profile
+Env.Text.Rescue = Rescue
+Env.Text.Manual = Manual
+Env.Text.Auto = Automatic
+
+Env.Text.ThemeName = Theme name

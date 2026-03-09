@@ -1,0 +1,416 @@
+<?cs if:Env.status.data.status == "down" ?>
+    <?cs if:?Env.autoconf.wanservices.infra ?>
+        <?cs if:Env.autoconf.wanservices.infra == "11" || Env.autoconf.wanservices.infra == "12" || Env.autoconf.wanservices.infra == "13" ?>
+        <div class="alert alert-warning">
+            <?cs var:Env.Text.NoFTTH ?>
+        </div>
+        <?cs /if ?>
+        <?cs if:#Env.autoconf.wanservices.infra >= 1 && #Env.autoconf.wanservices.infra <= 10 ?>
+        <div class="alert alert-warning">
+            <?cs var:Env.Text.NoDSL ?>
+        </div>
+        <?cs /if ?>
+    <?cs /if ?>
+<?cs /if ?>
+
+<div class="homeheader <?cs if:?Var.femto_online.Value && Var.femto_online.Value != "0" ?>femto<?cs /if ?>" >
+    <h1 class="text-center"><img src="/img/icon_clock.png?v=3.4" alt=""/>&nbsp;<?cs var:Env.Section.informations.Title ?></h1>
+    <div class="clearfix">
+        <div class="pull-left">
+            <table>
+                <caption><a href="/state/wan"><img src="/img/icon_wan.png?v=3.4" alt=""/></a>&nbsp;<?cs var:Env.Var.infra_name.Header ?></caption>
+                    <tr>
+                        <th scope="row"><?cs call:varHeader("wan_status") ?></th>
+                        
+                        <?cs if:Env.status.net.ipv6.status == "up" && Env.status.net.data.ipaddr != "" ?>
+                            <?cs set:net_access_status = "enabled" ?>
+                        <?cs elif: Env.status.net.mapt.status == "up" && Env.status.net.ipv6.status == "up" ?>
+                            <?cs set:net_access_status = "enabled" ?>
+                        <?cs elif:Env.status.net.ipv6.status == "down" && Env.status.net.data.ipaddr != "" ?>
+                            <?cs set:net_access_status = "enabled" ?>
+                        <?cs elif:Env.status.net.ipv6.status == "up" && Env.status.net.mapt.status == "down" ?>
+                            <?cs set:net_access_status = "unused" ?>
+                        <?cs elif:Env.status.net.ipv6.status == "down" && Env.status.net.mapt.status == "down" ?>
+                            <?cs set:net_access_status = "disabled" ?>
+                        <?cs /if ?>
+                        
+                        <td id="wan_status" class="<?cs var:net_access_status ?>">
+                            <?cs if:net_access_status == "enabled" ?>
+                                <?cs var:Env.Var.internet_status.Value.up ?>
+                            <?cs elif: net_access_status == "unused" || net_access_status == "disabled" ?>
+                                <?cs var:Env.Var.internet_status.Value.down ?>
+                            <?cs /if ?>
+                    </td>
+                </tr>
+
+                <?cs if:Env.status.net.status == "up"?>
+                <tr>
+                    <th scope="row"><?cs call:varHeader("wan_uptime") ?></th>
+                    <td id="wan_uptime">
+                        <?cs var:Var.wan_uptime.day.Value ?>  <?cs var:Env.Text.dayAbbr?>
+                        <?cs var:Var.wan_uptime.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+                        <?cs var:Var.wan_uptime.min.Value ?> <?cs var:Env.Text.minAbbr?>
+                        <?cs var:Var.wan_uptime.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+                    </td>
+                </tr>
+                <?cs /if?>
+                    
+                <tr>
+                    <th scope="row"><?cs var:Env.Var.Sys.NetInfraExtra.Header ?></th>
+                    <td><?cs if:Env.status.net.status =="up" ?>
+                            <?cs call:varValue_d(Env.Var.Sys.NetInfraExtra.Value[Var.Sys.NetInfraExtra.Value], Env.Var.Sys.NetInfraExtra.Value.unknown)?>
+                       <?cs elif:Env.status.net.data.access != "gprs" && ?Env.autoconf.wanservices.infra ?>
+                            <?cs if:Env.autoconf.wanservices.infra == "11" || Env.autoconf.wanservices.infra == "12" || Env.autoconf.wanservices.infra == "13" ?>
+                                 <?cs var:Env.Var.Sys.NetInfraExtra.Value.ftth ?>
+                            <?cs elif:Env.autoconf.wanservices.infra == "9" || Env.autoconf.wanservices.infra == "10" ?>
+                                 <?cs var:Env.Var.Sys.NetInfraExtra.Value.VDSL2 ?>
+                            <?cs else?>    
+                                 <?cs var:Env.Var.Sys.NetInfraExtra.Value.adsl ?>
+                            <?cs /if ?>
+                       <?cs else ?>
+                            <?cs var:Env.Var.Sys.NetInfraExtra.Value.unknown ?>
+                       <?cs /if ?></td>
+                </tr>
+
+        <?cs if:Var.Sys.NetInfraExtra.Value =="ftth" ?>
+            <tr id="ont_device">
+                <th><?cs call:varHeader("ont_device") ?></th>
+                <td>
+                    <?cs if:Env.ont.type != "" ?>
+                        <?cs var:Env.Text.Detected ?>
+                    <?cs else ?>
+                        <?cs var:Env.Text.Undetected ?>
+                    <?cs /if ?>
+                </td>
+            </tr>
+        <?cs /if ?>
+
+ <?cs if:Env.status.net.data.ipaddr != "" || Env.status.net.mapt.ipaddr != ""?>
+ 
+                <tr>
+                    <th><?cs var:Env.Var.Sys.IPAddressv4.Header ?></th>
+                    <td>
+                        <?cs if:Env.status.net.data.ipaddr != "" ?>
+                            <?cs var:Env.status.net.data.ipaddr ?>
+                        <?cs elif:Env.status.net.mapt.ipaddr != "" ?>
+                            <?cs var:Env.status.net.mapt.ipaddr ?> (<?cs var:Env.Text.Shared ?>)
+                        <?cs /if ?> 
+                    </td>
+                </tr>
+   <?cs /if ?>           
+              
+                
+                    
+                <?cs if:Env.user.ipv6.enable == "on" || Env.autoconf.ipv6.force == "true" || Env.status.net.ipv6.infra == "Only" ?>
+                    <?cs if:Env.status.net.ipv6.status == "up" ?>
+                            <?cs set:net_ipv6_status = "enabled" ?>
+                    <?cs else ?>
+                            <?cs set:net_ipv6_status = "unused" ?>
+                    <?cs /if ?>
+                <?cs else ?>
+                    <?cs set:net_ipv6_status = "disabled" ?>
+                <?cs /if ?>
+                
+                <?cs if:net_ipv6_status=="enabled" ?>
+                <tr>
+                    <th><?cs var:Env.Var.Sys.IPAddressv6.Header ?></th>
+                    <td><?cs var:Env.status.net.ipv6.ipaddr ?></td>
+                </tr>
+                <?cs /if ?>
+                
+                
+                <?cs if:Env.status.gprs.device.state == "available" ?>  
+                <tr id="gprs_device">
+                    <th scope="row"><?cs call:varHeader("gprs_device") ?></th>
+                    <td><?cs var:Env.Text.Detected ?></td>
+                </tr>
+                <?cs /if ?>
+                <?cs if:?Var.femto_online.Value && Var.femto_online.Value != "0" ?>
+                <tr id="femto_device">
+                    <th><?cs call:varHeader("femto_device") ?></th>
+                    <td><?cs var:Env.Text.Detected ?></td>
+                </tr>
+                <?cs /if ?>
+
+            </table>
+            <br/>
+            <table id="warning_table" style="<?cs if:!Var.loop_interface.Value ?>display:none;<?cs /if ?>">
+                <tr>
+                    <th class="text-alert"><?cs call:varHeader("loop_alert") ?></th>
+                    <td><a href="/maintenance/loop"><?cs var:Env.Var.loop_detection ?></a></td>
+                </tr>
+            </table>
+        </div>
+        <div class="pull-right">
+            <table>
+                <caption><a href="/state"><img src="/img/icon_box.png?v=3.4" alt=""/></a>&nbsp;<?cs var:Env.Section.modem_infos.Title ?></caption>
+                <tr>
+                    <th scope="row"><?cs call:varHeader("modem_model") ?></th>
+                    <td><?cs var:Env.status.productID ?></td>
+                </tr>
+                <tr>
+                    <th scope="row"><?cs call:varHeader("modem_uptime") ?></th>
+                    <td id="modem_uptime">
+                        <?cs var:Var.modem_uptime.day.Value ?> <?cs var:Env.Text.dayAbbr?>
+                        <?cs var:Var.modem_uptime.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+                        <?cs var:Var.modem_uptime.min.Value ?> <?cs var:Env.Text.minAbbr?>
+                        <?cs var:Var.modem_uptime.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?cs call:varHeader("modem_mainversion") ?></th>
+                    <td><?cs var:Env.status.version.mainfirmware ?></td>
+                </tr>
+                <tr>
+                    <th scope="row"><?cs call:varHeader("modem_rescueversion") ?></th>
+                    <td><?cs var:Env.status.version.rescuefirmware ?></td>
+                </tr>
+                <?cs if:Var.net_data_access.Value != "ftth" ?> 
+                <tr>
+                    <th scope="row"><?cs call:varHeader("modem_adslversion") ?></th>
+                    <td><?cs var:Env.status.version.dsldriver ?></td>
+                </tr>
+                <?cs /if ?>
+            </table>
+            
+            <table>
+                <caption><img src="/img/icon_tv.png?v=3.4" alt=""/>&nbsp;<?cs var:Env.Section.tv.Title ?></caption>
+                <tr>
+                    <th><?cs call:varHeader("decoder_detected") ?></th>
+                    <td><?cs call:varValue_d(Var.tv_online.Value,"0") ?></td>
+                </tr>
+                <?cs set:cpt = 0?>
+                <?cs if:subcount(Env.status.lan.topology.device) > 0 ?>
+                <?cs each:host = Env.status.lan.topology.device ?>
+                    <?cs if:host.type=="stb" ?>
+                        <?cs set:cpt = #cpt +1?>
+                        <tr>
+                            <th><?cs if:host.hostname != '' ?><?cs var:host.hostname ?><?cs elif:host.ipaddr != '' ?><?cs var:host.ipaddr ?><?cs elif:host.ip6masteraddr != '' ?><?cs var:host.ip6masteraddr ?><?cs /if?></th>
+                            <td class="<?cs if:host.status == "online" ?>enabled<?cs else ?>disabled<?cs /if ?>">&nbsp;</td>
+                        </tr>
+                    <?cs /if ?>
+                <?cs /each ?>
+            <?cs /if?>
+            </table>
+        </div>
+    </div>
+<?cs if:Env.status.eco.status=="up" ?>
+<div id="ecoflag"><a href="/eco">&nbsp;</a></div>
+<?cs /if ?>
+</div>
+
+<div class="homefooter">
+    <h1 class="text-center"><img src="/img/icon_device.png?v=3.4" alt=""/>&nbsp;<?cs var:Env.Section.devices.Title ?></h1>
+    <div class="row-fluid">
+        <div id="welcome" class="span12 text-center"><?cs var:Env.Var.welcome.Value ?></div>
+    </div>
+    <div class="row-fluid">
+        <div class="span3">
+            <?cs set:cpt = 0?>
+            <?cs if:subcount(Env.status.lan.topology.device) > 0 ?>
+                <?cs each:host = Env.status.lan.topology.device ?>
+                    <?cs if:host.port!="wl0" && host.port!="wl1" && host.port!="guest" && host.status=="online" && (host.type=="pc" || host.type=="stb") ?>
+                        <?cs set:cpt = #cpt +1?>
+                    <?cs /if ?>
+                <?cs /each ?>
+            <?cs /if?>
+            <table>
+                <caption>
+                    <span><a href="/network"><img src="/img/icon_ethernet.png?v=3.4" alt=""/>&nbsp;<a class="unstyle" href="/network"><?cs var:Env.Section.lan.Title ?></span>
+                    <br />
+                    <span class="text-tiny"><?cs var:cpt ?> <?cs var:Env.Section.connected_computers.Title ?></span>
+                </caption>
+                <?cs if:cpt>0 ?>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th><?cs var:Env.Section.connected_computers.Title ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?cs set:cpt = 0?>
+                    <?cs each:host = Env.status.lan.topology.device ?>
+                    <?cs if:host.port != "wl0" && host.port !="wl1" && host.port !="guest" && host.status=="online" && (host.type=="pc" || host.type=="stb") ?>
+                    <?cs set:cpt = #cpt + 1?>
+                    <tr>
+                        <td><?cs var:cpt ?></td>
+                        <td><?cs if:host.hostname != '' ?><?cs var:host.hostname ?><?cs elif:host.ipaddr != '' ?><?cs var:host.ipaddr ?><?cs elif:host.ip6masteraddr != '' ?><?cs var:host.ip6masteraddr ?><?cs /if?></td>
+                    </tr>
+                    <?cs /if ?>
+                    <?cs /each ?>
+                </tbody>
+                <?cs /if ?>
+            </table>
+        </div>
+        <div class="span3">
+            <?cs set:cpt = 0?>
+            <?cs if:subcount(Env.status.lan.topology.device) > 0 ?>
+                <?cs each:host = Env.status.lan.topology.device ?>
+                    <?cs if:(host.port=="wl0" || host.port=="wl1") && host.status=="online" && (host.ipaddr != '' || host.ip6masteraddr != '') && (host.type=="pc" || host.type=="stb") ?>
+                        <?cs set:cpt = #cpt +1?>
+                    <?cs /if ?>
+                <?cs /each ?>
+            <?cs /if?>
+            <table>
+                <caption>
+                    <span><a href="/wifi"><img src="/img/icon_wan.png?v=3.4" alt=""/></a>&nbsp;<a class="unstyle" href="/wifi"><?cs var:Env.Section.wifi.Title ?></a></span>
+                    <br />
+                    <span class="text-tiny"><a class="unstyle" href="/wifi"><?cs var:cpt ?> <?cs var:Env.Section.connected_computers.Title ?></a></span>
+                </caption>
+                <tbody>
+                    <tr>
+                        <th>SSID 2G</th>
+                        <td><?cs var:Env.user.wlan.wl0.ssid ?></td>
+                        <td id="wlan_status" class="<?cs if:Var.wifi_status.Value == "off" ?>disabled<?cs else ?><?cs if:Env.user.wlan.active == "on" ?>enabled<?cs else ?>disabled<?cs /if ?><?cs /if ?>">
+                    </tr>
+                    <tr>
+                        <th><?cs var:Env.Var.key.Header ?></th>
+                        <td><?cs if:User.authenticated=="1" || Env.user.web.auth=="off"?><?cs var:Env.user.wlan.wl0.wpakey ?><?cs else ?>**********<?cs /if ?></td>
+                    </tr>
+                    <tr>
+                        <th>SSID 5G</th>
+                        <td><?cs var:Env.user.wlan.wl0.ac.ssid ?></td>
+                        <td id="wlan_status_ac" class="<?cs if:Var.wifi_status_ac.Value == "off" ?>disabled<?cs else ?><?cs if:Env.user.wlan.ac.active == "on" ?>enabled<?cs else ?>disabled<?cs /if ?><?cs /if ?>"></td>
+                    </tr>
+                    <tr>
+                        <th><?cs var:Env.Var.key.Header ?></th>
+                        <td><?cs if:User.authenticated=="1" || Env.user.web.auth=="off"?><?cs var:Env.user.wlan.wl0.ac.wpakey ?><?cs else ?>**********<?cs /if ?></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <?cs if:cpt>0 ?>
+            <table class="stack">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th><?cs var:Env.Section.connected_computers.Title ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?cs set:cpt = 0?>
+                    <?cs each:host = Env.status.lan.topology.device ?>
+                    <?cs if:(host.port == "wl0" || host.port == "wl1") && host.status=="online" && (host.ipaddr != '' || host.ip6masteraddr != '') && (host.type=="pc" || host.type=="stb") ?>
+                    <?cs set:cpt = #cpt + 1?>
+                    <tr>
+                        <td><?cs var:cpt ?></td>
+                        <td><?cs if:host.hostname != '' ?><?cs var:host.hostname ?><?cs elif:host.ipaddr != '' ?><?cs var:host.ipaddr ?><?cs elif:host.ip6masteraddr != '' ?><?cs var:host.ip6masteraddr ?><?cs /if?></td>
+                    </tr>
+                    <?cs /if ?>
+                    <?cs /each ?>
+                </tbody>
+            </table>
+            <?cs /if ?>
+            
+        </div>
+        <div class="span3">
+            <table>
+                <caption>
+                    <a href="/voip"><img src="/img/icon_voip.png?v=3.4" alt=""/></a>&nbsp;<a class="unstyle" href="/voip"><?cs var:Env.Section.voip.Title  ?></a>
+                    <br />
+                    <span class="text-tiny">&nbsp;<a class="unstyle" href="/voip/config"><?cs var:Var.voip_call_missed.Value ?> <?cs var:Env.Var.missed_call.Header ?></a></span>
+                </caption>
+                <tr>
+                    <th><?cs call:varHeader("voip_linestatus") ?></th>
+                    <td class="<?cs if:Env.user.eco.voip.active == "off" && Env.status.eco.status=="up" ?>unused<?cs elif:Var.voip_linestatus.Value == "up" ?>enabled<?cs elif:Var.voip_linestatus.Value == "down"?>disabled<?cs /if ?>">
+                        <?cs if:Env.user.eco.voip.active == "off" && Env.status.eco.status=="up" ?>
+                            <?cs call:varValue_d(Env.Var.voip_linestatus.Value.down_eco, Env.Var.voip_linestatus.Value.down)?>
+                        <?cs else ?>
+                            <?cs call:varValue_d(Env.Var.voip_linestatus.Value[Var.voip_linestatus.Value], Env.Var.voip_linestatus.Value.down)?>
+                        <?cs /if ?>
+                        
+
+                        <?cs if:Var.voip_access.Value == "gprs" ?>
+                                (<?cs var:Env.Var.voip_access.Value.gprs ?>)
+                        <?cs /if ?>
+                    </td>
+                </tr>
+                <tr>
+                   <th><?cs call:varHeader("voip_hookstatus") ?></th>
+                   <td class="<?cs if:Var.voip_hookstatus.Value == "unknown" || (Env.user.eco.voip.active == "off" && Env.status.eco.status=="up") ?>unused<?cs else ?>enabled<?cs /if ?>">
+                        <?cs if:Env.user.eco.voip.active == "off" && Env.status.eco.status=="up" ?>
+                            <?cs var:Env.Var.voip_linestatus.Value.down_eco ?>
+                        <?cs else ?>
+                            <?cs call:varValue(Env.Var.voip_hookstatus.Value[Var.voip_hookstatus.Value])?>
+                        <?cs /if ?>
+				
+                   </td>
+                </tr>
+                <?cs if:?Env.autoconf.voip.sig && Env.autoconf.voip.sig == "sip" ?>
+                <tr>
+                   <th><?cs call:varHeader("voip_blacklist") ?></th>
+                   <td class="<?cs if:Env.user.voip.blacklist.active  == "off" ?>disabled<?cs else ?>enabled<?cs /if ?>">
+                                <?cs if:Env.user.voip.blacklist.active == "off" ?>
+                                <?cs var:Env.Text.Disabled ?>
+                                <?cs else ?>
+                                <?cs var:Env.Text.Enabled ?>
+                                <?cs /if ?>
+                   </td>
+                </tr>
+                <?cs /if ?>
+                <tr>
+                   <th><?cs call:varHeader("voip_usermissedcall") ?></th>
+                   <td class="<?cs if:Env.user.voip.usermissedcall == "off" ?>disabled<?cs else ?>enabled<?cs /if ?>">
+                                <?cs if:Env.user.voip.usermissedcall == "off" ?>
+                                <?cs var:Env.Text.Disabled ?>
+                                <?cs else ?>
+                                <?cs var:Env.Text.Enabled ?>
+                                <?cs /if ?>
+                   </td>
+                </tr>
+            </table>
+        </div>
+        <div class="span3">
+            <table>
+                <caption>
+                    <a href="/service"><img src="/img/icon_service.png?v=3.4" alt=""/></a>&nbsp;<a class="unstyle" href="/service"><?cs var:Env.Section.services.Title ?></a>
+                    <br />
+                    <span class="text-tiny">&nbsp;</span>
+                </caption>
+                <tbody>
+                <tr>
+                    <?cs set:status = "disabled"?>
+                    <?cs if:Env.user.samba.active != "off" ?>
+                        <?cs if:Env.status.samba.status == "up"?>
+                            <?cs set:status = "enabled"?>
+                        <?cs elif:Env.status.samba.status == "starting" || Env.status.samba.status == "installing"?>
+                            <?cs set:status = "unused"?>
+                        <?cs /if ?>
+                    <?cs /if ?>
+                    <th><?cs call:varHeader("samba") ?></th>
+                    <td class="<?cs var:status ?>">&nbsp;</td>
+                </tr>
+                <tr>
+                    <?cs set:status="disabled" ?>
+                    <?cs if:Env.status.p910nd.status == "up" ?>
+                    <?cs set:status="enabled" ?>
+                    <?cs /if ?>
+                    <th><?cs call:varHeader("printersharing") ?></th>
+                    <td class="<?cs var:status ?>">&nbsp;</td>
+                </tr>
+                <tr>
+                    <?cs if:Env.status.upnpav.status == "up" && Env.status.upnpav.sharedcount == "0" ?>
+                        <?cs set:status="unused" ?>
+                        <?cs elif:Env.status.upnpav.status == "up" || Env.status.upnpav.status == "starting" ?>
+                        <?cs set:status="enabled" ?>
+                        <?cs elif:Var.upnpav_status.Value == "installing" ?>
+                        <?cs set:status="unused" ?>
+                        <?cs else ?>
+                        <?cs set:status="disabled" ?>
+                    <?cs /if ?>
+                    <th><?cs call:varHeader("upnpav") ?></th>
+                    <td class="<?cs var:status ?>">&nbsp;</td>
+                </tr>
+                <tr>
+                    <?cs set:status="disabled" ?>
+                    <?cs if:Env.status.ca.status == "enable" ?>
+                            <?cs set:status="enabled" ?>
+                    <?cs /if ?>
+                    <th><?cs call:varHeader("ca") ?></th>
+                    <td class="<?cs var:status ?>">&nbsp;</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

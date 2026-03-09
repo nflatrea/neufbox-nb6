@@ -1,0 +1,76 @@
+#!/bin/sh /etc/rc.common
+
+RADVD_CONF="/run/radvd.conf"
+RADVD_LOCK="/run/radvd.lock"
+RADVD_PID="/run/radvd.pid"
+
+logger -t "radvd[$$]" "$action"
+
+config() {
+	local conf=/tmp/autoconf/$(autoconf get wanservices_file)
+	if test -f ${conf}; then
+		local AdvValidLifetime=$(roxml -q ${conf} '//ipv6/AdvValidLifetime')
+		local AdvPreferredLifetime=$(roxml -q ${conf} '//ipv6/AdvPreferredLifetime')
+	fi
+	local ipv6_ifname=$(status get net_ipv6_ifname)
+	local lan_ifname=$(status get lan_ifname)
+	local prefix=$(status get net_ipv6_subnet_lan | sed 's|1/64|/64|')
+	local addr=$(status get net_ipv6_subnet_lan | sed 's|/64||')
+	local dhcp=$(nvram get dhcp6_active)
+	local slaac=$(nvram get ipv6_slaac)
+	# assume wan link mru = mtu
+	local mru=$(ip -6 addr show dev ${ipv6_ifname} scope link | sed -n 's/.*mtu \([0-9]*\).*/\1/p')
+
+	cat > "${RADVD_CONF}" << EOF
+interface ${lan_ifname}
+{
+	AdvSendAdvert on;
+	AdvDefaultPreference high;
+	AdvLinkMTU ${mru};
+	AdvManagedFlag ${dhcp};
+	AdvOtherConfigFlag ${dhcp};
+	AdvHomeAgentFlag on;
+	AdvHomeAgentInfo on;
+	HomeAgentPreference 10;
+	AdvIntervalOpt on;
+EOF
+
+	[ "${slaac}" = "on" ] && cat >> "${RADVD_CONF}" << EOF
+	prefix ${prefix}
+	{
+		AdvOnLink on;
+		AdvAutonomous on;
+		AdvRouterAddr on;
+		DeprecatePrefix on;
+		AdvValidLifetime ${AdvValidLifetime:-604800};
+		AdvPreferredLifetime ${AdvPreferredLifetime:-604800};
+	};
+	RDNSS ${addr} { };
+EOF
+
+	echo "};" >> "${RADVD_CONF}"
+}
+
+start() {
+	lock "${RADVD_LOCK}"
+
+	config
+
+	if ! radvd -C "${RADVD_CONF}" -m syslog
+	then
+		logger -t "radvd[$$]" "radvd: start failed"
+		lock -u "${RADVD_LOCK}"
+		stop
+	fi
+
+	lock -u "${RADVD_LOCK}"
+}
+
+stop() {
+	lock "${RADVD_LOCK}"
+
+	test -e /run/radvd.pid && pid=$(cat /run/radvd.pid)
+	test -z ${pid} || kill ${pid}
+
+	lock -u "${RADVD_LOCK}"
+}

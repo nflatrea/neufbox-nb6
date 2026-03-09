@@ -1,0 +1,14 @@
+<rsp stat="ok">
+  <wifi>
+    <link val="<?cs var:Var.wifi_status.Value ?>" text="<?cs call:varValue(Env.Var.wifi_status.Value[Var.wifi_status.Value])?>" />
+    <linkac val="<?cs var:Var.wifi_status_ac.Value ?>" text="<?cs call:varValue(Env.Var.wifi_status.Value[Var.wifi_status_ac.Value])?>" />
+    <linkguest val="<?cs var:Var.wifi_status_guest.Value ?>" text="<?cs call:varValue(Env.Var.wifi_status.Value[Var.wifi_status_guest.Value])?>" />
+    <hotspot>
+      <enable val="<?cs var:Env.autoconf.hotspot.enable?>" text="<?cs call:varValue_d(Env.Var.hotspot_enable.Value[Env.autoconf.hotspot.enable], Env.Var.hotspot_enable.Value.true)?>" />
+      <active val="<?cs var:Env.user.hotspot.active ?>" text="<?cs call:varValue_d(Env.Var.hotspot_active.Value[Env.user.hotspot.active], Env.Var.hotspot_active.Value.off)?>" />
+      <status val="<?cs var:Env.status.hotspot.status?>" text="<?cs call:varValue_d(Env.Var.hotspot_status.Value[Env.status.hotspot.status], Env.Var.hotspot_status.Value.down)?>" />
+      <ssid val="<?cs var:Env.status.hotspot.ssids?>" />
+    </hotspot>
+  </wifi>
+
+</rsp>

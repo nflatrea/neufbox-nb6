@@ -1,0 +1,171 @@
+<div class="title">
+        <h1><?cs var:Env.Section.services_status.Title ?></h1>
+</div>
+
+<div class="content">
+
+        <table id="services_status">
+                <tr>
+                        <th scope="row"><?cs call:varHeader("internet_status") ?></th>
+                        <td class="<?cs if:Env.status.net.status == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>" id="internet_status">
+                                <?cs if:Env.status.net.status == "up" ?>
+                                        <?cs var:Env.Var.internet_status.Value.up ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.internet_status.Value.down ?>
+                                <?cs /if ?>
+
+                                <?cs if:Env.status.net.data.access == "gprs" ?>
+                                        (<?cs var:Env.Var.internet_access.Value.gprs ?>)
+                                <?cs /if ?>
+                        </td>
+                </tr>
+
+
+                    <?cs if:Env.user.ipv6.enable == "on" || Env.autoconf.ipv6.force == "true" || Env.status.net.ipv6.status == "up" ?>
+                        <?cs if:Env.status.net.ipv6.status == "up" ?>
+                                <?cs set:net_ipv6_status = "enabled" ?>
+                        <?cs else ?>
+                                <?cs set:net_ipv6_status = "unused" ?>
+                        <?cs /if ?>
+                    <?cs else ?>
+                        <?cs set:net_ipv6_status = "disabled" ?>
+                    <?cs /if ?>
+                
+                <tr>
+                        <th scope="row"><?cs var:Env.Section.ipv6_info.Title ?></th>
+                        <td class="<?cs var:net_ipv6_status ?>" id="internet_status_v6">
+                                <?cs if:net_ipv6_status == "enabled" ?><?cs var:Env.Var.net_ipv6_status.up ?><?cs /if ?>
+                                <?cs if:net_ipv6_status == "unused" ?><?cs var:Env.Var.net_ipv6_status.noconnect ?><?cs /if ?>
+                                <?cs if:net_ipv6_status == "disabled" ?><?cs var:Env.Var.net_ipv6_status.down ?><?cs /if ?>
+                        </td>
+                </tr>
+
+                
+                <tr>
+                        <th scope="row"><?cs call:varHeader("voip_status") ?></th>
+                        <td class="<?cs if:Env.status.voip.up == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>" id="voip_status">
+                                <?cs if:Env.status.voip.up == "up" ?>
+                                        <?cs var:Env.Var.voip_status.Value.up ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.voip_status.Value.down ?>
+                                <?cs /if ?>
+
+                                <?cs if:Env.status.net.voip.access == "gprs" ?>
+                                        (<?cs var:Env.Var.voip_access.Value.gprs ?>)
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <?cs set:tv_status="up"?>
+                        <?cs if:Var.tv_status.Value == "0" ?><?cs set:tv_status="down"?><?cs /if ?>
+                        <th scope="row"><?cs call:varHeader("tv_status") ?></th>
+                        <td class="<?cs if:tv_status == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>" id="tv_status">
+                                <?cs if:tv_status == "up" ?>
+                                        <?cs var:Env.Var.tv_status.Value.up ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.tv_status.Value.down ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.Wifi.Header ?></th>
+                        <td id="wlan_status" class="<?cs if:Env.status.wlan.status == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                                <?cs if:Env.status.wlan.status == "up" ?>
+                                        <?cs var:Env.Text.Enabled ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Text.Disabled ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.Samba.Header ?></th>
+                        <td id="wlan_status" class="<?cs if:Env.status.samba.status == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                                <?cs if:Env.status.samba.status == "up" ?>
+                                        <?cs var:Env.Text.Enabled ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Text.Disabled ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.p910nd.Header ?></th>
+                        <td id="wlan_status" class="<?cs if:Env.status.p910nd.status == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                                <?cs if:Env.status.p910nd.status == "up" ?>
+                                        <?cs var:Env.Text.Enabled ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Text.Disabled ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.upnpav.Header ?></th>
+                        <td id="wlan_status" class="<?cs if:Env.status.upnpav.status == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                                <?cs if:Env.status.upnpav.status == "up" ?>
+                                        <?cs var:Env.Text.Enabled ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Text.Disabled ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.ca.Header ?></th>
+                        <td id="wlan_status" class="<?cs if:Env.status.ca.status == "enable" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+                                <?cs if:Env.status.ca.status == "enable" ?>
+                                        <?cs var:Env.Var.ca_status.Value.enable ?>
+                                <?cs elif:Env.status.ca.status == "disabled" ?>
+                                        <?cs var:Env.Var.ca_status.Value.disabled ?>
+                                <?cs elif:Env.status.ca.status == "autoconf disabled" ?>
+                                        <?cs var:Env.Var.ca_status.Value.disabled_autoconf ?>
+                                <?cs elif:Env.status.ca.status == "user disabled" ?>
+                                        <?cs var:Env.Var.ca_status.Value.disabled_user ?>
+                                <?cs elif:Env.status.ca.status == "date disabled" ?>
+                                        <?cs var:Env.Var.ca_status.Value.disabled_date  ?>
+                                <?cs elif:Env.status.ca.status == "data disabled" ?>
+                                        <?cs var:Env.Var.ca_status.Value.disabled_data  ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                
+        </table>
+
+</div>
+
+<div class="title">
+        <h1><?cs var:Env.Section.modem_infos.Title ?></h1>
+</div>
+
+<div class="content">
+
+        <table id="modem_infos">
+                <tr>
+                        <th scope="row"><?cs call:varHeader("modem_model") ?></th>
+                        <td><?cs var:Env.status.productID ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("modem_macaddr") ?></th>
+                        <td><?cs var:Env.status.mac.addr ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("modem_mainversion") ?></th>
+                        <td><?cs var:Env.status.version.mainfirmware ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("modem_rescueversion") ?></th>
+                        <td><?cs var:Env.status.version.rescuefirmware ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("modem_adslversion") ?></th>
+                        <td><?cs var:Env.status.version.dsldriver ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("modem_uptime") ?></th>
+                        <td id="row_uptime">
+				<?cs var:Var.modem_uptime.day.Value ?> <?cs var:Env.Text.dayAbbr?>
+				<?cs var:Var.modem_uptime.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+				<?cs var:Var.modem_uptime.min.Value ?> <?cs var:Env.Text.minAbbr?>
+				<?cs var:Var.modem_uptime.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+			</td>
+                </tr>
+        </table>
+
+</div>

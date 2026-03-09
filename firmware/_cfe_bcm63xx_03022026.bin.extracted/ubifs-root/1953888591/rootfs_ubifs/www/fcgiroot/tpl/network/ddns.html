@@ -1,0 +1,93 @@
+<div class="title">
+	<h1><?cs var:Env.Section.ddns_configuration.Title ?></h1>
+</div>
+
+<?cs if:Env.status.net.status != "up"?>
+    <?cs set:Env.status.ddns.status = "waiting_wan"?>
+<?cs /if?>
+
+<div class="content">
+
+	<form method="post" action="<?cs var:Env.Page.Name ?>" id="form_ddns_configuration">
+
+	<table id="ddns_configuration">
+	       <tr>
+			<th scope="row"><?cs var:Env.Var.ddns_status.Header?></th>
+			<td class="<?cs if:(Env.status.ddns.status == "up" || Env.status.ddns.status == "updated" || Env.status.ddns.status == "starting") ?>enabled<?cs else ?>disabled<?cs /if ?>" id="ddns_status">
+                                <span class="text">
+                                <?cs call:varValue_d(Env.Var.ddns_status.Value[Env.status.ddns.status], Env.Var.ddns_status.Value.down) ?>
+
+                                <?cs if:Env.status.ddns.status == "updated" && Env.status.ddns.lastupdateip != '' ?>
+                                        (<?cs var:Env.status.ddns.lastupdateip ?>)
+                                <?cs /if ?>
+                                </span>
+                                <span class="actions">
+                                    <button class="btn" title="<?cs var:Env.Text.Refresh ?>" name="refresh" type="submit" ><i class="icon-refresh icon-white"></i></button>
+                                </span>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<?cs call:varHeader("ddns_active") ?>
+			</th>
+			<td>
+                                <?cs call:div_onoff("ddns_active",Env.user.ddns.active == "on") ?>
+			</td>
+		</tr>
+		<tr id="row_ddns_service"<?cs if:Env.user.ddns.active == "off" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("ddns_service") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.ddns_service.Error?>error<?cs /if ?>">
+				<select name="ddns_service" class="<?cs if:?Var.ddns_service.Error ?>error<?cs else ?>text<?cs /if ?>" id="ddns_service">
+					<option value="dyndns"<?cs if:Env.user.ddns.service == "dyndns" ?> selected="selected"<?cs /if ?>>dyndns.com</option>
+					<option value="ovh"<?cs if:Env.user.ddns.service == "ovh" ?> selected="selected"<?cs /if ?>>ovh.fr</option>
+					<option value="no-ip"<?cs if:Env.user.ddns.service == "no-ip" ?> selected="selected"<?cs /if ?>>no-ip.com</option>
+					<option value="dyndnsit"<?cs if:Env.user.ddns.service == "dyndnsit" ?> selected="selected"<?cs /if ?>>dyndns.it</option>
+					<option value="sitelutions"<?cs if:Env.user.ddns.service == "sitelutions" ?> selected="selected"<?cs /if ?>>sitelutions.com</option>
+                                        <option value="changeip"<?cs if:Env.user.ddns.service == "changeip" ?> selected="selected"<?cs /if ?>>changeip.com</option>
+				</select>
+                                <?cs call:varErrorDiv_gd("ddns_service", Env.Text.InvalidValue)?>
+                            </div>
+			</td>
+		</tr>
+		<tr id="row_ddns_username"<?cs if:Env.user.ddns.active == "off" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row">
+				<label for="ddns_username">
+					<?cs call:varHeader("ddns_username") ?>
+				</label>
+			</th>
+			<td>
+                            <div class="control-group <?cs if:?Var.ddns_username.Error?>error<?cs /if ?>">
+				<input type="text" name="ddns_username" class="<?cs if:?Var.ddns_username.Error ?>error<?cs else ?>text<?cs /if ?>" id="ddns_username" value="<?cs var:html_escape(Env.user.ddns.username) ?>" maxlength="100" />
+                                <?cs call:varErrorDiv_gd("ddns_username", Env.Text.InvalidValue)?>
+                            </div>
+			</td>
+		</tr>
+		<tr id="row_ddns_password"<?cs if:Env.user.ddns.active == "off" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row">
+				<label for="ddns_password"><?cs call:varHeader("ddns_password") ?></label>
+			</th>
+			<td>
+                            <div class="control-group <?cs if:?Var.ddns_password.Error?>error<?cs /if ?>">
+				<input type="password" name="ddns_password" class="<?cs if:?Var.ddns_password.Error ?>error<?cs else ?>text<?cs /if ?>" id="ddns_password" value="<?cs var:html_escape(Env.user.ddns.password) ?>" maxlength="20" />
+                                <?cs call:varErrorDiv_gd("ddns_password", Env.Text.InvalidValue)?>
+                            </div>
+			</td>
+		</tr>
+		<tr id="row_ddns_hostname"<?cs if:Env.user.ddns.active == "off" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row">
+				<label for="ddns_hostname"><?cs call:varHeader("ddns_hostname") ?></label>
+			</th>
+			<td>
+                                <div class="control-group <?cs if:?Var.ddns_hostname.Error?>error<?cs /if ?>">
+                                <input type="text" name="ddns_hostname" class="<?cs if:?Var.ddns_hostname.Error || ?Var.ddns_hostname.Error ?>error<?cs else ?>text<?cs /if ?>" id="ddns_hostname" value="<?cs var:html_escape(Env.user.ddns.hostname) ?>" maxlength="47" />
+                                    <?cs call:varErrorDiv_gd("ddns_hostname", Env.Text.InvalidValue)?>
+                                </div>
+			</td>
+		</tr>
+	</table>
+
+            <button class="btn" type="submit" name="submitBtn"><?cs var:Button.Submit ?></button>
+
+	</form>
+</div>

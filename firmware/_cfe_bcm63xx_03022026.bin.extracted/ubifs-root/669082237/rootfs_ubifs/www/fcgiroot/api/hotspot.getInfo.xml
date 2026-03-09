@@ -1,0 +1,2 @@
+   <hotspot status="<?cs var:Env.status.hotspot.status ?>" enabled="<?cs var:Env.user.hotspot.active ?>" />
+   

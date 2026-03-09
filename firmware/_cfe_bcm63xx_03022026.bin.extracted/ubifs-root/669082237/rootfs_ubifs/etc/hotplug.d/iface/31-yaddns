@@ -1,0 +1,12 @@
+#!/bin/sh
+
+[ "${INTERFACE}" != "data" ] && exit 0
+
+case ${ACTION} in
+	ifup)
+		# try to reload yaddns. if doesn't started, it will be
+		/etc/init.d/yaddns reload
+		;;
+	ifdown)
+		;;
+esac

@@ -1,0 +1,15 @@
+#!/bin/sh /etc/rc.common
+
+START=51
+
+start() {
+	[ "$(nvram get net_mode)" = "bridge" ] && exit 0
+	[ "$(nvram get lan_topology_debug)" = "on" ] && local debug=-d
+	lan-topology -i $(status get lan_ifname) ${debug}
+	lan-topology -i guest0 ${debug}
+	ip neigh flush all
+}
+
+stop() {
+	killall lan-topology
+}

@@ -1,0 +1,28 @@
+<div class="title">
+	<h1><?cs var:Env.Section.PrinterSharing.Title ?></h1>
+</div>
+
+<div class="content">
+
+	<form method="post" action="<?cs var:Env.Page.Name ?>">
+	
+	<table id="printer_sharing">
+		<tr>
+			<th scope="row"><?cs var:Env.Var.PrinterSharingStatus.Header ?></th>
+			<td id="PrinterSharingStatus" class="<?cs if:Var.PrinterSharingStatus.Value == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+				<?cs if:Var.PrinterSharingStatus.Value == "up" ?><?cs var:Env.Var.PrinterSharingStatus.Value.up ?><?cs else ?><?cs var:Env.Var.PrinterSharingStatus.Value.down ?><?cs /if ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.PrinterSharingBidir.Header ?></th>
+			<td>
+                            <?cs call:div_onoff("printer_sharing_bidir", Var.PrinterSharingBidir.Value == "on") ?>
+			</td>
+		</tr>
+	</table>
+	
+	<button type="submit" name="submit" class="btn"><?cs var:Button.Submit ?></button>
+
+	</form>
+	
+</div>

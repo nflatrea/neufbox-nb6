@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# This script is called by nbd when dispatching events, after it sending events
+# to its plugins.
+# It is then possible to handle nbd events with scripts.
+#
+# Scripts are supposed to be in "/etc/events.d/<event>"" folders.
+# Those scripts are executed in alphabetical order and are suppposed to be named as:
+# "[0-9]{2}-my-script-name".
+#
+# The script tries ensures atomic access to all domain scripts when called from the outside,
+# but at this stage, cannot ensure that scripts are not mutually called from the scripts themselves.
+
+lock_file=/var/lock/events_$PPID.lock
+
+lock $lock_file
+
+ev_folder=/etc/events.d
+
+for ev in $@ ; do
+	if [ ! -d "$ev_folder/$ev" ] ; then
+		continue
+	fi
+
+	for script in $(ls $ev_folder/$ev) ; do
+		[ -f $ev_folder/$ev/$script ] && . $ev_folder/$ev/$script
+	done
+done
+
+lock -u $lock_file

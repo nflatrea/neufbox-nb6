@@ -1,0 +1,12 @@
+Env.Page.Title =  Access Control
+Env.Section.ca.Title = Access Control
+Env.Help.Text =In the <b>Access control</b> section, you can monitor its operation, and continue to the service configuration page.
+Env.Var.ca_status.Header = Service status
+Env.Var.ca_status.Value.enable = Enabled
+Env.Var.ca_status.Value.disabled = Disabled
+Env.Var.ca_status.Value.disabled_autoconf = Disabled by network
+Env.Var.ca_status.Value.disabled_user = Disabled by user
+Env.Var.ca_status.Value.disabled_date = Disabled (clock unavailable)
+Env.Var.ca_status.Value.disabled_data = Disabled (internet unavailable)
+Env.Var.ca_access_page.Value = Access to
+Env.Var.ca_access_page.Value.link = manager

@@ -1,0 +1,282 @@
+#!/bin/sh /etc/rc.common
+
+START=37
+
+logger -t "topology[$$]" "$action"
+
+EXTRA_COMMANDS="xtm_reconfigure"
+
+[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+topology_conf=/etc/config/topology${mode}.xml
+[ -e ${topology_conf} ] || topology_conf=/etc/default/topology${mode}.xml
+
+bridge_create() {
+	local ifname=$1
+	brctl addbr ${ifname}
+	[ ${ifname} = "lan0" ] && ip link set ${ifname} address $(mac_addr)
+	[ ${ifname} = "wan0" ] && ip link set ${ifname} address $(mac_addr -- -1)
+	brctl setfd ${ifname} 0
+}
+
+ethernet_create() {
+	# nothing todo
+	true
+}
+
+wireless_create() {
+    local ifname=$1
+    local wlx=$(echo $1|cut -d. -f1)
+    local bss=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@bss")
+    test -z ${bss} && bss=0
+    
+    logger -t "topology[$$]" "$wlx $ifname BSS${bss}: ${bssid}"
+
+    wlctl -i $wlx bss -C ${bss} down
+    wlctl -i $wlx ssid -C ${bss} ""
+    wlctl -i ${ifname} down
+    ip link set ${ifname} down
+}
+
+atm_create() {
+	local ifname=$1
+	local pvcid=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@pvcid")
+	local queues=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@queues")
+
+	[ "$(xtm --version 2>&1|awk '{print $3}')" = "1.0" ] && {
+		TDTE=1
+	}
+	xtm 2>&1 | grep -q mpaal && PRIO="1 10"
+	xtm operate conn --add 1.${pvcid} aal5 ${TDTE} llcsnap_eth ${PRIO} \
+		$(echo $(for q in ${queues}; do echo " --addq 1.${pvcid} ${q} wrr ${q}"; done))
+	xtm operate conn --createnetdev 1.${pvcid} ${ifname}
+}
+
+atm_delete() {
+	local ifname=$1
+	local pvcid=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@pvcid")
+	xtm operate conn --delete 1.${pvcid}
+}
+
+ptm_create() {
+	local ifname=$1
+	local ptm=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@ptm")
+	local queues=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@queues")
+	xtm operate conn --add 1.${ptm} 1 10 \
+		$(echo $(for q in ${queues}; do echo " --addq 1.${ptm} ${q} wrr ${q} 0 0 0"; done))
+	xtm operate conn --createnetdev 1.${ptm} ${ifname}
+}
+
+ptm_delete() {
+	local ifname=$1
+	local ptm=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@ptm")
+	xtm operate conn --delete 1.${ptm}
+}
+
+vlan_create() {
+	local ifname=$1
+	local vid=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@vid")
+	local interface=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@interface")
+	local tags=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@tags")
+	local untags=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@untags")
+
+	# depends
+	netdev_create ${interface}
+
+	[ -x /etc/init.d/vlan ] && VID="${vid}" TAGS="${tags}" UNTAGS="${untags}" /etc/init.d/vlan start
+
+	ip link set ${interface} up
+	ip link add link ${interface} name ${ifname} noqueue type vlan id ${vid}
+}
+
+macvlan_create() {
+	local ifname=$1
+	local interface=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@interface")
+	local multicast=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@multicast")
+
+	# depends
+	netdev_create ${interface}
+
+	ip link set ${interface} up
+	ip link add link ${interface} name ${ifname} noqueue type macvlan
+	[ -n "${multicast}" ] && ip link set ${ifname} multicast ${multicast}
+}
+
+ifb_create() {
+	true
+}
+
+tun_create() {
+	true
+}
+
+virtual_create() {
+	true
+}
+
+netdev_create() {
+	local ifname=$1
+	local type=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@type")
+
+	ip link show ${ifname} > /dev/null 2>&1 && [ "${type}" != "wireless" ] && return
+
+	${type}_create ${ifname}
+}
+
+ip_link_set() {
+	local cmd=$1
+	local ifname=$2
+	local type=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@type")
+
+	# DO NOT return for ifb interfaces type as it needs
+	# to be up for software QoS. (need to be investigated)
+	[ "${type}" = "wireless" ] && return
+	[ "${type}" = "tun" ] && return
+
+	ip link set ${ifname} down
+
+	[ "${cmd}" = "add" ] && {
+		local ipalias=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@ipalias")
+		local ipv6=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@ipv6")
+		local offset=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@mac")
+		[ -n "${offset}" ] && ip link set ${ifname} address $(mac_addr -- ${offset})
+		local fixedmac=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@fixedmac")
+		[ -n "${fixedmac}" ] && ip link set ${ifname} address $fixedmac
+		[ -n "${ipalias}" ] && {
+			eval $(ipcalc -b ${ipalias})
+			ip addr add ${ipalias} broadcast ${BROADCAST} dev ${ifname}
+		}
+
+		ip link set ${ifname} up
+		[ -z "${ipv6}" ] && ip -6 route flush dev ${ifname}
+		[ -z "${ipv6}" ] && sysctl -w net.ipv6.conf.${ifname}.disable_ipv6=1
+	}
+}
+
+bridge_configure() {
+	local cmd=$1
+	local bridge=$2
+	local mode=$3
+
+	for ifname in $(roxml -q ${topology_conf} "//interface[@ifname=${bridge}]/interface/@ifname")
+	do
+		local ipv6=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@ipv6")
+		[ -z "${ipv6}" ] && sysctl -w net.ipv6.conf.${ifname}.disable_ipv6=1
+		ip_link_set "${cmd}" "${ifname}"
+		# ip link set dev ${ifname} master ${bridge}
+		brctl "${cmd}if" ${bridge} ${ifname}
+	done
+}
+
+phy_id(){
+    if [ "$1" = "wl0" ] || [ "$1" = "wl1" ] ; then
+        echo 0
+    else
+        echo $1 | cut -d"." -f2
+    fi
+}
+
+phy_name(){
+    echo $1 | cut -d"." -f1
+}
+
+fix_wlan_macaddr() {
+    for wl in $(ifconfig -a | awk '/^wl/ { print $1 }')
+    do
+        wlx=$(phy_name $wl)
+        bss=$(phy_id $wl)
+        if [ "$wl" = "wl0" ]; then
+            if [ "$bss" = "0" ]; then
+                bssid=$(/usr/bin/mac_addr -- 5)
+            else
+                bssid=$(maccalc wl $(/usr/bin/mac_addr -- 5) $bss)
+            fi
+        else
+            if [ "$bss" = "0" ]; then
+                bssid=$(/usr/bin/mac_addr -- 6)
+            else
+                bssid=$(maccalc wl $(/usr/bin/mac_addr -- 6) $bss)
+            fi
+        fi
+        wlctl -i $wlx bss -C ${bss} down
+        wlctl -i $wlx ssid -C ${bss} ""
+        wlctl -i ${wl} down
+        ip link set ${wl} down
+        ip link set ${wl} address ${bssid}
+        wlctl -i ${wl} cur_etheraddr ${bssid}
+    done
+}
+
+boot() {
+	for ifname in $(roxml -q ${topology_conf} '//interface/@ifname'); do
+	        netdev_create ${ifname}
+		ip_link_set "add" "${ifname}"
+	done
+
+	fix_wlan_macaddr
+
+	for bridge in $(roxml -q ${topology_conf} '//interface[@type=bridge]/@ifname')
+	do
+		bridge_configure "add" "${bridge}"
+	done
+
+	status set lan_ifname "$(roxml -q ${topology_conf} '//interface[@service=lan]/@ifname')"
+	status set hotspot_ifname "$(roxml -q ${topology_conf} '//interface[@service=hotspot and @config=hotspot]/@interface')"
+	status set wlan_guest_topology "$(roxml -q ${topology_conf} '//interface[@service=hotspot and @config=hotspot]/@interface')"
+	status set wlan_ses_ifname "$(roxml -q ${topology_conf} '//interface[@config=ses]/@ifname')"
+	status set hotspot_portail_ifname "$(echo $(roxml -q ${topology_conf} '//interface[@type=wireless and @config=portail]/@ifname'))"
+	status set hotspot_eapsim_ifname "$(echo $(roxml -q ${topology_conf} '//interface[@type=wireless and @config=eapsim]/@ifname'))"
+	# wlan topology
+	status set wlan_topology "$(echo $(roxml -q ${topology_conf} '//interface[@service=lan]/interface[@type=wireless]/@ifname'))"
+	status set hotspot_topology "$(echo $(roxml -q ${topology_conf} '//interface[@service=hotspot]/interface[@type=wireless]/@ifname'))"
+	# hotspot net
+	eval $(ipcalc -np $(roxml -q ${topology_conf} '//interface[@service=hotspot and @config=hotspot]/@ipaddr'))
+	status set hotspot_net ${NETWORK}/${PREFIX}
+	status set lan_alias_ipaddr $(roxml -q ${topology_conf} '//interface[@service=lan]/@ipalias'|sed 's/\(.*\)\/.*/\1/')
+	eval $(ipcalc -m $(roxml -q ${topology_conf} '//interface[@service=lan]/@ipalias'))
+	status set lan_alias_netmask ${NETMASK}
+
+	# lately enable PS on RTK switch
+	test -x /usr/sbin/rtk-switch && rtk-switch aldp enable
+	return 0
+}
+
+stop() {
+	for ifname in $(roxml -q ${topology_conf} '//interface[@type=wireless]/@ifname')
+	do
+		ip link set ${ifname} down
+	done
+}
+
+xtm_reconfigure() {
+	# delete xtm interfaces
+	for ifname in $(roxml -q ${topology_conf} '//interface[@type=atm]/@ifname')
+	do
+		atm_delete ${ifname}
+	done
+	for ifname in $(roxml -q ${topology_conf} '//interface[@type=ptm]/@ifname')
+	do
+		ptm_delete ${ifname}
+	done
+	# create xtm interface
+	for ifname in $(roxml -q ${topology_conf} '/topology/interface/@ifname'); do
+		local type=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@type")
+		if [ "${type}" = "atm" -o "${type}" = "ptm" -o "${type}" = "macvlan" ]; then
+			netdev_create ${ifname}
+			ip_link_set "add" "${ifname}"
+		fi
+	done
+	for bridge in $(roxml -q ${topology_conf} '//interface[@type=bridge]/@ifname')
+	do
+		for ifname in $(roxml -q ${topology_conf} "//interface[@ifname=${bridge}]/interface/@ifname")
+		do
+			local type=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@type")
+			if [ "${type}" = "atm" -o "${type}" = "ptm" -o "${type}" = "macvlan" ]; then
+				netdev_create ${ifname}
+				local ipv6=$(roxml -q ${topology_conf} "//interface[@ifname=${ifname}]/@ipv6")
+				[ -z "${ipv6}" ] && sysctl -w net.ipv6.conf.${ifname}.disable_ipv6=1
+				ip_link_set add "${ifname}"
+				brctl addif ${bridge} ${ifname}
+			fi
+		done
+	done
+}

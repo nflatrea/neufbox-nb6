@@ -1,0 +1,141 @@
+#!/bin/sh /etc/rc.common
+
+START=36
+
+EXTRA_COMMANDS="ui_dsl_config afeloopbacktest"
+
+logger -t "adsl[$$]" "$action"
+
+adsl_config() {
+	local profile=$(nvram get adsl_config)
+	if [ "${profile}" = "user" ]; then
+		local prefix=adsl_userprofile
+	else
+		local prefix=adsl_profiles_${profile}
+	fi
+
+	local mod=$(nvram get ${prefix}_mod)
+	local lpair=$(nvram get ${prefix}_lpair)
+	local trellis=$(nvram get ${prefix}_trellis)
+	local snr=$(nvram get ${prefix}_snr)
+	local bitswap=$(nvram get ${prefix}_bitswap)
+	local sesdrop=$(nvram get ${prefix}_sesdrop)
+	local sra=$(nvram get ${prefix}_sra)
+#	local i24k=$(nvram get ${prefix}_i24k)
+	local phyR=$(nvram get ${prefix}_phyR|sed -e 's/on/3/' -e 's/off/0/')
+	local ginp=$(nvram get ${prefix}_ginp|sed -e 's/on/3/' -e 's/off/0/')
+
+	xdslctl --help 2>&1|grep -q Ginp && has_ginp=1
+	echo "--mod ${mod} \
+		--lpair ${lpair:-inner} \
+		--trellis ${trellis:-on} \
+		${snr:+--snr ${snr}} \
+		--bitswap ${bitswap:-off} \
+		--sesdrop ${sesdrop:-off} \
+		--sra ${sra:-off} \
+		--i24k ${i24k:-off} \
+		--phyReXmt ${phyR:-3} \
+		${has_ginp:+--Ginp ${ginp:-0}}"
+}
+
+boot() {
+	mkdir -p /tmp/adsl
+	if test -e /dev/mtd-adslphy; then
+		if adslphy_copy /dev/mtd-adslphy /tmp/adsl/adsl_phy.bin $(hostname) /tmp/adsl/release; then
+			local release=$(cat /tmp/adsl/release)
+		fi
+	else
+		for phy in $(ls /etc/adsl/*DSL* 2>/dev/null); do
+			if adslphy_copy ${phy} /tmp/adsl/adsl_phy.bin $(hostname) /tmp/adsl/release; then
+				local release=$(cat /tmp/adsl/release)
+				break
+			fi
+		done
+	fi
+
+	# try default PHY
+	if [ -z "${release}" ]; then
+		for phy in $(ls /etc/default/*DSL* 2>/dev/null); do
+			if adslphy_copy ${phy} /tmp/adsl/adsl_phy.bin $(hostname) /tmp/adsl/release; then
+				local release=$(cat /tmp/adsl/release)
+				break
+			fi
+		done
+	fi
+
+	if [ -z "${release}" -a "$1" != "afelb" ]; then
+		event notify boot-failed
+		status set errno "-31"
+		exit 1
+	fi
+
+	# LZMA compressed ?
+	if echo ${release}|grep -q '.lzma'; then
+		local release=$(echo ${release}|sed 's/\(.*\).lzma/\1/')
+		mv -f /tmp/adsl/adsl_phy.bin /tmp/adsl/adsl_phy.bin.lzma
+		unlzma /tmp/adsl/adsl_phy.bin.lzma
+	fi
+
+	insmod adsldd
+
+	local devno=$(sed -n "s/^\(.*\)adsl/\1/p" /proc/devices)
+	mknod -m 666 /dev/bcmadsl0 c ${devno} 0
+
+	xdslctl start
+	xdslctl oem --vendorid $(hostname)
+
+	if [ "$1" != "afelb" ];then
+		status set version_dsldriver ${release}
+		echo -n "[${release}]" >> /tmp/motd
+	fi
+
+
+	start
+}
+
+start() {
+	xdslctl configure $(adsl_config)
+	xdslctl connection --up
+	dsl snr monitor reset
+
+	/etc/init.d/xtm start
+}
+
+stop() {
+	xdslctl connection --down
+}
+
+ui_dsl_config() {
+	diaglog event uidslconfig
+	stop
+	start
+}
+
+afeloopbacktest_adsl() {
+	# force adsl mode
+	xdslctl connection --down
+	xdslctl configure --mod dlt2pe
+	xdslctl connection --up
+	xdslctl afelb --time 8 --signal 8
+	sleep 10
+	xdslctl info --SNR|/usr/bin/afeloopbacktest -v adsl=1 -v debug=${debug}
+}
+
+afeloopbacktest_vdsl() {
+	# force adsl mode
+	xdslctl connection --down
+	xdslctl configure --mod dlt2pev
+	xdslctl connection --up
+	xdslctl afelb --time 8 --signal 8
+	sleep 10
+	xdslctl info --SNR|/usr/bin/afeloopbacktest -v vdsl=1 -v debug=${debug}
+}
+
+afeloopbacktest() {
+	afeloopbacktest_adsl
+	xdslctl profile --show|grep -q VDSL2 && afeloopbacktest_vdsl
+
+	# reload dsl PHY
+	xdslctl stop
+	rmmod adsldd
+}

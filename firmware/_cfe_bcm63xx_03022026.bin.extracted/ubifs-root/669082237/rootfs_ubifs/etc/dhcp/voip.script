@@ -1,0 +1,81 @@
+#!/bin/sh
+
+service=voip
+TAG=VOIP_DHCP_STATUS
+STATE="$1"
+
+net_setup() {
+	status set dhcpc_${service}_ipaddr "$ip"
+	status set dhcpc_${service}_netmask "$subnet"
+	status set dhcpc_${service}_broadcast "$broadcast"
+	status set dhcpc_${service}_gateway "$router"
+	status set dhcpc_${service}_dns "$dns"
+	status set dhcpc_${service}_nisdomain "$nisdomain"
+	status set dhcpc_${service}_lease "$lease"
+
+	[ -n "$broadcast" ] && BROADCAST="broadcast $broadcast"
+	[ -n "$subnet" ] && NETMASK="netmask $subnet"
+	ifconfig $interface $ip $BROADCAST $NETMASK
+
+	if [ "$(status get dhcpc_${service}_status)" = "down" ]
+	then
+		status set dhcpc_${service}_access "adsl"
+		status set dhcpc_${service}_status "up"
+		event notify "dhcp-${service}-up"
+
+		defaultroute
+	fi
+
+	[ "${STATE}" = "renew" ] && event notify dhcp-voip-update
+}
+
+net_setdown() {
+
+	status set dhcpc_${service}_access ""
+	status set dhcpc_${service}_ipaddr ""
+	status set dhcpc_${service}_netmask ""
+	status set dhcpc_${service}_broadcast ""
+	status set dhcpc_${service}_gateway ""
+	status set dhcpc_${service}_dns ""
+	status set dhcpc_${service}_nisdomain ""
+
+	if [ "$(status get dhcpc_${service}_status)" = "up" ]
+	then
+		ifconfig "$interface" "0.0.0.0" up
+		rm -f $RESOLV_CONF
+		status set dhcpc_${service}_access ""
+		status set dhcpc_${service}_status "down"
+		event notify "dhcp-${service}-down"
+
+		defaultroute
+	fi
+
+}
+
+previous_answer=$(status get dhcpc_${service}_answer)
+if [ "$previous_answer" != "$STATE" ]
+then
+	logger -s -t "${TAG}" -p local1.info "[${service}] DHCP ANSWER changed [$previous_answer] -> [$STATE] ($nisdomain)"
+	logger -s -t "${TAG}" -p daemon.debug "[${service}] DHCP ANSWER changed [$previous_answer] -> [$STATE] ($nisdomain)"
+	status set dhcpc_${service}_answer $STATE
+fi
+
+case "$STATE" in
+
+	deconfig|leasefail|nak)
+		net_setdown
+	;;
+
+	bound|renew)
+		CAFQDN=$(echo $dumpfile | awk -F "|" '{print $4}')
+		if [ "$CAFQDN" = 'toto1@neuf.com' ]
+		then
+			logger -s -t "${TAG}" -p daemon.debug "[VOIP]  ** DHCP Answer FQDN=[$CAFQDN]"
+			net_setdown
+			exit 1
+		fi
+
+		net_setup
+	;;
+
+esac

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+[ "${BUTTON}" != "wlan" ] && exit 0
+
+[ "${ACTION}" != "pressed" ] && exit 0
+
+if [ "$(wlan active)" = "on" ]; then
+	status set wlan_wlan0_interrupter off
+	nvram set wlan_btnstate off
+	nvram commit
+	local status=$(status get wifisched_status)
+	if [ "${status:0:8}" = "forceoff" ]; then
+		/etc/init.d/wifisched reload reset
+	else
+		/etc/init.d/wlan stop
+	fi
+else
+	status set wlan_wlan0_interrupter on
+	nvram set wlan_btnstate on
+	nvram commit
+	if [ "$(status get wifisched_status)" = "wlanstopped" ]; then
+		/etc/init.d/wifisched reload forceoff
+	elif [ "$(status get wifisched_status)" = "up" ]; then
+		/etc/init.d/wifisched reload
+	else
+		/etc/init.d/wlan start
+	fi
+fi
+

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+[ "${INTERFACE}" != "data" ] && exit 0
+
+case ${ACTION} in
+	ifup)
+		/etc/init.d/wol restart
+		;;
+	ifdown)
+		/etc/init.d/wol restart
+		;;
+esac

@@ -1,0 +1,139 @@
+#!/bin/sh /etc/rc.common
+
+EXTRA_COMMANDS="config"
+
+
+PFX="packages"
+LOCK="/run/lock/packages.lock"
+
+err_samba()
+{
+	logger -t "$PFX" "$@"
+	status set packages_samba error
+	status set samba_status error_unknown
+	return 1
+}
+
+err_ushare()
+{
+	logger -t "$PFX" "$@"
+	status set packages_ushare error
+	status set upnpav_status error_unknown
+	return 1
+}
+
+cleanup()
+{
+	lock -u "$LOCK"
+}
+
+fatal()
+{
+	logger -t "$PFX" "$@"
+	cleanup
+	exit 1
+}
+
+info()
+{
+	logger -t "$PFX" "$@"
+}
+
+update_config()
+{
+	[ "$(status get packages_init)" = "yes" ] && return 0
+
+	packages_file="/tmp/autoconf/$(autoconf get packages_file)"
+	[ ! -f "$packages_file" ] && fatal "$packages_file not found"
+	domain="$(roxml -q "$packages_file"  //packagesmirror//privatelist//url)"
+	version="$(status get version_mainfirmware | sed 's/.*-R\(.\)\.\(.\).*/\1\.\2/')/brcm63xx"
+	url="http://${domain}/${version}"
+
+	cat > /etc/opkg.conf << EOF
+src/gz packages ${url}
+dest root /
+dest ram /tmp
+lists_dir ext /var/opkg-lists
+option overlay_root /overlay
+EOF
+
+	opkg update || fatal "can't setup opkg (ret=$?)"
+	status set packages_init yes
+}
+
+update_samba()
+{
+	[ "$(nvram get samba_active)" = "off" ] && return 0
+	[ "$(status get samba_status)" = "up" ] && return 0
+
+	info "installing samba"
+	status set packages_samba download
+
+	if ! opkg --nodeps install samba36-server; then
+		err_samba "can't install samba"
+		return 1
+	fi
+
+	info "samba install success"
+	status set packages_samba "up"
+	/etc/init.d/samba start
+}
+
+update_ushare()
+{
+	[ "$(nvram get upnpav_active)" = "off" ] && return 0
+	[ "$(status get upnpav_status)" = "up" ] && return 0
+
+	info "installing ushare"
+	status set packages_ushare download
+
+	if ! opkg --nodeps install libupnp ushare; then
+		err_ushare "can't install ushare"
+		return 1
+	fi
+
+	info "ushare install success"
+	status set packages_ushare "up"
+	/etc/init.d/ushare start    
+}
+
+wait_xml_value()
+{
+	xml=$1
+	varname=$2
+	needvalue=$3
+	faillogmsg=$4
+
+	count=0
+	while [ $count -lt 7 ]; do
+		count=`expr $count + 1`
+
+		if [ "$(${xml} get ${varname})" = "${needvalue}" ]; then
+			return 0
+		fi
+
+		sleep 1
+	done
+
+	return 1
+}
+
+config() {
+	update_config
+}
+
+reload()
+{
+	[ "$(nvram get packages_enable)" = "no" ] && exit 0
+
+	lock "$LOCK"
+
+	wait_xml_value "status" "swap_status" "on" || fatal "no swap"
+	wait_xml_value "autoconf" "packages_status" "ok" || fatal "autoconf not ready"
+	wait_xml_value "status" "net_data_status" "up" || fatal "data not ready"
+
+	update_config
+	update_samba
+	update_ushare
+	cleanup
+}

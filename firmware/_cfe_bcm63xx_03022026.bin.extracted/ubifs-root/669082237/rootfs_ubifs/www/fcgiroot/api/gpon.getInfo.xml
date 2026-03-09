@@ -1,0 +1,9 @@
+<gpon model="<?cs var:Env.gpon.model ?>" mode="<?cs var:Env.status.gpon.mode ?>" sn="<?cs var:Env.gpon.sn ?>">
+        <info name="daterefresh" value="<?cs var:Env.gpon.daterefresh ?>" />
+        <info name="ranging" value="<?cs var:Env.gpon.ranging ?>" />
+        <info name="receive" value="<?cs var:Env.gpon.rssi.receive ?>" />
+        <info name="transmit" value="<?cs var:Env.gpon.rssi.transmit ?>" />
+        <info name="bias" value="<?cs var:Env.gpon.rssi.bias ?>"  />
+        <info name="temp" value="<?cs var:Env.gpon.rssi.temp ?>"  />
+        <info name="vcc" value="<?cs var:Env.gpon.rssi.vcc ?>"  />
+</gpon>

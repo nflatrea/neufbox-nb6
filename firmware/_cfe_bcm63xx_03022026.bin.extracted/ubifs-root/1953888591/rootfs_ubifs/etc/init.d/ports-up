@@ -1,0 +1,7 @@
+#!/bin/sh
+
+for i in `seq 1 4`;
+do
+        rtk-switch phy power port$i up
+done
+status set net_loop_interface ""

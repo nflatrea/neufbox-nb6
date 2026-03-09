@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="<?cs var:Env.user.web.lang ?>">
+    <head>
+        <meta charset="utf-8">
+
+        <title><?cs var:Env.Page.Pretitle?><?cs var:Env.Page.Title ?></title>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="format-detection" content="telephone=no" /> 
+
+        <link rel="shortcut icon" type="image/png" href="/img/header_logo.png?v=3.4" />
+
+        <link rel="stylesheet" type="text/css" media="screen" href="/css/global.css?v=3.4" />
+        <?cs if:?Env.Page.css ?><link rel="stylesheet" type="text/css" media="screen" href="<?cs var:Env.Page.css ?>?v=3.4" /><?cs /if ?>
+
+        <script type="text/javascript" src="/js/global.js?v=3.4"></script>
+        <?cs if:?Env.Page.js ?><script type="text/javascript" src="<?cs var:Env.Page.js ?>?v=3.4"></script><?cs /if ?>
+
+    </head>
+
+    <body>
+
+        <div id="header">
+            <div id="logo">
+                <a href="/" title="<?cs var:Env.Page.Index.Title ?>"><?cs var:Env.Page.Index.Title ?></a>
+            </div>
+            <div id="infos">
+                <a id="btn-help" class="btn" href="#help" data-toggle="modal" title="<?cs var:Env.Help.Title ?>">?</a>
+
+                <?cs set:net_ipv6_status = "disabled" ?>  
+                <?cs if:Env.user.ipv6.enable == "on" || Env.autoconf.ipv6.force == "true" ?>
+                <?cs if:Env.status.net.ipv6.status == "up" ?>
+                <?cs set:net_ipv6_status = "enabled" ?>
+                <?cs /if ?>
+                <?cs /if ?>
+
+                <table class="notableborder">
+                    <tr>
+                        <th><?cs var:Env.Var.Sys.MACAddress.Header ?>&nbsp;</th>
+                        <td>: <?cs var:Env.status.mac.addr ?></td>
+                    </tr>
+                    <tr>
+                        <th><?cs var:Env.Var.Sys.FirmwareVersion.Header ?>&nbsp;</th>
+                        <td>: <?cs var:Env.status.version.mainfirmware ?></td>
+                    </tr>
+
+                    <tr>
+                        <th><?cs var:Env.Var.Sys.NetInfraExtra.Header ?>&nbsp;</th>
+                        <td>: <?cs if:Env.status.net.status =="up" ?>
+                                <?cs call:varValue_d(Env.Var.Sys.NetInfraExtra.Value[Var.Sys.NetInfraExtra.Value], Env.Var.Sys.NetInfraExtra.Value.unknown)?>
+                            <?cs elif:Env.status.net.data.access != "gprs" && ?Env.autoconf.wanservices.infra ?>
+                                <?cs if:Env.autoconf.wanservices.infra == "11" || Env.autoconf.wanservices.infra == "12" || Env.autoconf.wanservices.infra == "13" ?>
+                                <?cs var:Env.Var.Sys.NetInfraExtra.Value.ftth ?>
+                                <?cs elif:Env.autoconf.wanservices.infra == "9" || Env.autoconf.wanservices.infra == "10" ?>
+                                <?cs var:Env.Var.Sys.NetInfraExtra.Value.VDSL2 ?>
+                                <?cs else?>    
+                                <?cs var:Env.Var.Sys.NetInfraExtra.Value.adsl ?>
+                                <?cs /if ?>
+                            <?cs else ?>
+                                <?cs var:Env.Var.Sys.NetInfraExtra.Value.unknown ?>
+                            <?cs /if ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><?cs var:Env.Var.Sys.Connectivity.Header ?>&nbsp;</th>
+                        <td>: 
+                            <?cs if:Env.status.net.ipv6.status == "up" && Env.status.net.cgnat.status == "up" ?>
+                                <?cs var:Env.Var.Sys.Connectivity.v4v6cgnat ?>
+                            <?cs elif:Env.status.net.ipv6.status == "up" && ( Env.status.net.mapt.status == "up" || Env.status.net.data.ipaddr != "") ?>
+                                <?cs var:Env.Var.Sys.Connectivity.v4v6 ?>
+                            <?cs elif:Env.status.net.data.ipaddr != "" ?>
+                                <?cs var:Env.Var.Sys.Connectivity.v4 ?>
+                            <?cs elif:Env.status.net.ipv6.status == "up" && Env.status.net.status =="up" ?>
+                                <?cs var:Env.Var.Sys.Connectivity.v6 ?>
+                            <?cs elif:Env.status.net.data.ipaddr != "" ?>
+                                <?cs var:Env.Var.Sys.Connectivity.v4 ?>
+                            <?cs else ?>
+                                <?cs var:Env.Var.Sys.Connectivity.unknown ?>
+                            <?cs /if ?>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <?cs include:"tpl/menu.html" ?>
+
+        <div id="main">
+
+
+            <?cs if:?Form.Error?>
+            <div class="alert alert-error">
+                <?cs alt:Env.Form.Error[Form.Error]?>
+                <?cs var:Env.Form.Error.unknown?>
+                <?cs /alt?>
+            </div>
+            <?cs elif:?Form.Success?>
+            <div class="alert alert-info">
+                <?cs alt:Env.Form.Success[Form.Success]?>
+                <?cs var:Env.Form.Success.default?>
+                <?cs /alt?>
+            </div>
+            <?cs /if?>

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+for i in /etc/dnsmasq.d/*; do
+    [ -x $i ] && $i "$@" 2>&1
+done | logger -t dnsmaq[$$][script]

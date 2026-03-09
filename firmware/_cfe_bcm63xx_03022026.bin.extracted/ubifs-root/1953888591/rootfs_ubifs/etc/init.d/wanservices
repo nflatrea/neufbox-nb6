@@ -1,0 +1,65 @@
+#!/bin/sh /etc/rc.common
+
+service=wanservices
+logger -t "${service}[$$]" "$action"
+
+xpath() {
+	roxml -q ${autoconf_file} $1
+}
+
+autoconf_reload() {
+	[ "$(autoconf get ${service}_enable)" != "true" ] && return 0
+	[ "$(autoconf get ${service}_status)" != "ok" ] && return 1
+
+	autoconf_file=/tmp/autoconf/$(autoconf get ${service}_file)
+	test -f ${autoconf_file} || return 1
+
+	autoconf set diaglog_interval_error $(xpath "//pushlog/error/MinInterval")
+	autoconf set diaglog_interval_event $(xpath "//pushlog/event/MinInterval")
+	autoconf set diaglog_lease_tv $(xpath "//pushlog/tv/interval")
+	autoconf set diaglog_lease_voip $(xpath "//pushlog/voip/interval")
+	autoconf set diaglog_lease_data $(xpath "//pushlog/data/interval")
+
+	autoconf set ipv6_rand $(xpath "//rand")
+	autoconf set ipv6_force $(xpath "//ipv6/forcev6/@enable")
+	autoconf set ipv6_infra $(xpath "//ipv6/infra")
+	autoconf set ipv6_password $(xpath "//ipv6/ppp-password")
+
+	autoconf set mapt_bmr_prefixv6 $(xpath "//mapt/bmr/prefixv6")
+	autoconf set mapt_bmr_maskv6 $(xpath "//mapt/bmr/maskv6")
+	autoconf set mapt_bmr_prefixv4 $(xpath "//mapt/bmr/prefixv4")
+	autoconf set mapt_bmr_maskv4 $(xpath "//mapt/bmr/maskv4")
+	autoconf set mapt_dmr_prefixv6 $(xpath "//mapt/dmr/prefixv6")
+	autoconf set mapt_dmr_maskv6 $(xpath "//mapt/dmr/maskv6")
+
+	autoconf set mapt_offset $(xpath "//mapt/offset")
+
+	autoconf set ont_slid $(xpath "//slid")
+
+	autoconf set wanservices_infra $(xpath "//infraAccess")
+	autoconf set wanservices_routing $(xpath "//routing")
+
+	nbctl async_run /etc/init.d/ont check_slid
+
+	voice_network=$(xpath "//voice-network/ipv6")
+	[ -z "${voice_network}" ] && voice_network="off"
+	autoconf set voip_ipv6 ${voice_network}
+}
+
+reload() {
+	lock /run/lock/${service}.lock
+
+	autoconf_reload
+
+	if [ -n "$(status get net_autoconf_ifname)" ]; then
+		/etc/init.d/ntp restart
+		/etc/init.d/firewall smtp
+		/etc/init.d/ipv6 reload
+		if [ "$(nvram get mapt_enable)" = "on" ]; then
+			/etc/init.d/mapt reload
+		fi
+		/etc/init.d/miniupnpd restart
+	fi
+
+	lock -u /run/lock/${service}.lock
+}

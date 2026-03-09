@@ -1,0 +1,7 @@
+ipv6 ,
++ipv6
+ipv6cp-use-persistent
+lock
+child-timeout 20
+lcp-echo-failure 3
+lcp-echo-interval 20

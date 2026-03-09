@@ -1,0 +1,85 @@
+Env.Page.Title = Security
+
+Env.Help.Text << EOM
+In the <b>Encryption</b> section, you can choose the encryption system to be used by you wireless network. Setting a encryption system is strongly advised. Furthermore, the encryption system should be chosen depending on your Wifi equipments.
+<br /><br />Depending on the radio mode chosen, some encryption systems might not be available. The <b>11n</b> radio mode only works with <b>WPA2 Personal (PSK)</b>, <b>11b/g/n</b> only with <b>WPA Personal (PSK)</b> and/or <b>WPA2 Personal (PSK)</b> and <b>11b/g</b> works with all the encryption systems.<br/><br/>For security reasons, it is advisable to focus on WPA2.<br/> For compatibility reasons, it is advisable to use a key type TKIP with WPA.
+<br/><br/>In the <b>Wifi Protected Setup (WPS)</b> section, you can enable the WPS service. This service allows to easily connect a compatible Wifi device to your wireless network. This mode is only enabled with WPA or WPA2 encryption.
+<br/><br/>3 WPS pairing methods are possible :
+<ul>
+    <li>WPS button : Use this method if your wireless equipment requires you to press the WPS button on your access point. The Wifi button on your <b > Box </ b> also allows you to start this method.</li>
+    <li>Device PIN Code : Use this method if your wireless device has a PIN code and enter it in the field indicated.</li>
+    <li>Box PIN Code : Use this method if your Wifi equipment requests a PIN code to the access point . A new code is generated each time this method is launched.</li>
+</ul>
+EOM
+
+Env.Text.GenerateKey = Generate a key
+
+Env.Section.wlan_encryption.Title = Wifi 2.4GHz encryption
+Env.Section.wlan_ac_encryption.Title = Wifi 5GHz encryption
+Env.Section.wlan_guest_encryption.Title = Wifi guest encryption
+
+Env.Var.wlan_encryptiontype.Header = System
+Env.Var.wlan_encryptiontype.Value.OPEN = Disabled
+Env.Var.wlan_encryptiontype.Value.WEP = WEP
+Env.Var.wlan_encryptiontype.Value.WPA_PSK = WPA Personal (PSK)
+Env.Var.wlan_encryptiontype.Value.WPA2_PSK = WPA2 Personal (PSK)
+Env.Var.wlan_encryptiontype.Value.WPA_WPA2_PSK = WPA/WPA2 Personal (PSK)
+Env.Var.wlan_encryptiontype.Error.value = Invalid format
+
+Env.Var.wlan_keytype.Header = Key type
+Env.Var.wlan_keytype.Value.ascii = ASCII
+Env.Var.wlan_keytype.Value.hexa = Hexadecimal
+Env.Var.wlan_keytype.Error.value = Invalid format
+
+Env.Var.wlan_wepkey.Header = Key
+Env.Var.wlan_wepkey.Error.ascii = Key must be 5 or 13 characters exactly, and must not contain " ' `.
+Env.Var.wlan_wepkey.Error.hexa = Key must be 10 or 26 characters exactly, and contain only hexadecimal characters.
+
+Env.Var.wlan_wpaenctype.Header = Key type
+Env.Var.wlan_wpaenctype.Value.tkip = TKIP
+Env.Var.wlan_wpaenctype.Value.aes = AES
+Env.Var.wlan_wpaenctype.Value.tkipaes = TKIP et AES
+
+Env.Var.wlan_wpakey.Header = Key
+Env.Var.wlan_wpakey.Error.value = The key length must be between 8 and 63 characters inclusive, and must not contain " ' `.
+
+Env.Form.Error.wpa_aes_incompatibility = Some wireless devices are not compatible with the encryption system 'WPA Personal (PSK)' and the key type 'AES'.
+
+Env.Form.Error.enc_mode_incompatibility = The selected encryption system is not compatible with the radion mode currently in use. Please change the radio mode on the "Settings" page before selecting another encryption sytem.
+
+Env.Section.wps.Title = Wifi Protected Setup (WPS)
+
+Env.Var.wps_status.Header = Service status 
+Env.Var.wps_status.Value.down = Started and waiting ...
+Env.Var.wps_status.Value.wait = Waiting for a device ...
+Env.Var.wps_status.Value.success = Pairing successful
+Env.Var.wps_status.Value.pin_ap_invalid = Wrong PIN code
+Env.Var.wps_status.Value.pin_sta_invalid = Wrong PIN code
+Env.Var.wps_status.Value.timeout = Timeout
+Env.Var.wps_status.Value.processing = Pairing in progress ...
+Env.Var.wps_status.Value.pbc_overlap = Error: multiple unexpected connection attempts
+Env.Var.wps_status.Value.pin_ap_lockdown = Error: multiple connection attempts with invalid PIN code
+Env.Var.wps_status.Value.failure = Pairing failed
+Env.Var.wps_status.Value.error = An error has occurred
+
+Env.Var.wps_mode.Header = WPS activation
+Env.Var.wps_mode.Value.enabled = Enabled
+Env.Var.wps_mode.Value.disabled = Disabled
+
+Env.Text.AboutWPSMethods = Please choose a pairing method and click on "Start".
+
+Env.Var.wps_method.Value.pbc = WPS button
+Env.Text.AboutPBCMethod = Choose this method if your Wifi device asks to press the WPS button.
+
+Env.Var.wps_method.Value.pinsta = Device PIN Code
+Env.Text.AboutPINSTA = Choose this method if your Wifi device has a WPS PIN code, and enter it in the following field
+
+Env.Var.wps_method.Value.pinap = Box PIN Code
+Env.Text.AboutPINAP = Choose this method if your Wifi device asks for the Box PIN code. A new PIN code will be generated after you click on "Start".
+
+Env.Text.AboutWPSwithWep = The WPS service doesn't work with WEP encryption.
+Env.Text.AboutWPSwithOpen = The WPS service is not available when encryption is disabled.
+
+Env.Text.AboutWlanClosed = To use the WPS, please <a href="/wifi/config">broadcast the SSID</a>.
+
+Env.Text.AboutWifiOff = To use the WPS, please enable Wifi.

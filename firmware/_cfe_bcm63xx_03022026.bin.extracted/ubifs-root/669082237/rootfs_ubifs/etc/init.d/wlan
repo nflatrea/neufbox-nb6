@@ -1,0 +1,573 @@
+#!/bin/sh /etc/rc.common
+
+START=53
+
+. /etc/wlan/wlan.sh
+
+
+user_config_fixup() {
+
+    local minor_previous=$(status get version_rescuefirmware | sed -e 's/NB6VAC-MAIN-R4.0.//g' -e 's/NB6VAC-MAIN-R4.0.//g' -e 's/-qa*.//g')
+    local fix_file="/etc/config/dfs_fix"
+    
+    if [ $minor_previous -lt 19 ] && ! [ -e $fix_file ] 2> /dev/null; then
+        info "Forcing dfs to on"
+        nvram set wlan_ac_dfs on
+        nvram commit
+        touch $fix_file
+    fi
+    
+    fix_file="/etc/config/guest_fix"
+    if [ $minor_previous -lt 23 ]  && ! [ -e $fix_file ] 2> /dev/null; then
+        info "Forcing wlan guest crypto"
+        nvram set wlan_guest_enc WPA-WPA2-PSK
+        nvram commit
+        touch $fix_file
+    fi
+    
+    fix_file="/etc/config/private_fix"
+    if [ $minor_previous -eq 13 ]  && ! [ -e $fix_file ] 2> /dev/null; then
+        info "Forcing private wlan crypto"
+        nvram set wlan_wl0_enc WPA-WPA2-PSK
+        nvram set wlan_wl0_ac_enc WPA-WPA2-PSK
+        nvram set wlan_wl0_enctype tkipaes
+        nvram set wlan_wl0_ac_enctype tkipaes
+        nvram commit
+        touch $fix_file
+    fi
+
+    fix_file="/etc/config/ac_fix"
+    if [ $minor_previous -lt 27 ]  && ! [ -e $fix_file ] 2> /dev/null; then
+        info "Forcing "
+	nvram set wlan_ac_dfs on
+	nvram set wlan_ac_mode auto
+        nvram commit
+        touch $fix_file
+    fi
+}
+
+bcm_daemon_reconf(){
+    
+    #reconf eapd
+    if [ $(pidof eapd) ]; then
+        if [ "$1" = "24" ]; then
+            kill -SIGUSR2 $(cat /run/eapd.pid)
+        elif [ "$1" = "5" ]; then
+            kill -35 $(cat /run/eapd.pid)
+        elif [ "$1" = "12" ]; then
+            kill -36 $(cat /run/eapd.pid)
+        fi
+    else
+        service_start eapd
+    fi
+    #reconf nas
+    if [ $(pidof nas) ]; then
+        if [ "$1" = "24" ]; then
+            kill -SIGUSR2 $(cat /run/nas.pid)
+        elif [ "$1" = "5" ]; then
+            kill -35 $(cat /run/nas.pid)
+        elif [ "$1" = "12" ]; then
+            kill -36 $(cat /run/nas.pid)
+        fi
+    else
+        service_start nas
+    fi
+}
+
+wps_status(){
+    if [ "$(nvram get wlan_wl0_wps_mode)" = "enabled" ]; then
+        if [ "$(nvram get wlan_wl0_enc|head -c 3)" = "WPA" ]; then
+            #revoir le nom des status
+            status set wlan_wps_mode enabled
+        else
+            status set wlan_wps_mode disabled
+        fi
+        if [ "$(nvram get wlan_wl0_ac_enc|head -c 3)" = "WPA" ]; then
+            status set wlan_wps_ac_mode enabled
+        else
+            status set wlan_wps_ac_mode disabled
+        fi
+    else
+        status set wlan_wps_mode disabled
+        status set wlan_wps_ac_mode disabled
+    fi
+
+}
+
+bcm_start_wl0(){
+    hinfo "Starting broadcom wlan wl0"
+
+    #CRDDB00017249 war
+
+    # 5ghz is on
+    if wlan_5g_is_on; then
+        wl_configure_common wl0
+        wl_configure_5ghz wl0
+
+        if [ "$(nvram get wlan_macmode)" = "whitelist" ]; then
+            wlan macfiltering wl0 whitelist
+        fi
+    else
+        wl_setdown_bss wl0
+    fi
+    
+    wps_status
+    bcm_daemon_reconf 5
+    
+    echo -n "wl0 isup :"; wlctl -i wl0 isup
+    echo -n "wl0 bss :"; wlctl -i wl0 bss
+#    if [ $(pidof acsd) ]; then
+#        acs_reload_5ghz
+#    else
+        service_start acsd
+#    fi
+
+    if wlan_wps_must_start; then
+        service_start wps_monitor
+    else
+        service_stop wps_monitor
+    fi
+
+    if wlan_5g_is_on; then
+        wl_setup_5ghz wl0
+    fi
+
+    # start hotpspot if enabled
+    __hotspot_start
+
+    #wl_autochannel_24ghz
+    #wl_autochannel_5ghz
+
+    sendarp -s lan0 -d lan0
+}
+
+bcm_start_wl1(){
+     hinfo "Starting broadcom wlan wl1"
+
+    #CRDDB00017249 war
+    wlnv wl1 phy_watchdog wlan_phywatchdog 0
+    #watchdog à 1 améliorerais les performances.
+    #wl wl1 phy_watchdog 1
+
+    # 2.4Ghz is on
+    if wlan_24g_is_on; then
+
+        wl_configure_common wl1
+        wl_configure_24ghz wl1
+
+        if [ "$(nvram get wlan_macmode)" = "whitelist" ]; then
+            wlan macfiltering wl1 whitelist
+        fi
+
+        if wlan_guest_24g_is_on; then
+            wl_configure_guest wl1.2
+        fi
+
+        # configure but keep down
+        wl_setup_hotspot wl1.1
+        wl_setup_eapsim  wl1.3
+    else
+        wl_setdown_bss wl1
+    fi
+    
+    wps_status
+    bcm_daemon_reconf 24
+    bcm_daemon_reconf 12
+
+    echo -n "wl1 isup :"; wlctl -i wl1 isup
+    echo -n "wl1 bss :"; wlctl -i wl1 bss
+    echo -n "wl1.1 bss:"; wlctl -i wl1.1 bss
+    echo -n "wl1.2 bss:"; wlctl -i wl1.2 bss
+    echo -n "wl1.3 bss:"; wlctl -i wl1.3 bss
+    if [ $(pidof acsd) ]; then
+        acs_reload_24ghz
+    else
+        service_start acsd
+    fi
+
+    if wlan_wps_must_start; then
+        service_start wps_monitor
+    else
+        service_stop wps_monitor
+    fi
+
+    if wlan_24g_is_on; then
+        wl_setup_24ghz wl1
+        
+        if wlan_guest_24g_is_on; then
+            wl_setup_guest wl1.2
+        else
+            wl_setdown_bss wl1.2
+        fi
+    fi
+
+    # start hotpspot if enabled
+    __hotspot_start
+
+    #wl_autochannel_24ghz
+    #wl_autochannel_5ghz
+
+    sendarp -s lan0 -d lan0
+}
+
+#---------- BCM ----------#
+bcm_start() {
+
+    hinfo "Starting broadcom wlan"
+
+    #CRDDB00017249 war
+    wlnv wl1 phy_watchdog wlan_phywatchdog 0
+    #watchdog à 1 améliorerais les performances.
+    #wl wl1 phy_watchdog 0
+
+    # 5ghz is on
+    if wlan_5g_is_on; then
+        wl_configure_common wl0
+        wl_configure_5ghz wl0
+
+        if [ "$(nvram get wlan_macmode)" = "whitelist" ]; then
+            wlan macfiltering wl0 whitelist
+        fi
+    else
+        wl_setdown_bss wl0
+    fi
+
+    # 2.4Ghz is on
+    if wlan_24g_is_on; then
+
+        wl_configure_common wl1
+        wl_configure_24ghz wl1
+
+        if [ "$(nvram get wlan_macmode)" = "whitelist" ]; then
+            wlan macfiltering wl1 whitelist
+        fi
+
+        if wlan_guest_24g_is_on; then
+            wl_configure_guest wl1.2
+        fi
+
+        # configure but keep down
+        wl_setup_hotspot wl1.1
+        wl_setup_eapsim  wl1.3
+    else
+        wl_setdown_bss wl1
+    fi
+
+    echo -n "wl0 isup :"; wlctl -i wl0 isup
+    echo -n "wl1 isup :"; wlctl -i wl1 isup
+    echo -n "wl0 bss :"; wlctl -i wl0 bss
+    echo -n "wl1 bss :"; wlctl -i wl1 bss
+    echo -n "wl1.1 bss:"; wlctl -i wl1.1 bss
+    echo -n "wl1.2 bss:"; wlctl -i wl1.2 bss
+    echo -n "wl1.3 bss:"; wlctl -i wl1.3 bss
+
+    wps_status
+    bcm_daemon_reconf 24
+    bcm_daemon_reconf 12
+    bcm_daemon_reconf 5
+    
+    service_start acsd
+    
+    if wlan_wps_must_start; then
+        service_start wps_monitor
+    else
+        service_stop wps_monitor
+    fi
+
+    if wlan_24g_is_on; then
+        wl_setup_24ghz wl1
+        
+        if wlan_guest_24g_is_on; then
+            wl_setup_guest wl1.2
+        else
+            wl_setdown_bss wl1.2
+        fi
+    fi
+
+    if wlan_5g_is_on; then
+        wl_setup_5ghz wl0
+    fi
+
+    # start hotpspot if enabled
+    __hotspot_start
+
+    #wl_autochannel_24ghz
+    #wl_autochannel_5ghz
+
+    sendarp -s lan0 -d lan0
+}
+
+bcm_stop_wl1(){
+    for i in wl1 wl1.1 wl1.2 wl1.3
+    do
+        wl_setdown_bss $i
+    done
+
+    wl wl1 down
+    wl wl1 radio off
+    #flush mac filtering
+    wl wl1 mac none
+
+    wps_stop
+
+    for sv in wps_monitor
+    do
+        service_stop $sv
+    done
+
+    bcm_daemon_reconf 24
+    bcm_daemon_reconf 12
+}
+
+bcm_stop_wl0(){
+    wl_setdown_bss wl0
+
+    wl wl0 down
+    wl wl0 radio off
+    #flush mac filtering
+    wl wl0 mac none
+
+    wps_stop
+
+    for sv in acsd wps_monitor
+    do
+        service_stop $sv
+    done
+
+    bcm_daemon_reconf 5
+    
+}
+
+bcm_stop() {
+    hinfo "Stopping broadcom wlan"
+    iflist="wl0 wl1"
+    for i in $iflist wl1.1 wl1.2 wl1.3
+    do
+        wl_setdown_bss $i
+    done
+
+    for i in $iflist; do
+        wl $i down
+        wl $i radio off
+        #flush mac filtering
+        wl $i mac none
+    done
+
+    wps_stop
+
+    for sv in acsd wps_monitor
+    do
+        service_stop $sv
+    done
+
+    bcm_daemon_reconf 24
+    bcm_daemon_reconf 12
+    bcm_daemon_reconf 5
+}
+
+service_start() {
+    if service_running "$1"; then
+        service_stop "$1"
+    fi
+    debug "$1"
+    sleep 0.2
+    pidof $1 > "/run/$1.pid"
+}
+
+service_stop() {
+    killall -9 "$1"
+}
+
+service_running() {
+    pidof $1 > /dev/null 2>&1
+}
+
+is_active(){
+    [[ "$(nvram get ${1}_active)" = "on" ]]
+}
+
+
+wlan_lock(){
+    lock /run/lock/wlan.lock
+    ledctl wifi blinks
+    [ -x /usr/bin/mcu ] && mcu p0 1 "WiFi Reload"
+}
+
+wlan_unlock(){
+    if [ "$(wlan active)" = "on" ] && (is_active "wlan" || is_active "wlan_ac" || is_active "wlan_guest"); then
+        event notify "wlan-up"
+        [ -x /usr/bin/mcu ] && mcu p0 1 "WiFi Up"
+    else
+        event notify "wlan-down"
+        [ -x /usr/bin/mcu ] && mcu p0 1 "WiFi Down"
+    fi
+
+    lock -u /run/lock/wlan.lock
+}
+
+#---------- commands ----------#
+EXTRA_COMMANDS="wps_pbc hotspot_start hotspot_stop shutdown wps_stop restart_wl0 restart_wl1 wps_reload"
+
+
+acs_stats_enable() {
+    lock /run/lock/cron.lock
+    sed -e '/wlan acs_stats/d' \
+	-e '1a*/5 * * * * /usr/bin/acs_stats' \
+	/run/crontabs/root | crontab -u root -
+    lock -u /run/lock/cron.lock
+}
+
+acs_stats_disable() {
+    lock /run/lock/cron.lock
+    sed -e '/usr/bin/acs_stats/d' \
+	/run/crontabs/root | crontab -u root -
+    lock -u /run/lock/cron.lock
+}
+
+wps_stop(){
+    status set wlan_wps_proc_status down
+    status set wlan_wps_proc_rawstatus 0
+    status set wlan_wps_proc_stamac
+    status set wlan_wps_proc_staname
+    status set wlan_wps_proc_stapin
+    status set wlan_wps_proc_successmode
+    status set wlan_wps_proc_method
+
+    ledctl wps off
+    wlan wps_stop
+}
+
+wps_reload(){
+    service_start wps_monitor
+    wps_stop
+}
+
+hotspot_setssids() {
+    local portal_ssid="$(autoconf get hotspot_portal_mode4_ssid)"
+    local eapsim_ssid="$(autoconf get hotspot_eapsim_mode5_ssid)"
+    #local portal_ifs="$(status get hotspot_portail_ifname)"
+    #local eapsim_ifs="$(status get hotspot_eapsim_ifname)"
+    local portal_ifs=wl1.1
+    local eapsim_ifs=wl1.3
+
+    for i in $portal_ifs; do
+        wlctl -i $i ssid -C $(phy_id $i) "$portal_ssid"
+    done
+    for i in $eapsim_ifs; do
+        wlctl -i $i ssid -C $(phy_id $i) "$eapsim_ssid"
+    done
+}
+
+#deloge style
+__hotspot_start() {
+    local portal_ssid="$(autoconf get hotspot_portal_mode4_ssid)"
+    local eapsim_ssid="$(autoconf get hotspot_eapsim_mode5_ssid)"
+
+    local ssids="$portal_ssid,$eapsim_ssid"
+
+    if wlan_hotspot_24g_is_on; then
+        status set hotspot_ssids "$ssids"
+        hotspot_setssids
+        for i in wl1.1 wl1.3
+        do
+            wlctl -i $i bss up
+            ifconfig $i up
+        done
+    fi
+}
+
+hotspot_start(){
+    lock /run/lock/wlan.lock
+    __hotspot_start
+    lock -u /run/lock/wlan.lock
+}
+
+__hotspot_stop() {
+    for i in wl1.1 wl1.3
+    do
+        ifconfig $i down
+        wlctl -i $i bss down
+        wlctl -i $i ssid  ""
+    done
+}
+
+hotspot_stop(){
+    lock /run/lock/wlan.lock
+    __hotspot_stop
+    lock -u /run/lock/wlan.lock
+}
+
+shutdown() {
+    stop
+}
+wps_pbc(){
+    local ifname=$1
+    if [ -z $1 ]; then
+        ifname="wl0 wl1"
+    fi
+    for i in $ifname; do
+        wps_linux_cmd addenrollee $i pbc
+    done
+}
+
+boot() {
+    user_config_fixup
+
+    if [ "$(nvram get wlan_btnstate)" = "on" ]; then
+        status set wlan_wlan0_interrupter on
+        service_start eapd
+        service_start nas
+        start
+        acs_stats_enable
+        #controller which run again wps_monitor if it is down
+        wrapper -t wps_alive
+    else
+        status set wlan_wlan0_interrupter off
+        stop
+    fi
+
+    return
+}
+
+start() {
+    wlan_lock
+    #bcm_stop
+    if [ -z "$1" ]; then
+        bcm_start
+    else
+        bcm_start_${1}
+    fi
+    acs_stats
+    wlan_unlock
+    return 0
+}
+
+stop() {
+    wlan_lock
+    if [ -z "$1" ]; then
+        bcm_stop
+    else
+        bcm_stop_${1}
+    fi
+    wlan_unlock
+    
+    return 0
+}
+
+restart() {
+    if [ -z "$1" ]; then
+        stop
+        start
+    else
+        stop $1
+        start $1
+    fi
+}
+
+restart_wl0() {
+    restart wl0
+}
+
+restart_wl1(){
+    restart wl1
+}

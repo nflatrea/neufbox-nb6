@@ -1,0 +1,39 @@
+Env.Page.Title = DHCP
+
+Env.Help.Text <<EOM
+La rubrique <b>Serveur DHCP</b>, vous permet d'activer un serveur DHCPv6 afin de distribuer des adresses IPv6 via le mécanisme DHCP selon la RFC3315.
+<br />Vous pouvez activer ce serveur DHCPv6 si vous souhaitez, par exemple, attribuer des IPv6 statiques ou attribuer une plage d'adresse particulière à vos équipements. Lors de l'activation de ce service, il se peut qu'un reboot des postes clients soit nécessaire pour une bonne prise en compte des IPv6 distribuées via DHCP.
+<br /><br />La rubrique <b>Adresses statiques</b>, vous permet d'attribuer des IPv6 statiques à vos équipements. L'utilisation de ce service nécessite l'activation du serveur DHCPv6.
+<br />Attention, certains équipements compatibles IPv6 ne sont pas compatibles avec ce mode de distribution d'adresse. Dans ce cas, si vous souhaitez maintenir sur ceux-ci, une connectivité en IPv6, vous devez garder le SLAAC actif .
+EOM
+
+Env.Section.dhcp_configuration.Title = Serveur DHCP
+
+Env.Form.Error.invalid_ip_range = La plage des adresses IP pour le serveur DHCP est invalide
+
+Env.Var.dhcp_active.Header = Activation
+Env.Var.dhcp_active.Value.on = Activé
+Env.Var.dhcp_active.Value.off = Désactivé
+Env.Var.dhcp_active.Error.value = Format incorrect
+
+Env.Var.dhcp6_subnet_lan.Header = Plage d'adresse
+Env.Var.dhcp6_subnet_lan.Error.value = Format incorrect
+Env.Var.dhcp6_subnet_lan.Error.invalid = Adresse IP incorrecte
+
+Env.Var.dhcp_lease.Header = Bail (en secondes)
+Env.Var.dhcp_lease.Error.value = Format incorrect
+
+Env.Section.dhcp_static.Title = Adresses statiques
+
+Env.Var.dhcp6_static_ipaddr.Header = Adresse IP
+Env.Var.dhcp6_static_ipaddr.Error.value = Format incorrect
+Env.Var.dhcp6_static_ipaddr.Error.invalid = Adresse IP invalide
+Env.Var.dhcp6_static_ipaddr.Error.already_use = Adresse IP déjà utilisée
+Env.Var.dhcp6_static_ipaddr.Error.boxip = Vous ne pouvez pas utiliser l'ip de la Box
+
+Env.Var.dhcp6_static_macaddr.Header = Adresse MAC
+Env.Var.dhcp6_static_macaddr.Error.value = Format incorrect
+Env.Var.dhcp6_static_macaddr.Error.invalid = Adresse MAC invalide
+Env.Var.dhcp6_static_macaddr.Error.already_use = Adresse MAC déjà utilisée
+
+Env.Text.dhcp_off_warning = Attention, la modification de certains paramètres peut entrainer une perte de service de vos équipements connectés en IPv6, cette section est réservée aux utilisateurs expérimentés.

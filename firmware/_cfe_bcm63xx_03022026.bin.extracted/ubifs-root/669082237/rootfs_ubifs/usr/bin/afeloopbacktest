@@ -1,0 +1,119 @@
+#!/usr/bin/awk -f
+
+BEGIN {
+	if (adsl) {
+		PROFILE="ADSL"
+		# defines pattern
+		# 0 - skip
+		tones_active[6] = 0
+		tones_active[32] = 1
+		tones_active[64] = 1
+		tones_active[128] = 1
+		tones_active[256] = 1
+
+		# only active are required
+		tones_base[32] = 6
+		tones_base[64] = 32
+		tones_base[128] = 64
+		tones_base[256] = 128
+
+		pattern_high[32] = 112
+		#pattern_high[64] = 53
+		pattern_high[64] = 54
+		pattern_high[128] = 42
+		pattern_high[256] = 39
+
+		pattern_low[32] = 112
+		#pattern_low[64] = 51
+		pattern_low[64] = 53
+		pattern_low[128] = 40
+		pattern_low[256] = 37
+	} else if (vdsl) {
+		PROFILE="VDSL"
+		# defines pattern
+		# 0 - skip
+		tones_active[6] = 0
+		tones_active[33] = 1
+		tones_active[880] = 1
+		tones_active[1197] = 1
+		tones_active[1981] = 1
+		tones_active[2774] = 1
+		tones_active[4080] = 1
+
+		# only active are required
+		tones_base[33] = 6
+		tones_base[880] = 33
+		tones_base[1197] = 880
+		tones_base[1981] = 1197
+		tones_base[2774] = 1981
+		tones_base[4080] = 2774
+
+		pattern_high[33] = 120
+		pattern_high[880] = 52
+		#pattern_high[1197] = 110
+		pattern_high[1197] = 112
+		pattern_high[1981] = 52
+		#pattern_high[2774] = 119
+		pattern_high[2774] = 120
+		pattern_high[4080] = 60
+
+		pattern_low[33] = 120
+		pattern_low[880] = 50
+		#pattern_low[1197] = 108
+		pattern_low[1197] = 111
+		#pattern_low[1981] = 50
+		pattern_low[1981] = 51
+		#pattern_low[2774] = 117
+		pattern_low[2774] = 119
+		pattern_low[4080] = 58
+	}
+
+	if (debug) {
+		print "PROFILE="PROFILE
+		for (tone in tones_active) {
+			if (tones_active[tone])
+				print "min:"tones_base[tone]", max:"tone", high:"pattern_high[tone]", low:"pattern_low[tone]
+		}
+	}
+}
+
+{
+	if ($1~/^[0-9]+$/) {
+		min=100000
+		for (tone in tones_active) {
+			if (0+tone < 0+min) {
+				if (0+$1 < 0+tone)
+					min = tone
+			}
+		}
+		tone=min
+		if (tones_active[tone])
+			sum[tone] += $2
+	}
+}
+
+END {
+	for (tone in tones_active) {
+		if (tones_active[tone]) {
+			means[tone] = sum[tone] / (tone - tones_base[tone])
+			if (debug)
+				print "means["tone"] = "means[tone]" / "pattern_high[tone]" / "pattern_low[tone]
+		}
+	}
+
+	for (tone in tones_active) {
+		if (tones_active[tone]) {
+			if (0+means[tone] > 0+pattern_high[tone])
+				high=1
+			else if (0+means[tone] > 0+pattern_low[tone])
+				low=1
+		}
+	}
+
+	if (high)
+		print PROFILE"=KO_HIGH" 
+	else if (low)
+		print PROFILE"=KO_LOW"
+	else                       
+		print PROFILE"=OK"
+}

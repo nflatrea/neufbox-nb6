@@ -1,0 +1,47 @@
+#!/bin/sh
+
+usage() {
+	echo "$0 <host> [opt_count(3)] [opt_timeout(3)]"
+	exit 1
+}
+
+is_ipv4() {
+	ipcalc -b $1 >/dev/null 2>&1
+}
+
+is_ipv6() {
+	ip6calc $1 >/dev/null 2>&1
+}
+
+# process option
+[ $# = 0 ] && usage
+
+host=$1
+opt_count=$2
+opt_timeout=$3
+[ -z "${opt_count}" ] && opt_count=3
+[ -z "${opt_timeout}" ] && opt_timeout=3
+has_ipv6=$(ip -6 route|grep -q "default" && echo yes)
+
+# prefer ipv6 over ipv4
+for ip in $(nslookup ${host} | awk '/Name:/ {p=1} /Address/ {if(p) print $3}'); do
+	if test -n "${has_ipv6}" && is_ipv6 ${ip}; then
+		host_ip6addr=${ip}
+		break
+	elif test -z "${host_ip4addr}" && is_ipv4 ${ip}; then
+		host_ip4addr=${ip}
+	fi
+done
+
+if test -n "${host_ip6addr}"; then
+	host_ipaddr=${host_ip6addr}
+elif test -n "${host_ip4addr}"; then
+	host_ipaddr=${host_ip4addr}
+	src_ipaddr=$(status get net_data_ipaddr)
+fi
+if [ -z "${host_ipaddr}" ]; then
+	echo "${host}: ${opt_ipv6:+IPv6} address not found"
+	exit 1
+fi
+
+traceroute ${opt_ipv6} -w ${opt_timeout} ${src_ipaddr:+-s ${src_ipaddr}} -q ${opt_count} ${host_ipaddr}

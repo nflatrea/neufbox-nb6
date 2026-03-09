@@ -1,0 +1,37 @@
+<div class="title">
+	<h1><?cs var:Env.Section.maintenance.Title ?></h1>
+</div>
+
+<div class="content">
+	<table id="system">
+		<tr>
+			<th scope="row"><?cs var:Env.Text.AccessProtect?></th>
+			<td class="<?cs if:Env.user.web.auth != "off" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+				<?cs if:Env.user.web.auth == "passwd" ?>
+				<?cs var:Env.Text.auth_passwd?>
+				<?cs elif:Env.user.web.auth == "button" ?>
+				<?cs var:Env.Text.auth_button?>
+				<?cs elif:Env.user.web.auth == "all" ?>
+				<?cs var:Env.Text.auth_all?>
+				<?cs else?>
+				<?cs var:Env.Text.Desactivated?>
+				<?cs /if ?>
+			</td>
+		</tr>
+<?cs if:Env.status.net.data.access != "ftth" ?>
+		<tr>
+			<th scope="row"><?cs var:Env.Text.ADSLprofil?></th>
+			<td>
+				<?cs if:Env.user.adsl.config == "rescue" ?>
+				<?cs var:Env.Text.Rescue?>
+				<?cs elif:Env.user.adsl.config == "user" ?>
+				<?cs var:Env.Text.Manual?>
+				<?cs else?>
+				<?cs var:Env.Text.Auto?>
+				<?cs /if?>
+			</td>
+		</tr>
+<?cs /if ?>
+	</table>
+
+</div>

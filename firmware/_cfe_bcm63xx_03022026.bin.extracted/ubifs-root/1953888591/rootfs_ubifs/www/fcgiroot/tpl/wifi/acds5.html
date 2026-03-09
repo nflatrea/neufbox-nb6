@@ -1,0 +1,24 @@
+<div class="title">
+        <h1 class="large"><?cs var:Env.Page.Title ?></h1>
+</div>
+
+<div class="content">
+        <div id="plotxy" class="plot_place"></div>
+        <br /><br />
+        <p id="currentchannel"><?cs var:Env.Text.currentChannel?>: <?cs var:Var.wifi_channel_5.Value ?></p>
+
+        <div class="button_submit" id="toggle_diag_div">
+            <button class="btn" id="toggle_diag" type="button"><?cs var:Env.Btn.ShowHideDump.Value ?></button>
+        </div>
+        <div id="diag_dump">
+                <pre id="bss">
+<?cs each:part = Var.acds_5_bss ?><?cs var:part.Value?><?cs /each?>
+                </pre>
+                <pre id="chanim">
+<?cs each:part = Var.acds_5_chanim ?><?cs var:part.Value?><?cs /each?>
+                </pre>
+                <pre id="candidate">
+<?cs each:part = Var.acds_5_candidate ?><?cs var:part.Value?><?cs /each?>
+                </pre>
+        </div>
+</div>

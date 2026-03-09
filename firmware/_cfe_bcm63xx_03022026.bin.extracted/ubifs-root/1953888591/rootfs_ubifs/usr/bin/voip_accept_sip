@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# This script is called by clientSip to create iptables rules to allow traffic incoming traffic
+#
+# usage :
+# voip_sip_accept <4|6> <proxy IP> <proxy port>  <local port> <min RTP port> <max RTP port>
+#
+
+version="$1"
+proxy="$2"
+proxy_port="$3"
+local_port="$4"
+rtp_min="$5"
+rtp_max="$6"
+
+xtables -F SIP_FILTER
+
+if [ "$version" = "6" ]
+then
+	ipt="ip6tables"
+else
+	ipt="iptables"
+fi
+
+$ipt -A SIP_FILTER -s $proxy -j ACCEPT
+
+if [ -n "$rtp_min" ] && [ -n "$rtp_max" ]; then
+	# if not defined, it would allow all UDP traffic
+	$ipt -A SIP_FILTER -p udp -m udp --dport ${rtp_min}:${rtp_max} -j ACCEPT
+else
+	logger -p local0.error "voip: failed to create iptables RTP rule min:${rtp_min} max:${rtp_max})"
+fi
+
+# The following is just for the record. This was the old way.
+# We changed it because it does not work when IPv6 packets are fragmented.
+# Fragments are dropped, so the SIP client never receive INVITEs...
+#for proto in udp tcp; do
+#	$ipt -A SIP_FILTER -s  -p $proto -m $proto --dport $local_port -j ACCEPT
+#done

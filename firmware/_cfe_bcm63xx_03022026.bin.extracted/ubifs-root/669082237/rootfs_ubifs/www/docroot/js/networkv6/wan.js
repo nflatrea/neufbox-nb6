@@ -1,0 +1,1 @@
+$(document).ready(function(){setInterval("sendRequest('/networkv6/wan', updateStatus)",1e3)});function updateStatus(response){var elm=$(response).find("wan");var status=elm.attr("val");var text=elm.attr("text");$("#internet_status_v6").attr("class",status);$("#internet_status_v6").text(text)}

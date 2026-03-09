@@ -1,0 +1,5 @@
+<rsp stat="ok">
+  <p910nd>
+    <status val="<?cs var:Var.PrinterSharingStatus.Value?>" text="<?cs call:varValue_d(Env.Var.PrinterSharingStatus.Value[Var.PrinterSharingStatus.Value], Env.Var.PrinterSharingStatus.Value.down)?>" />
+  </p910nd>
+</rsp>

@@ -1,0 +1,3 @@
+   <ftth status="<?cs var:Env.status.ftth.link ?>" wanfibre="<?cs var:Var.ftth.wanfibre.status.Value ?>"/>
+   
+   

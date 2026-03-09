@@ -1,0 +1,23 @@
+#!/bin/sh
+
+[ "${INTERFACE}" != "data" ] && exit 0
+
+case ${ACTION} in
+	ifup)
+		lock /run/lock/cron.lock
+		sed -e '/ca cron/d' \
+		    -e '1a0 * * * * /etc/init.d/ca cron' \
+		    -e '1a30 * * * * /etc/init.d/ca cron' \
+			/run/crontabs/root | crontab -u root -
+		lock -u /run/lock/cron.lock
+
+		/etc/init.d/ca restart
+		;;
+	ifdown)
+		lock /run/lock/cron.lock
+		sed -e '/ca cron/d' \
+			/run/crontabs/root | crontab -u root -
+		lock -u /run/lock/cron.lock
+		/etc/init.d/ca stop
+		;;
+esac

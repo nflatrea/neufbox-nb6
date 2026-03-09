@@ -1,0 +1,5 @@
+Env.Page.Title = Wifi statistics
+
+Env.Section.wifi_stats.Title = General Wifi statistics
+Env.Section.wifi_stats.wl0.Title = Wifi 5GHz
+Env.Section.wifi_stats.wl1.Title = Wifi 2.4GHz

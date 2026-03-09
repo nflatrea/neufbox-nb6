@@ -1,0 +1,406 @@
+#!/bin/sh /etc/rc.common
+
+START=55
+
+service=hotspot
+logger -t "${service}[$$]" "$action"
+
+[ "$(nvram get net_mode)" = "bridge" ] && local mode="-bridge"
+local topology_conf=/etc/config/topology${mode}.xml
+[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+
+# both
+hotspot_ifname=$(status get hotspot_ifname)
+hotspot_ipaddr="$(roxml -q ${topology_conf} '//interface[@service=hotspot and @config=hotspot]/@ipaddr')"
+eval $(ipcalc -np ${hotspot_ipaddr})
+hotspot_network=${NETWORK}/${PREFIX}
+# portail
+# portail_ifname="$(roxml -q ${topology_conf} '//interface[@service=hotspot and @config=portail]/@ifname')"
+portail_ipaddr="$(roxml -q ${topology_conf} '//interface[@service=hotspot and @config=portail]/@ipaddr')"
+eval $(ipcalc -np ${portail_ipaddr})
+portail_network=${NETWORK}/${PREFIX}
+# eapsim
+eapsim_ifname="$(roxml -q ${topology_conf} '//interface[@service=hotspot and @config=eapsim]/@ifname')"
+eapsim_ipaddr="$(roxml -q ${topology_conf} '//interface[@service=hotspot and @config=eapsim]/@ipaddr')"
+eval $(ipcalc -bnp ${eapsim_ipaddr})
+eapsim_network=${NETWORK}/${PREFIX}
+eapsim_broadcast=${BROADCAST}
+
+tc=tc
+root="1:"
+parent="1:1"
+lan_minor="10"
+lan_class="1:${lan_minor}"
+lan_qdisc="1${lan_minor}:"
+hotspot_minor="30"
+hotspot_class="1:${hotspot_minor}"
+hotspot_qdisc="1${hotspot_minor}:"
+
+xpath() {
+	roxml -q ${autoconf_file} $1
+}
+
+boot() {
+	[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+	local topology_conf=/etc/config/topology${mode}.xml
+	[ -e ${topology_conf} ] || topology_conf=/etc/default/topology${mode}.xml
+	test -z "$(roxml -q ${topology_conf} '//interface[@service=hotspot]/@ifname')" && exit 0
+
+	iptables -N HOTSPOT_FORWARD_AUTH
+	iptables -N HOTSPOT_FORWARD_PUB
+	iptables -N HOTSPOT_INPUT
+
+        iptables -t nat -N HOTSPOT_PAT
+        iptables -t nat -A HOTSPOT_PAT -j ACCEPT
+
+	# classify hotspot traffic
+	xtables -t mangle -N hotspot_QoS
+	xtables -t mangle -A hotspot_QoS -j CLASSIFY --set-class ${hotspot_class}
+	xtables -t mangle -A hotspot_QoS -j ACCEPT
+
+	wrapper -t hotspot -p /run/hotspot-wrapper.pid
+
+	# hotspot network
+	ip route replace unreachable default table hotspot_t
+	local prio=1000
+	ip rule add priority ${prio} from ${hotspot_network} dev ${hotspot_ifname} lookup hotspot_t
+	ip rule add priority ${prio} from ${hotspot_network} dev tun0 lookup hotspot_t
+
+	# EAP-SIM network
+	ip addr add ${eapsim_ipaddr} dev ${eapsim_ifname} broadcast ${eapsim_broadcast} scope link
+	ip route add ${eapsim_network} dev ${eapsim_ifname}
+	ip route add ${eapsim_network} dev ${eapsim_ifname} table hotspot_t
+}
+
+make_conf() {
+	local conf=$1
+
+	local net_data_ipaddr=$(status get net_data_ipaddr)
+
+	echo "pidfile /run/chilli.pid" > ${conf}
+	echo "statedir /var/chilli" >> ${conf}
+	echo "radiusserver1 $(xpath '//URL_proxy_radius')" >> ${conf}
+	echo "radiusserver2 $(xpath '//URL_proxy_radius')" >> ${conf}
+	echo "radiussecret a5jkv323zq" >> ${conf}
+	echo "radiusauthport 1812" >> ${conf}
+	echo "radiusacctport 1813" >> ${conf}
+	echo "net $(status get hotspot_net)" >> ${conf}
+	echo "dhcpif $(status get hotspot_ifname)" >> ${conf}
+	echo "lease $(xpath '//dhcp_lease_time')" >> ${conf}
+	local dns1=$(status get net_data_dns|awk '{print $1}')
+	test -n "${dns1}" && echo "dns1 ${dns1}" >> ${conf}
+	local dns2=$(status get net_data_dns|awk '{print $2}')
+	test -n "${dns2}" && echo "dns2 ${dns2}" >> ${conf}
+	echo "uamallowed $(echo $(xpath '//autrewhitelist/access-list/url')|sed 's/ /,/g')" >> ${conf}
+	echo "uamserver $(xpath '//URL_portail_captif_full')" >> ${conf}
+	echo "uamsecret ecba8461430cbad9e04a377859c1686c" >> ${conf}
+	echo "uamchannel $(xpath '//uam_channel')" >> ${conf}
+	echo "maxeapsim $(xpath '//eapsim/max_users')" >> ${conf}
+	echo "radiuschannel $(xpath '//radius_channel')" >> ${conf}
+	echo "radiusnasid $(nbctl mac 3 hyphens)" >> ${conf}
+	echo "radiusnasip ${net_data_ipaddr}" >> ${conf}
+	echo "radiusidletimeout $(xpath '//idle_timeout')" >> ${conf}
+	echo "radiussessiontimeout $(xpath '//session_timeout')" >> ${conf}
+	echo "radiuslocationid $(xpath '//radius_locationid')${net_data_ipaddr}" >> ${conf}
+	echo "radiuslocationname $(xpath '//radius_locationname')${net_data_ipaddr}" >> ${conf}
+	echo "radiusnasportid $(xpath '//radius_nasportid')" >> ${conf}
+}
+
+start() {
+	[ "$(autoconf get ${service}_enable)" != "true" ] && exit 0
+	[ "$(autoconf get ${service}_status)" != "ok" ] && exit 1
+
+	autoconf_file=/tmp/autoconf/$(autoconf get ${service}_file)
+	test -f ${autoconf_file} || exit 1
+
+	# INPUT: UAM port, bootps
+	iptables -A HOTSPOT_INPUT -p udp -m udp --dport bootps -j ACCEPT
+	iptables -A HOTSPOT_INPUT -s ${portail_network} -p tcp -m tcp --dport 3990 -j ACCEPT
+	iptables -A INPUT -s ${hotspot_network} -m state --state NEW -j HOTSPOT_INPUT
+
+	# install QoS rule
+	xtables -t mangle -A FORWARD -j hotspot_QoS -o ${hotspot_ifname}
+
+	# FORWARD Authenticated devices white list (EAP-SIM + Public Portail)
+	iptables -F HOTSPOT_FORWARD_AUTH
+	n=1
+	for i in $(xpath '//whitelist-auth/access-list/proto'); do
+		local url="$(xpath "//whitelist-auth/access-list[$n]/url")"
+		local port="$(xpath "//whitelist-auth/access-list[$n]/port")"
+		local protos="$(xpath "//whitelist-auth/access-list[$n]/proto"|sed -e 's/both/tcp udp/')"
+
+		for proto in ${protos}; do
+			iptables -A HOTSPOT_FORWARD_AUTH ${url:+-s ${url}} -p ${proto} ${port:+-m ${proto} --dport ${port}} -j ACCEPT
+		done
+		n=$(($n + 1))
+	done
+	iptables -A HOTSPOT_FORWARD_AUTH -p icmp --icmp-type fragmentation-needed -j ACCEPT
+	iptables -A HOTSPOT_FORWARD_AUTH -j REJECT --reject-with icmp-net-prohibited
+	# All EAP-SIM devices are authenticated
+	iptables -A FORWARD -s ${eapsim_network} -m mark --mark 0x2300 -m state --state NEW -j HOTSPOT_FORWARD_AUTH
+
+
+	# FORWARD: Public Portail: accept domain, www, https
+	iptables -A HOTSPOT_FORWARD_PUB ! -s ${portail_network} -j REJECT --reject-with icmp-net-prohibited
+	for dns in $(status get net_data_dns); do
+		iptables -A HOTSPOT_FORWARD_PUB -d ${dns} -p udp -m udp --dport domain -j ACCEPT
+	done
+	iptables -A HOTSPOT_FORWARD_PUB -p tcp -m tcp --dport www -j ACCEPT
+	iptables -A HOTSPOT_FORWARD_PUB -p tcp -m tcp --dport https -j ACCEPT
+	iptables -A FORWARD -s ${hotspot_network} -m state --state NEW -j HOTSPOT_FORWARD_PUB
+
+	# logging
+	iptables -t nat -D POSTROUTING -s ${hotspot_network} -j LOG --log-prefix CHILLI --log-level "emerg"
+	[ "$(autoconf get hotspot_logmode)" = "2" ] && \
+		iptables -t nat -I POSTROUTING -s ${hotspot_network} -j LOG --log-prefix CHILLI --log-level "emerg"
+
+        # Hotspot PAT
+        iptables -t nat -I POSTROUTING -s ${hotspot_network} -j HOTSPOT_PAT
+
+
+	# Bandwidth limit
+	if [ "$(xpath '//qos/@enable')" = "true" ]; then
+		#
+		# Hotspot BW is (/autoconf/hotspot/bw_ratio) % of link rates.
+		# Ftth link rates are supposed Up=250000kbps, Down=500000kbps
+		# Hotspot BW ceils value are Up=400kbps, Down=8000kbps
+		#
+		if [ "$(status get net_data_access)" = "adsl" ]; then
+			local wan_upstream=$(dsl get adsl_rate_up)
+			local wan_downstream=$(dsl get adsl_rate_down)
+		else
+			local wan_upstream=250000
+			local wan_downstream=500000
+		fi
+		
+		# get hotspot ratio
+		local bw_ratio="$(xpath '//bw_ratio')"
+
+		# upstream limit
+		local hotspot_bw_max_upstream=$(( 1200 * ${bw_ratio} / 100 ))
+		local hotspot_bw_upstream=$(( ${wan_upstream} * ${bw_ratio} / 100 ))
+		if [ "${hotspot_bw_upstream}" -gt "${hotspot_bw_max_upstream}" ]; then
+			local hotspot_bw_upstream=${hotspot_bw_max_upstream}
+		fi
+		${tc} qdisc add dev ${hotspot_ifname} handle ffff: ingress
+		${tc} filter add dev ${hotspot_ifname} parent ffff: protocol ip prio 50 \
+			u32 match ip src 0.0.0.0/0 police rate ${hotspot_bw_upstream}kbit burst 10k drop flowid :1
+
+		# downstream limit
+		local hotspot_bw_max_downstream=$(( 24000 * ${bw_ratio} / 100 ))
+		local hotspot_bw_downstream=$(( ${wan_downstream} * ${bw_ratio} / 100 ))
+		if [ "${hotspot_bw_downstream}" -gt "${hotspot_bw_max_downstream}" ]; then
+			local hotspot_bw_downstream=${hotspot_bw_max_downstream}
+		fi
+		if [ "$(nvram get qos_ifblan)" != "on" ]; then
+			${tc} qdisc add dev ${hotspot_ifname} root tbf rate ${hotspot_bw_downstream}kbit burst 50kb latency 10ms
+		else
+			[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+			local topology_conf=/etc/config/topology${mode}.xml
+			[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+			local ifb=$(roxml -q ${topology_conf} '//@type=ifb/@ifname')
+			if [ "${wan_downstream}" -lt "1000" ]; then
+				 local r2q=5
+			elif [ "${wan_downstream}" -gt "100000" ]; then
+				local r2q=100
+			elif [ "${wan_downstream}" -gt "50000" ]; then
+				local r2q=50
+			fi
+
+			# root: default: high QoS -> catch arp, lcp
+			${tc} qdisc add dev ${ifb} root handle ${root} htb ${r2q:+r2q ${r2q}} default ${lan_minor}
+
+			# parent: bandwitdh limit: should be wan_downstream, but add margin
+			local wan_downstream_ceil=$(( ${wan_downstream} + ${hotspot_bw_downstream} ))
+			${tc} class add dev ${ifb} \
+				parent ${root} classid ${parent} \
+				htb rate ${wan_downstream_ceil}kbit ceil ${wan_downstream_ceil}kbit \
+				burst 30k cburst 30k
+			# lan class
+			${tc} class add dev ${ifb} \
+				parent ${parent} classid ${lan_class} \
+				htb prio 0 rate ${wan_downstream}kbit ceil ${wan_downstream_ceil}kbit \
+				burst 30k cburst 30k
+			${tc} qdisc add dev ${ifb} \
+				parent ${lan_class} handle ${lan_qdisc} pfifo limit 64
+			# hotspot class rate: bw / 4 ceil: bw
+			${tc} class add dev ${ifb} \
+				parent ${parent} classid ${hotspot_class} \
+				htb prio 1 rate $(( ${hotspot_bw_downstream} / 4 ))kbit ceil ${hotspot_bw_downstream}kbit
+			${tc} qdisc add dev ${ifb} \
+				parent ${hotspot_class} handle ${hotspot_qdisc} pfifo limit 8
+
+			# redirect hostpot/ lan traffic ot ifb
+			${tc} qdisc add dev ${hotspot_ifname} root handle 1: htb
+			${tc} filter add dev ${hotspot_ifname} \
+				parent 1: protocol ip \
+				u32 match ip dst 0.0.0.0/0 \
+				action mirred egress redirect dev ${ifb}
+
+			local lan_ifname=$(status get lan_ifname)
+			${tc} qdisc add dev ${lan_ifname} root handle 1: htb
+			${tc} filter add dev ${lan_ifname} \
+				parent 1: protocol ip \
+				u32 match mark 0x0000 0xffff \
+				action mirred egress redirect dev ${ifb}
+		fi
+	fi
+
+	# default route to data
+	ip route replace default via $(status get net_data_gateway) table hotspot_t
+
+	/etc/init.d/wlan hotspot_start
+
+	hotspot autoreg_start
+	
+	make_conf /run/chilli.conf
+	exec chilli --conf /run/chilli.conf --fg --debug \
+			--conup /etc/chilli/chilli.conup \
+			--condown /etc/chilli/chilli.condown
+
+}
+
+stop() {
+	/etc/init.d/wlan hotspot_stop
+
+	# unreachable default route
+	ip route replace unreachable default table hotspot_t
+
+	# INPUT filter
+	iptables -D INPUT -s ${hotspot_network} -m state --state NEW -j HOTSPOT_INPUT
+
+	# FORWARD filter
+	iptables -D FORWARD -s ${eapsim_network} -m mark --mark 0x2300 -m state --state NEW -j HOTSPOT_FORWARD_AUTH
+	iptables -D FORWARD -s ${hotspot_network} -m state --state NEW -j HOTSPOT_FORWARD_PUB
+	iptables -F HOTSPOT_FORWARD_PUB
+	iptables -F HOTSPOT_FORWARD_AUTH
+	iptables -F HOTSPOT_INPUT
+	
+	xtables -t mangle -D FORWARD -j hotspot_QoS -o ${hotspot_ifname}
+
+	iptables -t nat -F HOTSPOT_PAT
+        iptables -t nat -A HOTSPOT_PAT -j ACCEPT
+	iptables -t nat -D POSTROUTING -s ${hotspot_network} -j HOTSPOT_PAT
+	iptables -t nat -D POSTROUTING -s ${hotspot_network} -j LOG --log-prefix CHILLI --log-level "emerg"
+
+	# Bandwidth limit
+	local lan_ifname=$(status get lan_ifname)
+	${tc} qdisc del dev ${lan_ifname} root
+	${tc} qdisc del dev ${hotspot_ifname} root
+	${tc} qdisc del dev ${hotspot_ifname} ingress
+	[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+	local topology_conf=/etc/config/topology${mode}.xml
+	[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+	local ifb=$(roxml -q ${topology_conf} '//@type=ifb/@ifname')
+	${tc} qdisc del dev ${ifb} root
+
+	hotspot autoreg_stop
+}
+
+autoconf_validate() {
+	mandatory_list="\
+	    autrewhitelist__access-list__port \
+	    autrewhitelist__access-list__proto \
+	    autrewhitelist__access-list__url \
+	    bw_ratio \
+    	dhcp_lease_time \
+    	eapsim__max_users \
+    	eapsim__radacct_interiminterval \
+    	eapsim__radattr_nasportid \
+    	eapsim__radattr_wispr_locationid \
+    	eapsim__radattr_wispr_locationname \
+    	eapsim__radchan \
+    	eapsim__radhost \
+    	idle_timeout \
+    	lan_ipaddr \
+    	mode_syslog \
+    	radius_channel \
+    	radius_locationid \
+    	radius_locationname \
+    	radius_nasportid \
+    	session_timeout \
+    	ssid__mode4 \
+    	ssid__mode5 \
+    	uam_channel \
+    	URL_conditions \
+    	URL_portail_captif \
+    	URL_portail_captif_full \
+    	URL_proxy_radius \
+    	whitelist-auth__access-list__port \
+	    whitelist-auth__access-list__proto"
+
+	data=$(roxml $1 '/')
+	for pattern in ${mandatory_list}; do
+		if ! echo ${data}|grep -q $pattern; then
+			logger -t "${service}[$$]" "Invalid autoconf: ${pattern} not found"
+			return 1
+		fi
+	done
+
+    exclude_list="\
+        ssid__mode3"
+
+	for pattern in ${exclude_list}; do
+		if echo ${data} |grep -q $pattern; then
+			logger -t "${service}[$$]" "Invalid autoconf: ${pattern} should not be provided"
+		fi
+	done
+
+	return 0
+}
+
+autoconf_reload() {
+	[ "$(autoconf get ${service}_enable)" != "true" ] && return 0
+	[ "$(autoconf get ${service}_status)" != "ok" ] && return 1
+
+	autoconf_file=/tmp/autoconf/$(autoconf get ${service}_file)
+	test -f ${autoconf_file} || return 1
+
+	if ! autoconf_validate ${autoconf_file}; then
+		autoconf default ${service}
+		return 1
+	fi
+
+	# SSIDs: rcc
+	autoconf set hotspot_portal_mode4_ssid "$(xpath '//ssid[@enable=true]/mode4')"
+	autoconf set hotspot_eapsim_mode5_ssid "$(xpath '//ssid[@enable=true]/mode5')"
+	# URL_conditions: WUI
+	autoconf set hotspot_conditions "$(xpath '//URL_conditions')"
+	# log mode: chilli
+	autoconf set hotspot_logmode "$(xpath '//mode_syslog')"
+	# Bandwidth restriction: wrapper
+	autoconf set hotspot_bwrestrict "$(xpath '//bwrestrict/@enable')"
+	autoconf set hotspot_rateup "$(xpath '//bwrestrict/@up')"
+	autoconf set hotspot_ratedown "$(xpath '//bwrestrict/@down')"
+	autoconf set hotspot_bwratio "$(xpath '//bw_ratio')"
+	# EAPSIM Radius: nas
+	autoconf set hotspot_eapsim_radhost "$(xpath '//eapsim/radhost')"
+	autoconf set hotspot_eapsim_radchan "$(xpath '//eapsim/radchan')"
+	autoconf set hotspot_eapsim_interiminterval "$(xpath '//eapsim/radacct_interiminterval')"
+	autoconf set hotspot_eapsim_nasportid "$(xpath '//eapsim/radattr_nasportid')"
+	autoconf set hotspot_eapsim_wisprlocationid "$(xpath '//eapsim/radattr_wispr_locationid')"
+	autoconf set hotspot_eapsim_wisprlocationname "$(xpath '//eapsim/radattr_wispr_locationname')"
+	# pat
+	autoconf set hotspot_pat "$(xpath '//pat/@enable')"
+	# Autoregulation: nbd
+	autoconf set hotspot_maxusers "$(xpath '/chilliconf/max_users')"
+	autoconf set hotspot_eapsim_maxusers "$(xpath '/chilliconf/eapsim/max_users')"
+	autoconf set hotspot_eapsim_autoregu_enable "$(xpath '//eapsim/autoregu/enable')"
+	autoconf set hotspot_eapsim_autoregu_down "$(xpath '//eapsim/autoregu/down')"
+	autoconf set hotspot_eapsim_autoregu_up "$(xpath '//eapsim/autoregu/up')"
+	autoconf set hotspot_eapsim_autoregu_looptime "$(xpath '//eapsim/autoregu/looptime')"
+	autoconf set hotspot_eapsim_autoregu_incstep "$(xpath '//eapsim/autoregu/incstep')"
+	autoconf set hotspot_eapsim_autoregu_hidessid "$(xpath '//eapsim/autoregu/hidessid')"
+}
+
+reload() {
+	lock /run/lock/${service}.lock
+
+	autoconf_reload
+
+	if [ -e /run/hotspot-wrapper.pid ]; then
+		kill -HUP $(cat /run/hotspot-wrapper.pid)
+	fi
+
+	lock -u /run/lock/${service}.lock
+}

@@ -1,0 +1,58 @@
+#!/bin/sh /etc/rc.common
+
+START=25
+
+PID_F='/run/nbd-wrapper.pid'
+local reset=/etc/default/reset.xml
+[ -f /etc/config/reset.xml ] && local reset=/etc/config/reset.xml
+
+reset() {
+	roxml ${reset} "//$1" | sed \
+		-e 's,__,_,g' \
+		-e "s,default_$1_\(.*\),\1," \
+		-e 's,",,g' > /tmp/reset.$1
+}
+
+random_psk() {
+    cat /dev/urandom | tr -dc 'a-zA-Z0-9'| head -c 13
+}
+
+start() {
+	echo -n "[$(cat /proc/productid)][$(cat /etc/efixo_release)]" > /tmp/motd
+	reset status
+	reset user
+	sed -i "s/\(wlan_wl0_ssid=.*_\)XXXX/\1$(sed 's/........//' /proc/mac_address_base)/" /tmp/reset.user
+	sed -i "s/\(wlan_wl0_ac_ssid=.*_\)XXXX/\1$(sed 's/........//' /proc/mac_address_base)_5GHZ/" /tmp/reset.user
+	sed -i "s/\(wlan_guest_ssid=.*_\)XXXX/\1$(sed 's/........//' /proc/mac_address_base)_GUEST/" /tmp/reset.user
+	sed -i "s/\(wlan_guest_wpakey=\)_CHANGEME_/\1$(random_psk)/" /tmp/reset.user
+	echo "wlan_wps_uuid=$(uuidgen)" >> /tmp/reset.user
+	echo "upnpd_uuid=$(uuidgen)" >> /tmp/reset.user
+	echo "ppp_login=$(cat /proc/mac_address_base)@neufpnp" >> /tmp/reset.user
+	echo 'ppp_password=neufpnp' >> /tmp/reset.user
+
+	# system config update found erase the old one
+	if [ -f "/etc/config/system_upgrade.xml" ]; then
+		mv -f /etc/config/system_upgrade.xml /etc/config/system.xml
+	fi
+
+	[ -x /usr/sbin/nbd ] && wrapper -t nbd -p $PID_F -- \
+		nbd -f --pidfile /run/nbd.pid ${debug} \
+			listen=/run/nbd.socket \
+			input=/dev/input/event0 \
+			input=/dev/input/event1
+	
+	# Wait for nbd to become ready
+	while [ ! -e /var/state/nbd ]; do sleep 1; done
+	
+	# Read the secure boot state from the OTP registers
+	status set version_secureboot $(($(iomem 0x10000480 4 | cut -d: -f2) >> 1))
+}
+
+stop() {
+	[ -f $PID_F ] && kill $(cat $PID_F) >/dev/null 2>&1
+	nbctl shutdown
+}
+
+reload() {
+	[ -f $PID_F ] && kill -HUP $(cat $PID_F) >/dev/null 2>&1
+}

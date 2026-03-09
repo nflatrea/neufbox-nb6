@@ -1,0 +1,66 @@
+Env.Page.Title = Etat
+
+Env.Help.Text << EOM
+Dans la rubrique <b>Etat des Services</b>, retrouvez l’état général des services de votre box, soit : l’état de l’accès à internet, de la connectivité en IPv4 et IPv6, du service télévision et téléphonie, du point d’accès Wifi, du partage de fichier et du partage d’imprimante ainsi que le serveur multimédia et le contrôle d’accès.<br />
+Dans la rubrique <b>Information Modem</b>, retrouvez les informations concernant votre box, soit : son adresse MAC, le modèle, la version principale et de secours de son firmware, le temps de service (temps qui s’est écoulé depuis le dernier redémarrage)
+EOM
+
+Env.Section.services_status.Title = Etat des services
+
+Env.Var.internet_status.Header = Internet
+Env.Var.internet_status.Value.up = Internet opérationnel
+Env.Var.internet_status.Value.down = Pas de connexion internet
+
+Env.Var.internet_access.Value.adsl =Connexion ADSL
+Env.Var.internet_access.Value.gprs =Connexion clé 3G
+
+Env.Var.voip_status.Header = Téléphonie
+Env.Var.voip_status.Value.up = Téléphonie active
+Env.Var.voip_status.Value.down = Téléphonie non fonctionnelle
+
+Env.Var.voip_access.Value.adsl =Connexion ADSL
+Env.Var.voip_access.Value.gprs =Connexion clé 3G
+
+Env.Var.tv_status.Header = Télévision
+Env.Var.tv_status.Value.up = Télévision connectée
+Env.Var.tv_status.Value.down = Télévision non connectée
+
+Env.Section.modem_infos.Title = Informations modem
+
+Env.Var.modem_macaddr.Header = Adresse MAC
+
+Env.Var.modem_model.Header = Modèle
+
+Env.Var.modem_mainversion.Header = Version principale
+Env.Var.modem_rescueversion.Header = Version de secours
+
+Env.Var.modem_adslversion.Header = Version driver DSL
+Env.Var.modem_mcuversion.Header = Version firmware MCU
+
+Env.Var.modem_uptime.Header = Temps de service
+
+Env.Section.led_configuration.Title = Etat des voyants
+
+Env.Var.leds_state.Header = Voyants
+Env.Var.leds_state.Value.on =  Voyants allumés
+Env.Var.leds_state.Value.off = Voyants éteints
+
+Env.Section.ipv6_info.Title = Internet IPv6
+Env.Var.net_ipv6_status.up = Opérationnel
+Env.Var.net_ipv6_status.noconnect = Non connecté
+Env.Var.net_ipv6_status.down = Désactivé
+
+Env.Var.Wifi.Header = Wifi
+Env.Var.Samba.Header = Partage de fichier
+Env.Var.p910nd.Header = Partage d’imprimante
+Env.Var.upnpav.Header = Serveur multimédia
+Env.Var.ca.Header = Contrôle d’accès
+
+Env.Var.ca_status.Value.enable = Activé
+Env.Var.ca_status.Value.disabled = Désactivé
+Env.Var.ca_status.Value.disabled_autoconf = Désactivé par le réseau
+Env.Var.ca_status.Value.disabled_user = Désactivé par l'utilisateur
+Env.Var.ca_status.Value.disabled_date = Désactivé. La Box n'arrive pas à se mettre à l'heure
+Env.Var.ca_status.Value.disabled_data = Désactivé (En attente de connexion internet)
+Env.Var.ca_access_page.Value = Accéder à la
+Env.Var.ca_access_page.Value.link = page de configuration

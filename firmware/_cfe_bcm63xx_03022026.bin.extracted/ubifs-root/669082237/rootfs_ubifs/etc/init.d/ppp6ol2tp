@@ -1,0 +1,64 @@
+#!/bin/sh /etc/rc.common
+
+logger -t "ppp6ol2tp[$$]" "$action"
+
+TID=l2tp-IPv6
+
+start() {
+	# start l2tp
+	if [ "$(status get net_data_status)" = "down" ]
+	then
+		logger -t "ppp6ol2tp[$$]" "data down..."
+		exit 1
+	fi
+
+	# started ?
+	test -e /run/xl2tpd.pid && local pid=$(cat /run/xl2tpd.pid)
+	if test -n "${pid}" && kill -0 ${pid}; then
+		logger -t "ppp6ol2tp[$$]" "started"
+		exit 0
+	fi
+
+	# xl2tpd
+	mkdir -p /run/xl2tpd
+	chmod a+rwx /run/xl2tpd
+
+	xl2tpd -c /etc/xl2tpd.conf
+
+	# Disable flowcache IPv6 acceleration, l2tp cause FAP errors/crash
+	fcctl config --ipv6 0
+
+	sleep 2
+
+	if [ "$(status get net_data_infra)" = "adsl/ppp" ]; then
+		local ppp_ipv6_login="ppp/$(status get net_data_ipaddr)@$(nbctl mac 3 strip)"
+	else
+		local ppp_ipv6_login="dhcp/$(status get net_data_ipaddr)@$(nbctl mac -1 strip)"
+	fi
+	status set ppp_ipv6_login ${ppp_ipv6_login}
+	local autoconf_file=/tmp/autoconf/$(autoconf get wanservices_file)
+	local ipv6_lns=$(roxml -q ${autoconf_file} "//ipv6/lns")
+	status set net_ipv6_server ${ipv6_lns}
+
+	# use data
+	ip route add ${ipv6_lns} via $(status get net_data_gateway)
+
+	xl2tpd-control add ${TID} hostname=${ipv6_lns} name=${ppp_ipv6_login} lns=${ipv6_lns}
+#	xl2tpd-control connect ${TID} ${ppp_ipv6_login} ${ppp_ipv6_password}
+}
+
+stop() {
+	status set net_ipv6_server ""
+	xl2tpd-control disconnect ${TID}
+	xl2tpd-control remove ${TID}
+	
+	# Re-enable flowcache IPv6 acceleration
+	fcctl config --ipv6 1
+
+	sleep 2
+
+	# stop xl2tpd
+	test -e /run/xl2tpd.pid && pid=$(cat /run/xl2tpd.pid)
+	test -z ${pid} && return
+	kill ${pid}
+}

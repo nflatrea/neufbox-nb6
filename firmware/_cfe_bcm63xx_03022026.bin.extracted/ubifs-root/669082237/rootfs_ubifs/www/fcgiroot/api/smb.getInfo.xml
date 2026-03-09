@@ -1,0 +1,5 @@
+   <smb active="<?cs var:Env.user.samba.active?>" status="<?cs var:Env.status.samba.status?>" name="<?cs var:Env.user.samba.name?>" workgroup="<?cs var:Env.user.samba.workgroup?>"> 
+       <?cs each:share = smb.shares?>
+       <share name="<?cs var:share.name?>" uuid="<?cs var:share.uuid?>" dir="<?cs var:share.dir?>" online="<?cs var:share.online?>" />
+      <?cs /each?>
+   </smb>

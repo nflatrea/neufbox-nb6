@@ -1,0 +1,55 @@
+#!/bin/sh /etc/rc.common
+
+START=44
+
+EXTRA_COMMANDS="add del"
+
+logger -t "route[$$]" "$action"
+
+do_start_stop() {
+	local cmd=$1
+	local config=/tmp/user-route.xml
+
+	lock /run/lock/user-route.lock
+
+	nvram xml route > ${config}
+
+	n=1
+	for rule in $(roxml -q ${config} '/route/rule/destination')
+	do
+		eval $(roxml -o ${config} "/route/rule[$n]")
+		eval $(ipcalc -np ${destination} ${genmask})
+
+		ip route ${cmd} ${NETWORK}/${PREFIX} via ${gateway} table lan_t
+
+		n=$(($n + 1))
+	done
+
+	rm -f ${config}
+
+	lock -u /run/lock/user-route.lock
+}
+
+start() {
+	do_start_stop add
+}
+
+stop() {
+	do_start_stop del
+}
+
+add() {
+	local destination=$1
+	local netmask=$2
+	local gateway=$3
+	eval $(ipcalc -np ${destination} ${netmask})
+	ip route add ${NETWORK}/${PREFIX} via ${gateway} table lan_t
+}
+
+del() {
+	local destination=$1
+	local netmask=$2
+	local gateway=$3
+	eval $(ipcalc -np ${destination} ${netmask})
+	ip route del ${NETWORK}/${PREFIX} via ${gateway} table lan_t
+}

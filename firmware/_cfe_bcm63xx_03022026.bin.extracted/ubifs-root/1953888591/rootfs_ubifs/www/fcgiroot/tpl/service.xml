@@ -1,0 +1,14 @@
+<rsp stat="ok">
+  <samba>
+    <status val="<?cs var:Env.status.samba.status?>" text="<?cs call:varValue_d(Env.Var.samba_status.Value[Env.status.samba.status], Env.Var.samba_status.Value.down)?>" />
+  </samba>
+  <p910nd>
+    <status val="<?cs var:Env.status.p910nd.status?>" text="<?cs call:varValue_d(Env.Var.p910nd_status.Value[Env.status.p910nd.status], Env.Var.p910nd_status.Value.down)?>" />
+  </p910nd>
+  <upnpav>
+    <status val="<?cs var:Env.status.upnpav.status?>" text="<?cs call:varValue_d(Env.Var.upnpav_status.Value[Env.status.upnpav.status], Env.Var.upnpav_status.Value.down)?>" />
+  </upnpav>
+  <ac>
+    <status val="<?cs var:Env.status.ca.status?>" text="<?cs call:varValue_d(Env.Var.ac_status.Value[Env.status.ca.status], Env.Var.ac_status.Value.disable)?>" />
+  </ac>
+</rsp>

@@ -1,0 +1,37 @@
+<ont type="<?cs var:Env.ont.type ?>" status="<?cs var:Env.status.ont.status ?>" sn="<?cs var:Env.ont.sn ?>" version="<?cs var:Env.ont.version.active ?>">
+        <info name="slid" value="<?cs var:Env.ont.slid ?>" />
+        <info name="ranging" value="<?cs var:Env.ont.ranging ?>" />
+        <info name="uptime" value="<?cs var:Env.ont.uptime ?>" />
+        <info name="receive" value="<?cs var:Env.ont.rssi.receive ?>" />
+        <info name="transmit" value="<?cs var:Env.ont.rssi.transmit ?>" />
+        <info name="bias" value="<?cs var:Env.ont.rssi.bias ?>"  />
+        <info name="temp" value="<?cs var:Env.ont.rssi.temp ?>"  />
+        <info name="vcc" value="<?cs var:Env.ont.rssi.vcc ?>"  />
+        <info name="lanlos" value="<?cs var:Env.ont.status.lanlos ?>" />
+        <info name="lossframe" value="<?cs var:Env.ont.status.lossframe ?>" />
+        <info name="lossgem" value="<?cs var:Env.ont.status.lossgem ?>" />
+        <info name="losssignal" value="<?cs var:Env.ont.status.losssignal ?>" />
+        <info name="errmsg" value="<?cs var:Env.ont.status.errormsg ?>" />
+        <info name="omcc" value="<?cs var:Env.ont.status.omcc ?>" />
+        <info name="deactivate" value="<?cs var:Env.ont.status.deactivate ?>" />
+        <info name="ranged" value="<?cs var:Env.ont.status.ranged ?>" />
+        <info name="phyerror" value="<?cs var:Env.ont.status.phyerror ?>" />
+        <info name="rdi" value="<?cs var:Env.ont.status.rdi ?>" />
+        <info name="failed" value="<?cs var:Env.ont.status.failed ?>"  />
+        <info name="slidattempts" value="<?cs var:Env.status.ont.slidattempts ?>"  />
+        <info name="updatecounter" value="<?cs var:Env.status.ont.counterupdate ?>"  />
+        <info name="versionpassive" value="<?cs var:Env.ont.version.passive ?>"  />
+        <info name="ledseqpt" value="<?cs var:Env.ont.leds.eqpt ?>"  />
+        <info name="ledseqptstate" value="<?cs var:Env.ont.leds.eqptstate ?>"  />
+        <info name="ledspon" value="<?cs var:Env.ont.leds.pon ?>"  />
+        <info name="ledsponstate" value="<?cs var:Env.ont.leds.ponstate ?>"  />
+        <info name="ledsmgnt" value="<?cs var:Env.ont.leds.mgnt ?>"  />
+        <info name="ledsmgntstate" value="<?cs var:Env.ont.leds.mgntstate ?>"  />
+        <info name="ledslan" value="<?cs var:Env.ont.leds.lan ?>"  />
+        <info name="ledslanstate" value="<?cs var:Env.ont.leds.lanstate ?>"  />
+        <info name="ledsalm" value="<?cs var:Env.ont.leds.alm ?>"  />
+        <info name="dlfail" value="<?cs var:Env.ont.status.dlfail ?>"  />
+        <info name="dlidle" value="<?cs var:Env.ont.status.dlidle ?>"  />
+        <info name="dlip" value="<?cs var:Env.ont.status.dlip ?>"  />
+        <info name="dlstart" value="<?cs var:Env.ont.status.dlstart ?>"  />
+</ont>

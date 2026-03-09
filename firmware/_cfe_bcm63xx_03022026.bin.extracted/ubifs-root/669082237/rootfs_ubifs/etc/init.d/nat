@@ -1,0 +1,163 @@
+#!/bin/sh /etc/rc.common
+
+START=33
+
+EXTRA_COMMANDS="user_nat dmz algs"
+
+logger -t "nat[$$]" "$action"
+
+boot() {
+	iptables -t nat -N USER_NAT
+	iptables -t nat -N DMZ
+
+	start
+}
+
+start() {
+	user_nat
+	dmz
+	algs
+}
+
+user_nat() {
+	local config=/tmp/user-nat.xml
+
+	lock /run/lock/user-nat.lock
+
+	iptables -t nat -F USER_NAT
+
+	[ "$(status get net_cgnat_status)" = "up" ] && {
+		lock -u /run/lock/user-nat.lock
+		exit 0
+	}
+
+	nvram xml nat > ${config}
+
+	n=1
+	for rule in $(roxml -q ${config} '//nat/rule/rulename')
+	do
+		eval $(roxml -o ${config} "//nat/rule[$n]")
+		n=$(($n + 1))
+
+		[ "${activated}" != "on" ] && continue
+
+		[ "${proto}" = "both" ] && proto="tcp udp"
+		for proto in ${proto}
+		do
+			local extport=$(echo ${extport}|sed 's,-,:,')
+			iptables -t nat -A USER_NAT -p ${proto} \
+				-m ${proto} --dport ${extport} \
+				-m comment --comment "${rulename}" \
+				-j DNAT --to ${dstip}:${dstport}
+		done
+	done
+
+	rm -f ${config}
+
+	lock -u /run/lock/user-nat.lock
+}
+
+dmz() {
+	lock /run/lock/nat-dmz.lock
+
+	iptables -t nat -F DMZ
+	[ "$(nvram get dmz_active)" != "on" -o \
+	  "$(status get net_cgnat_status)" = "up" ] && {
+		lock -u /run/lock/nat-dmz.lock
+		exit 0
+	}
+
+	local dmz_ipaddr=$(nvram get dmz_ipaddr)
+	[ -z "${dmz_ipaddr}" ] && {
+		logger -t "nat[$$]" "empty DMZ ipaddr"
+		lock -u /run/lock/nat-dmz.lock
+		exit 1
+	}
+	
+	declare -i rule
+	rule=1
+	for p in $(nvram list nat_reserved)
+        do
+        	if [ $rule -eq 1 ]
+        	then
+        		local rulename=$(echo $p|sed 's,.*=\(.*\),\1,')
+        	fi
+        	if [ $rule -eq 2 ]
+        	then
+	                local ports=$(echo $p|sed 's,.*=\(.*\),\1,'|sed 's,-,:,')
+        	fi
+        	if [ $rule -eq 3 ]
+        	then
+                	local protos=$(echo $p|sed 's,.*=\(.*\),\1,')
+        		rule=1
+        	
+	                [ "${protos}" = "both" ] && protos="tcp udp"
+	                for proto in ${protos}
+	                do
+		                iptables -t nat -A DMZ -p "${proto}" -m "${proto}" --dport "${ports}" -m comment --comment "${rulename}" -j RETURN
+	                done
+        	else
+        		rule=$(( $rule + 1 ))
+        	fi
+        done
+
+	iptables -t nat -A DMZ -j DNAT --to ${dmz_ipaddr}
+
+	lock -u /run/lock/nat-dmz.lock
+}
+
+unload_module_and_deps() {
+	local module="$1"
+	local dependencies="$(lsmod | awk '/^\<'$module'\>/ {gsub(","," ",$4); print $4}')"
+
+	for dep in $dependencies
+	do
+		unload_module_and_deps "$dep"
+	done
+
+	rmmod $module &>/dev/null
+}
+
+extract_alg_app_from_nat_kmod() {
+	local kmod="$1"
+	echo $kmod | sed -n 's,^nat_,,p'
+}
+
+get_nat_alg_kmod_list() {
+	# The ipt nathelper lists nat kernel modules in correct order (important in the way insmod works)
+	local nat_kmod_list="$(sed 's,^nf_,,' $(find /etc/modules.d -name "*-ipt-nathelper"))"
+	local output=""
+
+	local app
+	for nat_kmod in $nat_kmod_list
+	do
+		app="$(extract_alg_app_from_nat_kmod $nat_kmod)"
+		# ignore modules that are not alg
+		nvram get nat_alg_$app &>/dev/null || continue
+		output="$output $nat_kmod"
+	done
+	echo "$output"
+}
+
+algs() {
+	lock /run/lock/nat-algs.lock
+
+	local nat_alg_kmod_list="$(get_nat_alg_kmod_list)"
+	local cgnat_actual_status="$(status get net_cgnat_status)"
+
+	local app
+	for nat_alg_kmod in $nat_alg_kmod_list
+	do
+		app="$(extract_alg_app_from_nat_kmod $nat_alg_kmod)"
+		[ -z "$app" ] && continue
+
+		if [ "$cgnat_actual_status" = "up" -o "$(nvram get nat_alg_$app 2>/dev/null)" != "on" ]
+		then
+			unload_module_and_deps nf_$nat_alg_kmod 2>&1 > /dev/null
+		else
+			insmod nf_$nat_alg_kmod 2>&1 > /dev/null
+		fi
+	done
+
+	lock -u /run/lock/nat-algs.lock
+}

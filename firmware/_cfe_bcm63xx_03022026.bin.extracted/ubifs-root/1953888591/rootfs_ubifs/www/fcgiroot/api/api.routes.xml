@@ -1,0 +1,3 @@
+<?cs each:item = Var.routes ?>
+<api route="<?cs var:item.name.Value ?>" type="<?cs each:subitem = item.type ?><?cs var:subitem.Value ?><?cs if:!last(subitem) ?>|<?cs /if ?><?cs /each ?>" credential="<?cs each:subitem = item.credential ?><?cs var:subitem.Value ?><?cs if:!last(subitem) ?>|<?cs /if ?><?cs /each ?>" />
+<?cs /each ?>

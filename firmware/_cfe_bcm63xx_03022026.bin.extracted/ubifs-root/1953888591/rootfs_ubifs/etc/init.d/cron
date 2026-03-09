@@ -1,0 +1,17 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+START=20
+
+start () {
+	loglevel=9
+	mkdir -p /var/spool/cron /run/crontabs
+	if ! test -e /run/crontabs/root; then
+		echo "# Min Hrs Days Mons Dow Command" > /run/crontabs/root
+	fi
+	ln -s /run/crontabs /var/spool/cron/ 2>/dev/null
+	crond -c /run/crontabs -l ${loglevel:-5}
+}
+
+stop() {
+	killall -9 crond
+}

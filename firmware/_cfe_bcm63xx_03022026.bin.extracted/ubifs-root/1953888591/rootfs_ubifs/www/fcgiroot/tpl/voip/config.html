@@ -1,0 +1,247 @@
+<?cs def:date(weekday, monthday, month, year, hour) ?>
+  <?cs var:Env.Text.Weekday[weekday]?> <?cs var:monthday?> <?cs var:Env.Text.Month[month]?> <?cs var:year?> <?cs var:Env.Text.to?> <?cs var:hour?>
+<?cs /def ?>
+
+<?cs def:time(length, direction)?>
+  <?cs if:#length == -1?>
+    <?cs if:direction == "outgoing"?>
+      <b><?cs var:Env.Text.NoResponseCall?></b>
+    <?cs else?>
+      <b><?cs var:Env.Text.MissedCall?></b>
+    <?cs /if?>
+  <?cs else?>
+    <?cs if:#length / 60 > 0?>
+      <?cs set:lengthApprox = (#length + #59) / 60?>
+      ~ <?cs var:lengthApprox?> <?cs var:Env.Text.minute?><?cs if:lengthApprox > 1?>s<?cs /if?>
+    <?cs else?>
+      &lt; 1 <?cs var:Env.Text.minute?>
+    <?cs /if?>
+
+  <?cs /if?>
+<?cs /def?>
+
+<?cs if:?Env.status.voip.errnum && Env.status.voip.errnum != #0 && Env.status.voip.errnum != #101?>
+<div class="alert alert-warning">
+	<?cs var:Env.Var.voip_err.Value.generic ?>
+</div>
+<?cs /if?>
+
+<?cs if:?Env.user.eco.led.active && Env.user.eco.led.active == "off" ?>
+<div class="alert alert-warning"><?cs var:Env.Var.warning_led ?></div>
+<?cs /if ?>
+
+<div class="title">
+	<h1><?cs var:Env.Section.voip_history.Title ?></h1>
+</div>
+
+<div class="content">
+
+	<form method="post" action="<?cs var:Env.Page.Name ?>" id="form_conf_history">
+	
+	<input type="hidden" name="action" value="conf" />
+	
+	<table id="table_callhistoryconf">
+		<tr>
+			<th scope="row"><?cs call:varHeader("callhistory_active")?></th>
+			<td>
+                            <?cs call:div_onoff("callhistory_active", Env.user.voip.callhistory  == "on") ?>
+			</td>
+		</tr>
+	</table>
+        <button class="btn" type="submit" name="submit_button"><?cs var:Button.Submit ?></button>
+	
+	</form>
+	
+	<table id="call_history_list"<?cs if:Env.user.voip.callhistory == "off" ?> style="display: none;"<?cs /if?>>
+		<thead>
+			<tr>
+				<th scope="col"><?cs call:varHeader("voip_call_direction") ?></th>
+				<th scope="col"><?cs call:varHeader("voip_call_type") ?></th>
+				<th scope="col"><?cs call:varHeader("voip_call_number") ?></th>
+				<th scope="col"><?cs call:varHeader("voip_call_length") ?></th>
+				<th scope="col"><?cs call:varHeader("voip_call_date") ?></th>
+			</tr>
+		</thead>
+		<tbody>
+			<?cs if:subcount(Var.call_list) > 0?>
+			<?cs each:call = Var.call_list ?>
+                        <?cs if:call.display.Value == "visible" ?>
+                        <?cs set:displayedcallhistory = 1 ?>
+			<tr>
+				<td>
+					<?cs if:call.direction.Value == "incoming" ?>
+					<?cs if:call.length.Value == -1 || call.length.Value == 0?>
+					<img src="/img/icon_call_missed.png?v=3.4"
+					     alt="<?cs var:Env.Var.voip_call_direction.Value.missedIncoming?>"
+					     title="<?cs var:Env.Var.voip_call_direction.Value.missedIncoming?>" />
+					<?cs else?>
+					<img src="/img/icon_call_incoming.png?v=3.4"
+					     alt="<?cs var:Env.Var.voip_call_direction.Value.incoming?>"
+					     title="<?cs var:Env.Var.voip_call_direction.Value.incoming?>" />
+					<?cs /if?>
+					<?cs else?>
+					<img src="/img/icon_call_outgoing.png?v=3.4"
+					     alt="<?cs var:Env.Var.voip_call_direction.Value.outgoing?>"
+					     title="<?cs var:Env.Var.voip_call_direction.Value.outgoing?>" />
+					<?cs /if?>
+				</td>
+				<td>
+					<?cs if:call.type.Value == "pstn" ?>
+					<?cs var:Env.Var.voip_call_type.Value.pstn?>
+					<?cs elif:call.type.Value == "radio"?>
+					<?cs var:Env.Var.voip_call_type.Value.radio?>
+					<?cs else?>
+					<?cs var:Env.Var.voip_call_type.Value.voip?>
+					<?cs /if?>
+				</td>
+				<td>
+					<?cs if:call.number.Value == ""?><i><?cs var:Env.Text.UnknownNumber?></i><?cs else?><?cs var:call.number.Value?><?cs /if?>
+				</td>
+				<td>
+					<?cs call:time(call.length.Value, call.direction.Value)?>
+				</td>
+				<td>
+					<?cs call:date(call.date.weekday.Value, call.date.monthday.Value, call.date.month.Value, call.date.year.Value, call.date.hour.Value)?>
+				</td>
+			</tr>
+                        <?cs /if ?>
+			<?cs /each?>
+                        <?cs /if ?>
+			<?cs if:!(?displayedcallhistory) ?>
+			<tr>
+				<td colspan="5" align="center">
+					<?cs var:Env.Text.NoInputInCallHistory?>
+				</td>
+			</tr>
+			<?cs /if?>
+		</tbody>
+	</table>
+
+	<?cs if:subcount(Var.call_list) > 0?>
+	<form method="post" action="<?cs var:Env.Page.Name ?>" id="form_cleanup_history"<?cs if:Env.user.voip.callhistory  == "off" ?> style="display: none;"<?cs /if?>>
+	<input type="hidden" name="action" value="cleanup" />
+	<button class="btn" type="submit" name="submit_button"><?cs var:Button.CleanupHistory ?></button>
+	</form>
+	<?cs /if?>
+</div>
+
+
+<div class="title">
+	<h1><?cs var:Env.Section.voip_led_notification.Title ?></h1>
+</div>
+
+<div class="content">
+	<?cs if:Var.leds_state.Value == "off" && Env.user.voip.usermissedcall == "on"?>
+	<div class="alert alert-warning">
+		<?cs var:Env.Text.WarningLedOff?>
+	</div>
+	<?cs /if?>
+	
+	<form method="post" action="<?cs var:Env.Page.Name ?>" id="form_conf_led_notification">
+	
+	<input type="hidden" name="action" value="led_notification" />
+	
+	<table id="table_led_notification_conf">
+		<tr>
+			<th scope="row"><?cs call:varHeader("led_notification_active")?></th>
+			<td>
+                            <?cs call:div_onoff("led_notification_active", Env.user.voip.usermissedcall == "on") ?>
+			</td>
+		</tr>
+	</table>
+	<button class="btn" type="submit" name="submit_button"><?cs var:Button.Submit ?></button>
+	</form>
+</div>
+
+<?cs if:?Env.autoconf.voip.sig && Env.autoconf.voip.sig=="sip" ?>
+<div class="title" id="voip_blacklist">
+	<h1><?cs var:Env.Section.voip_blacklist.Title ?></h1>
+</div>
+<div class="content">
+	<form method="post" action="<?cs var:Env.Page.Name ?>#voip_blacklist" id="form_voip_blacklist">
+            <input type="hidden" name="action" value="blacklist_active" />
+            <table>
+                    <tr>
+                            <th scope="row"><?cs call:varHeader("voip_blacklist_active")?></th>
+                            <td>
+                                    <?cs call:div_onoff("blacklist_active", Env.user.voip.blacklist.active  == "on") ?>
+                            </td>
+                    </tr>
+            </table>
+            <button class="btn" type="submit" name="submit_button"><?cs var:Button.Submit ?></button>
+	</form>
+        
+        <form method="post" action="<?cs var:Env.Page.Name ?>#voip_blacklist">
+        <input type="hidden" name="action" value="blacklist_ndi" />
+	<table id="blacklist"<?cs if:Env.user.voip.blacklist.active == "off" ?> style="display: none;"<?cs /if?>>
+		<thead>
+			<tr>
+				<th scope="col">#</th>
+				<th scope="col"><?cs call:varHeader("voip_call_number") ?></th>
+				<th scope="col"><?cs call:varHeader("voip_blacklist_count") ?></th>
+                                <th scope="col" class="col_action"></th>
+			</tr>
+		</thead>
+		<tbody>
+                        <?cs set:cpt=0 ?>
+                        <?cs each:item = Env.user.voip.blacklist.ndis.entry ?>
+                        <?cs set:cpt=#cpt+1 ?>
+                        <tr>
+                            <td><?cs var:cpt ?></td>
+                            <td><?cs var:item.ndi ?></td>
+                            <td><?cs var:Env.status.voip.blacklist.ndis.1[item.ndi] ?></td>
+                            <td class="col_action">
+                                 <button class="btn" type="submit" name="blacklist_ndi_remove.<?cs name:item ?>"><i class="icon-minus-sign icon-white"></i></button>
+                            </td>     
+                        </tr>
+                        <?cs /each ?>
+                        <?cs set:cpt=#cpt+1 ?>
+                        <?cs if:cpt <= Var.blacklist_max_entry.Value ?>
+                        <tr>
+                            <td><?cs var:cpt ?></td>
+                            <td>
+                                <div class="control-group <?cs if:?Var.blacklist_ndi.Error?>error<?cs /if ?>">
+                                    <input type="text" name="blacklist_ndi" maxlength="14" class="input-medium <?cs if:?Var.blacklist_ndi.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs var:html_escape(Query.blacklist_ndi)?>" />
+
+                                    <?cs if:?Var.blacklist_ndi.Error ?>
+                                    <div class="help-inline">
+                                            <?cs var:Env.Var.voip_blacklist.Error[Var.blacklist_ndi.Error] ?>
+                                    </div>
+                                    <?cs /if ?>
+                                </div>
+                                
+                            </td>
+                            <td> 0 </td>
+                            <td class="col_action">
+                                <button class="btn" type="submit" name="blacklist_ndi_add"><i class="icon-plus-sign icon-white"></i></button>
+                            </td>     
+                        </tr>
+                        <?cs /if ?>
+		</tbody>
+	</table>
+        </form>
+</div>
+<?cs /if ?>
+
+<?cs set:Env.Help.Text = Env.Help.Text + Env.Help.Text.tone ?>
+
+<div class="title">
+	<h1><?cs var:Env.Section.voip_tone.Title ?></h1>
+</div>
+<div class="content">
+        <form method="post" action="<?cs var:Env.Page.Name ?>" id="form_conf_led_notification">
+                <input type="hidden" name="action" value="tone" />
+                <table id="table_led_notification_conf">
+                        <tr>
+                                <th scope="row"><?cs call:varHeader("voip_choose_tone")?></th>
+                                <td>
+                                        <select name="voip_tone">
+                                                <option value="on" <?cs if:Env.user.voip.threetone =="on" ?>selected="selected"<?cs /if ?>><?cs var:Env.Var.voip_tone.Value.threetone ?></option>
+                                                <option value="off" <?cs if:Env.user.voip.threetone =="off" ?>selected="selected"<?cs /if ?>><?cs var:Env.Var.voip_tone.Value.default ?></option>
+                                        </select>
+                                </td>
+                        </tr>
+                </table>
+                <button class="btn" type="submit" name="submit_button"><?cs var:Button.Submit ?></button>
+        </form>
+</div>

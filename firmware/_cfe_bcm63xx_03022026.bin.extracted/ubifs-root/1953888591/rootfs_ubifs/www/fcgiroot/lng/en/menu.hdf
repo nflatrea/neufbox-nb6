@@ -1,0 +1,51 @@
+Env.Menu.state.Label                     = Status
+Env.Menu.state.SubMenu.wan.Label         = Internet
+Env.Menu.state.SubMenu.lan.Label         = Local network
+Env.Menu.state.SubMenu.device.Label      = Devices
+
+Env.Menu.fiber.Label                   = Fiber
+Env.Menu.fiber.SubMenu.config.Label    = Configuration
+
+Env.Menu.network.Label                   = Network v4
+Env.Menu.network.SubMenu.wan.Label       = WAN
+Env.Menu.network.SubMenu.ddns.Label      = DynDNS
+Env.Menu.network.SubMenu.dns.Label       = DNS
+Env.Menu.network.SubMenu.dhcp.Label      = DHCP
+Env.Menu.network.SubMenu.nat.Label       = NAT
+Env.Menu.network.SubMenu.route.Label     = Route
+Env.Menu.network.SubMenu.firewall.Label  = Filtering
+
+Env.Menu.networkv6.Label                   = Network v6
+Env.Menu.networkv6.SubMenu.wan.Label       = WAN
+Env.Menu.networkv6.SubMenu.firewall.Label  = Firewall
+Env.Menu.networkv6.SubMenu.dhcp.Label      = DHCP
+Env.Menu.networkv6.SubMenu.slaac.Label      = SLAAC
+Env.Menu.networkv6.SubMenu.dns.Label       = DNS
+
+Env.Menu.wifi.Label                      = Wifi
+Env.Menu.wifi.SubMenu.config.Label       = Configuration
+Env.Menu.wifi.SubMenu.security.Label     = Security
+Env.Menu.wifi.SubMenu.macfiltering.Label = MAC filtering
+Env.Menu.wifi.SubMenu.hotspot.Label = Hotspot
+Env.Menu.wifi.SubMenu.wifisched.Label = Wifi Schedule
+
+Env.Menu.voip.Label                       = Telephony
+Env.Menu.voip.SubMenu.config.Label        = Settings
+
+Env.Menu.service.Label                   = Applications
+Env.Menu.service.SubMenu.samba.Label     = File sharing
+Env.Menu.service.SubMenu.printer.Label   = Printer sharing
+Env.Menu.service.SubMenu.upnpav.Label    = Multimedia server
+Env.Menu.service.SubMenu.accesscontrol.Label    = Access control
+
+Env.Menu.maintenance.Label               = Maintenance
+Env.Menu.maintenance.SubMenu.system.Label = System
+Env.Menu.maintenance.SubMenu.admin.Label = Management
+Env.Menu.maintenance.SubMenu.dsl.Label   = xDSL line
+Env.Menu.maintenance.SubMenu.diag.Label  = Diagnosis
+Env.Menu.maintenance.SubMenu.tests.Label = Tests
+Env.Menu.maintenance.SubMenu.loop.Label = Loop detection
+
+Env.Menu.eco.Label                       = Eco
+Env.Menu.eco.SubMenu.config.Label = Configuration
+

@@ -1,0 +1,11 @@
+<?cs if:Env.status.net.status != "up"?>
+    <?cs set:Env.status.ddns.status = "waiting_wan"?>
+<?cs /if?>
+
+<rsp stat="ok">
+  <ddns>
+    <status val="<?cs var:Env.status.ddns.status?>" text="<?cs call:varValue_d(Env.Var.ddns_status.Value[Env.status.ddns.status], Env.Var.ddns_status.Value.down)?>" />
+    <active val="<?cs var:Env.user.ddns.active?>" text="<?cs call:varValue_d(Env.Var.ddns_active.Value[Env.user.ddns.active], Env.Var.ddns_active.Value.off)?>" />
+    <lastupdateip val="<?cs var:Env.status.ddns.lastupdateip?>" />
+  </ddns>
+</rsp>

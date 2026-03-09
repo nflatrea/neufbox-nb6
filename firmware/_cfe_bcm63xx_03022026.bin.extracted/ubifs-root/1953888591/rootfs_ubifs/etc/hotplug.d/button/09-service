@@ -1,0 +1,10 @@
+#!/bin/sh
+
+[ "${BUTTON}" != "wps" ] && exit 0
+[ "${ACTION}" != "held" ] && exit 0
+
+[ "$(nvram get web_auth)" = "passwd" ] && exit 0
+
+status set web_autologin "on"
+
+nbctl start_webautologin

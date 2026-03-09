@@ -1,0 +1,2 @@
+   <auth token="<?cs var:auth.token ?>" method="<?cs var:auth.method?>" />
+   

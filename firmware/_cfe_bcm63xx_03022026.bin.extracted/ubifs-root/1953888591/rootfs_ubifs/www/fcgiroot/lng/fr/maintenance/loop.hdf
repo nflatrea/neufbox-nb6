@@ -1,0 +1,16 @@
+Env.Page.Title = Détection de boucle
+
+Env.Help.Text = Dans la rubrique
+Env.Section.loop.Title = Détection de boucle
+
+Env.Var.lan_port1.Header = Port 1
+Env.Var.lan_port2.Header = Port 2
+Env.Var.lan_port3.Header = Port 3
+Env.Var.lan_port4.Header = Port 4
+
+Env.Var.port_status.up = Connecté
+Env.Var.port_status.down = Non connecté
+Env.Var.port_status.loop = En boucle
+
+Env.Var.button.reboot_port = Redémarrer tous les ports
+Env.Var.reboot_inprocess =  Redémarrage en cours

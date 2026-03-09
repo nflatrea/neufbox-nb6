@@ -1,0 +1,11 @@
+Env.Page.Title = WAN
+
+Env.Help.Text = Configure Internet IPv6 allows you to enable or disable the IPv6 service. Be carful, disable this service will result in the loss of all of your equipment connectivity in IPv6.
+
+Env.Section.ipv6.Title = IPV6 Settings
+Env.Var.status_service.Value = Service status
+
+Env.Var.mode_ipv6.Value = Internet IPv6
+Env.Var.net_ipv6_status.up = Operational
+Env.Var.net_ipv6_status.noconnect = Disconnected
+Env.Var.net_ipv6_status.down = Disabled

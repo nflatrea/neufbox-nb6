@@ -1,0 +1,27 @@
+Env.Page.Title = Setting
+
+Env.Help.Text = In this section, you can define the configuration of your Box Eco mode. Adjust the brightness of the LEDs on the front panel or disable services. <br /> For each Ethernet ports, you can enable <b>EEE 802.3az</b> that automatically adjust their consumption according to your usage. To be effective, this feature requires that your equipment is also compatible with this standard.
+
+Env.Section.configuration.Title = ECO mode setting
+
+Env.Var.warning_led = Warning! The extinction of lights in ECO mode will cause the lack of notification of missed call.
+Env.Var.warning_stb.part1 = One or more Set top boxes SFR decoders were detected on the port(s)
+Env.Var.warning_stb.part2 = of your Box, the speed rate of these ports has been limited to a minimum of 100Mbps.
+
+Env.Var.disabled.Value = Disabled
+
+Env.Var.telephone.Header = Phone
+Env.Var.cpl.Header = PLC
+Env.Var.powersw.Header = Power Save Wifi
+Env.Var.port_usb.Header = USB Port
+Env.Var.ethernet_pc_tv.Header = Ethernet PC/TV
+Env.Var.brightness.Header = Brightness of LEDs
+
+Env.Var.mbps.Value = Mbps
+
+Env.Var.off.Value = Off
+Env.Var.low.Value = Low
+Env.Var.medium.Value = Medium
+Env.Var.high.Value = High
+
+Env.Var.ecolantv.Value = The Ethernet ports at 10Mpbs may cause a degradation of the TV reception.

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+[ "${INTERFACE}" != "data" ] && exit 0
+
+case ${ACTION} in
+	ifup)
+	        /etc/init.d/packages reload
+		;;
+	ifdown)
+		;;
+esac

@@ -1,0 +1,39 @@
+Env.Page.Title = DHCP
+
+Env.Help.Text <<EOM
+In the <b>DHCPv6 server</b> section, you can activate a DHCPv6 server to assign IPv6 addresses through the DHCP mechanism following RFC3315.
+<br/>You can activate the DHCPv6 server for example to assign static IPv6 addresses or assign a particular range to your devices. Rebooting the clients might be necessary for the IPv6 attribution through the DHCP to be taken in account.
+<br /><br />In the <b>static addresses</b> section, you can configure static Ipv6 addresses to your equipments.The use of this service requires the activation of DHCPv6 server. 
+<br/>Note that some IPv6 compatible devices are not compatible with this kind of address distribution. In that case, if you want to maintain IPv6 connectivity on these devices, SLAAC must stay activated.
+EOM
+
+Env.Section.dhcp_configuration.Title = DHCP server
+
+Env.Form.Error.invalid_ip_range = The ip address range for the dhcp server is invalid
+
+Env.Var.dhcp_active.Header = DHCP server
+Env.Var.dhcp_active.Value.on = Enabled
+Env.Var.dhcp_active.Value.off = Disabled
+Env.Var.dhcp_active.Error.value = Invalid format
+
+Env.Var.dhcp6_subnet_lan.Header = Range address
+Env.Var.dhcp6_subnet_lan.Error.value = Invalid format
+Env.Var.dhcp6_subnet_lan.Error.invalid = Invalid IP address
+
+Env.Var.dhcp_lease.Header = Lease (in seconds)
+Env.Var.dhcp_lease.Error.value = Invalid format
+
+Env.Section.dhcp_static.Title = Static addresses
+
+Env.Var.dhcp6_static_ipaddr.Header = IP address
+Env.Var.dhcp6_static_ipaddr.Error.value = Invalid format
+Env.Var.dhcp6_static_ipaddr.Error.invalid = Invalid IP address
+Env.Var.dhcp6_static_ipaddr.Error.already_use = IP address already in use
+Env.Var.dhcp6_static_ipaddr.Error.boxip = You cannot use the ip of the Box
+
+Env.Var.dhcp6_static_macaddr.Header = MAC address
+Env.Var.dhcp6_static_macaddr.Error.value = Invalid format
+Env.Var.dhcp6_static_macaddr.Error.invalid = Invalid MAC address
+Env.Var.dhcp6_static_macaddr.Error.already_use = MAC address already in use
+
+Env.Text.dhcp_off_warning = Warning: if you change some settings, you may cause a loss of service of your IPV6-connected devices; this section is for expert users.

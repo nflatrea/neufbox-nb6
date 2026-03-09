@@ -1,0 +1,101 @@
+Env.Page.Pretitle = Box -&nbsp; 
+Env.Page.Index.Title = Accueil
+Env.Help.Title = Aide
+Env.Text.Notice = Message d'avertissement
+
+Env.Form.Error.unknown = Une erreur s'est produite !
+Env.Form.Error.system = Une erreur système s'est produite !
+Env.Form.Success.default = Données enregistrées
+
+Env.Var.Sys.FirmwareVersion.Header = Version
+Env.Var.Sys.MACAddress.Header = Adresse MAC
+Env.Var.Sys.Connectivity.Header = Connectivité
+Env.Var.Sys.IPAddressv4.Header = Adresse IPv4
+Env.Var.Sys.IPAddressv6.Header = Adresse IPv6
+Env.Var.Sys.Hostname.Header = Nom d'hôte
+
+Env.Var.Sys.NetInfraExtra.Header = Profil d'accès
+Env.Var.Sys.NetInfraExtra.Value.VDSL2 = vDSL2
+Env.Var.Sys.NetInfraExtra.Value.VDSL2adsl = vDSL2
+Env.Var.Sys.NetInfraExtra.Value.VDSL2gprs = Mix vDSL2/3G
+Env.Var.Sys.NetInfraExtra.Value.adsl = aDSL
+Env.Var.Sys.NetInfraExtra.Value.adslgprs = Mix aDSL/3G
+Env.Var.Sys.NetInfraExtra.Value.gprsadsl = Mix aDSL/3G
+Env.Var.Sys.NetInfraExtra.Value.ftth = FTTH
+Env.Var.Sys.NetInfraExtra.Value.ftthgprs = Mix FTTH/3G
+Env.Var.Sys.NetInfraExtra.Value.gprsftth = Mix FTTH/3G
+Env.Var.Sys.NetInfraExtra.Value.gprs = Connexion 3G
+Env.Var.Sys.NetInfraExtra.Value.unknown = Inconnu
+Env.Var.Sys.Connectivity.v4v6 = IPv4 & IPv6
+Env.Var.Sys.Connectivity.v4v6cgnat = IPv6 & IPv4 CGNAT
+Env.Var.Sys.Connectivity.v4 = IPv4
+Env.Var.Sys.Connectivity.v6 = IPv6
+Env.Var.Sys.Connectivity.unknown = Inconnu
+
+Env.Text.NoFTTH = Le boitier ONT n'est pas joignable. Vérifier le branchement de celui-ci en vous référant au guide d'installation.
+Env.Text.NoDSL = Vérifier le branchement de votre ligne DSL en vous référant au guide d’installation.
+
+Button.Signoff = Déconnexion
+Button.Submit = Valider
+Button.Reboot = Redémarrer
+Button.Launch = Lancer
+Button.Relaunch = Relancer
+Button.Stop = Stopper
+Button.Reinit = Réinitialiser
+Button.Restore = Restaurer
+Button.Save = Enregistrer
+
+Env.Text.General = Général
+Env.Text.UnknownError = Erreur inconnue
+Env.Text.InternalError = Erreur interne !
+Env.Text.UnknownValue = Valeur inconnue !
+Env.Text.InvalidValue = Valeur invalide
+Env.Text.Disabled = Désactivé
+Env.Text.Enabled = Activé
+Env.Text.Disable = Désactiver
+Env.Text.Enable = Activer
+Env.Text.Offline = Déconnecté
+Env.Text.Activation = Activation
+Env.Text.Shared = Partagée
+
+Env.Text.dayAbbr = j
+Env.Text.hourAbbr = h
+Env.Text.minAbbr = min.
+Env.Text.secAbbr = sec.
+
+Env.Text.Day.0 = Dimanche
+Env.Text.Day.1 = Lundi 
+Env.Text.Day.2 = Mardi
+Env.Text.Day.3 = Mercredi
+Env.Text.Day.4 = Jeudi
+Env.Text.Day.5 = Vendredi
+Env.Text.Day.6 = Samedi
+
+Env.Text.Month.01 = Janvier
+Env.Text.Month.02 = Février
+Env.Text.Month.03 = Mars
+Env.Text.Month.04 = Avril
+Env.Text.Month.05 = Mai
+Env.Text.Month.06 = Juin
+Env.Text.Month.07 = Juillet
+Env.Text.Month.08 = Août
+Env.Text.Month.09 = Septembre
+Env.Text.Month.10 = Octobre
+Env.Text.Month.11 = Novembre
+Env.Text.Month.12 = Décembre
+
+Env.Var.voip_err.Value.0 = Succès
+Env.Var.voip_err.Value.generic = Votre Box a détecté une erreur sur le service téléphonie, <a href="/maintenance/diag">cliquez ici</a> afin d'effectuer un diagnostic de votre installation. Si le problème persiste, veuillez contacter le service client.
+
+Env.Text.nojs = Vous devez activer le javascript pour utiliser cette fonctionnalité.
+
+Env.Text.work_in_progress = Opération en cours
+
+Env.Text.Absente = Absente
+
+Env.Text.Undefined = Indéfini
+
+Env.Text.Mbps = Mbit/s
+
+Env.Text.Detected = Détecté
+Env.Text.Undetected = Non détecté

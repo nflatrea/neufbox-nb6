@@ -1,0 +1,24 @@
+#!/bin/sh
+backup3g stop data
+
+# update status
+status set ppp_adsl_session "$(cat /run/network/pppoe_session)"
+status set ppp_adsl_server "$(cat /run/network/pppoe_server)"
+# NOTE: this give a chance for VOIP in option 3
+status set ppp_adsl_ifname "$IFNAME"
+status set ppp_adsl_ipaddr "$IPLOCAL"
+status set ppp_adsl_gateway "$IPREMOTE"
+status set ppp_adsl_dns "$DNS1 $DNS2"
+status set ppp_adsl_status "up"
+event notify 'ppp_adsl-up'
+
+defaultroute
+
+logger -s -t PPP_STATUS -p local1.info "ppp/adsl UP :)"
+
+[ -d /etc/ppp/ip-up.d ] && {
+	for SCRIPT in /etc/ppp/ip-up.d/*
+	do
+		[ -x "$SCRIPT" ] && "$SCRIPT" "$@"
+	done
+}

@@ -1,0 +1,7 @@
+
+<tv infra="<?cs var:Env.status.net.tv.infra ?>" lanchain="<?cs var:Env.status.lan.iptv.chain ?>" netchain="<?cs var:Env.autoconf.iptv.chain ?>"/>
+<igmps>
+    <?cs each:item = Env.status.igmp.client ?>
+    <igmp group="<?cs var:item.group ?>" ether="<?cs var:item.ether ?>" ipaddr="<?cs var:item.source ?>" />
+    <?cs /each ?>
+</igmps>    

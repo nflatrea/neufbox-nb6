@@ -1,0 +1,81 @@
+<div class="alert alert-info">
+    <h1><?cs var:Env.Text.AccessLock?></h1>
+    <?cs var:Env.Text.AccessLockPlus?>
+</div>
+
+<?cs if:?Var.Error.login.Value?>
+<div class="alert alert-error">
+    <?cs if:Var.Error.login.Value == "LOGINORPASS_INVALID"?>
+	<?cs var:Env.Error.LOGINORPASS_INVALID?>
+    <?cs elif:Var.Error.login.Value == "SESSION_INVALID"?>
+	<?cs var:Env.Error.SESSION_INVALID?>
+    <?cs elif:Var.Error.login.Value == "METHOD_NOT_ALLOWED" || Var.Error.button.Value == "METHOD_NOT_ALLOWED"?>
+	<?cs var:Env.Error.METHOD_NOT_ALLOWED?>
+    <?cs elif:Var.Error.login.Value == "AUTOLOGIN_OFF"?>
+	<?cs var:Env.Error.AUTOLOGIN_OFF?>
+    <?cs else?>
+	<?cs var:Env.Error.SYSTEM_ERROR?>
+    <?cs /if?>
+</div>
+<?cs /if?>
+
+<?cs if:Env.user.web.auth == "button" || Env.user.web.auth == "all"?>
+<div class="title">
+    <h1 class="large"><?cs var:Env.Section.web_auth_button.Title ?></h1>
+</div>
+
+<div class="content">
+    <img src="/img/img_btn_wps_nb6vac.png?v=3.4" align="right" />
+    <?cs var:Env.Text.ButtonMethod?>
+        
+    <br/><br/>
+    
+        <form method="post" action="<?cs var:Env.Page.Name?>" id="form_web_button">
+
+            <input type="hidden" name="page_ref" value="<?cs var:html_escape(Env.Page.Referer)?>" />
+            <input type="hidden" name="method" value="button" />
+
+            <button type="submit" id="button_continue" class="btn disabled" name="submit_button"><?cs var:Button.Continue ?></button>
+        </form>
+    </div>
+    <div class="spacer"></div>
+<?cs /if?>
+
+<?cs if:Env.user.web.auth == "passwd" || Env.user.web.auth == "all"?>
+<div class="title">
+    <h1 class="large"><?cs var:Env.Section.web_auth_passwd.Title ?></h1>
+</div>
+
+<div class="content">
+    <p><?cs var:Env.Text.PasswdMethod?></p>
+    
+    <form method="post" action="<?cs var:Env.Page.Name?>" id="form_auth_passwd" class="form-horizontal"> 
+		
+        <input type="hidden" name="method" value="passwd" />
+        <input type="hidden" name="page_ref" value="<?cs var:html_escape(Env.Page.Referer)?>" />
+        <input type="hidden" name="zsid" id="zsid" />
+        <input type="hidden" name="hash" id="hash" />
+        
+            <div class="control-group">
+                <label class="control-label" for="login"><?cs call:varHeader("login") ?></label>
+                <div class="controls">
+                    <input type="text" class="text" name="login" id="login" size="30" />
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label" for="password"><?cs call:varHeader("password") ?></label>
+                <div class="controls">
+                    <input type="password" class="text" name="password" id="password" size="30" />
+                </div>
+            </div>
+        
+            <div class="control-group">
+                <div class="controls">
+                    <button type="submit" name="submit_button" class="btn"><i class="icon-ok icon-white"></i> <?cs var:Button.Submit ?></button>
+                </div>
+            </div>
+        
+    </form>
+</div>
+<?cs /if?>

@@ -1,0 +1,28 @@
+#!/bin/sh
+	
+parse_scanresults()
+{
+	results=$(wlctl -i $1 scanresults)
+	if [ "$1" = "wl0" ]; then
+                echo "${results}" |awk -F'"' '/^SSID/p {print "Scan.wlan.wl0."j++".ssid = "$2}'
+                echo "${results}" |awk '/^BSSID/p {print "Scan.wlan.wl0."j++".bssid = "$2}'
+                echo "${results}" |awk '/RSSI/p {print "Scan.wlan.wl0."j++".rssi = "$4" dBm"}'
+                echo "${results}" |awk '/^Mode:.*Channel/p {print "Scan.wlan.wl0."j++".channel = "$NF}'
+	else
+                echo "${results}" |awk -F'"' '/^SSID/p {print "Scan.wlan.wl1."j++".ssid = "$2}'
+                echo "${results}" |awk '/^BSSID/p {print "Scan.wlan.wl1."j++".bssid = "$2}'
+                echo "${results}" |awk '/RSSI/p {print "Scan.wlan.wl1."j++".rssi = "$4" dBm"}'
+                echo "${results}" |awk '/^Mode:.*Channel/p {print "Scan.wlan.wl1."j++".channel = "$NF}'
+	fi
+
+}
+
+wlctl -i wl0 scan
+wlctl -i wl1 scan
+
+sleep 2
+
+parse_scanresults wl0
+parse_scanresults wl1
+
+

@@ -1,0 +1,46 @@
+
+<div class="title">
+	<h1><?cs var:Env.Section.Applications.Value?></h1>
+</div>
+
+<div class="content">
+	<table>
+		<tr>
+			<th scope="row"><?cs var:Env.Header.samba.Value?></th>
+			<td class="<?cs if:Env.status.samba.status == "up"?>enabled<?cs elif:Env.status.samba.status == "starting" || Env.status.samba.status == "installing"?>unused<?cs else ?>disabled<?cs /if ?>" id="smb_status">
+				<?cs call:varValue_d(Env.Var.samba_status.Value[Env.status.samba.status], Env.Var.samba_status.Value.down)?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Header.p910nd.Value?></th>
+			<td class="<?cs if:Env.status.p910nd.status == "up" ?>enabled<?cs else ?>disabled<?cs /if ?>" id="p910nd_status">
+				<?cs call:varValue_d(Env.Var.p910nd_status.Value[Env.status.p910nd.status], Env.Var.p910nd_status.Value.down)?>
+			</td>
+		</tr>
+                
+                    <?cs if:Env.status.upnpav.status == "up" && Env.status.upnpav.sharedcount == "0" ?>
+                        <?cs set:class_upnpav="unused" ?>
+                    <?cs elif:Env.status.upnpav.status == "up" || Env.status.upnpav.status == "starting" ?>
+                        <?cs set:class_upnpav="enabled" ?>
+                    <?cs elif:Var.upnpav_status.Value == "installing" ?>
+                        <?cs set:class_upnpav="unused" ?>
+                    <?cs else ?>
+                        <?cs set:class_upnpav="disabled" ?>
+                    <?cs /if ?>
+                        
+		<tr>
+			<th scope="row"><?cs var:Env.Header.upnpav.Value?></th>
+			<td class="<?cs var:class_upnpav ?>" id="upnpav_status">
+				<?cs call:varValue_d(Env.Var.upnpav_status.Value[Env.status.upnpav.status], Env.Var.upnpav_status.Value.down)?>
+			</td>
+		</tr>
+<?cs if:Env.autoconf.ca.enable == "true" ?>		
+		<tr>
+			<th scope="row"><?cs var:Env.Header.ac.Value?></th>
+			<td class="<?cs if:Env.status.ca.status == "enable" ?>enabled<?cs else ?>disabled<?cs /if ?>" id="ac_status">
+				<?cs call:varValue_d(Env.Var.ac_status.Value[Env.status.ca.status], Env.Var.ac_status.Value.disable)?>
+			</td>
+		</tr>
+<?cs /if ?>	
+</table>
+</div>

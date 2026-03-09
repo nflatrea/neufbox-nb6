@@ -1,0 +1,2 @@
+   <ppp status="<?cs var:Env.status.ppp[Env.status.net.data.access].status ?>" ip_addr="<?cs var:Env.status.ppp[Env.status.net.data.access].ipaddr ?>" />
+   

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+[ "${BUTTON}" != "wps" ] && exit 0
+
+if [ "${ACTION}" = "released" ] && [ "$(status get web_autologin)" = "off" ]; then
+	if [ "$(status get wlan_wps_proc_status)" = "wait" ]; then
+		[ "$(status get wlan_status)" = "up" ] && /etc/init.d/wlan wps_stop
+	else
+		[[ "$(status get wlan_status)" = "up" ]] && ([[ "$(status get wlan_wps_mode)" = "enabled" ]] || [[ "$(status get wlan_wps_ac_mode)" = "enabled" ]]) && wlan wpsses
+	fi
+fi

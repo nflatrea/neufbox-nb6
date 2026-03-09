@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rsp stat="<?cs var:stat ?>" version="<?cs var:Env.version ?>"><?cs if:stat == "fail" ?>
+  <err code="<?cs var:err.code ?>" msg="<?cs var:err.msg ?>" /><?cs elif:stat == "ok" && Env.current_template != "" ?>
+  <?cs include:Env.current_template ?>
+<?cs /if ?>
+</rsp>

@@ -1,0 +1,13 @@
+<wlan>
+  <?cs each:item = Env.user.wlan.filter ?>
+    <?cs if:item.band=="both" ?>
+      <filtering mac="<?cs var:item.mac ?>" band="both" />
+    <?cs /if ?>
+    <?cs if:item.band=="wl1" ?>
+      <filtering mac="<?cs var:item.mac ?>" band="2.4Ghz" />
+    <?cs /if ?>
+    <?cs if:item.band=="wl0" ?>
+      <filtering mac="<?cs var:item.mac ?>" band="5Ghz" />
+    <?cs /if ?>
+  <?cs /each ?>  
+</wlan>

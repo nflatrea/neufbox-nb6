@@ -1,0 +1,72 @@
+#!/bin/sh /etc/rc.common
+
+START=31
+
+logger -t "hosts[$$]" "$action"
+
+start() {
+	local operator_hostname=$(status get operator_hostname)
+	local operator_box=$(status get operator_box)
+	[ $(status get operator_name) != "SFR" ] && operator_box=""
+	local hostname=$(hostname)
+	local net_ipv6_ipaddr="$(status get net_ipv6_subnet_lan | sed 's:/64::')"
+
+	lock /run/lock/hosts.lock
+
+	# localhost
+	echo "127.0.0.1 localhost." > /etc/hosts
+	echo "$(nvram get lan_ipaddr) ${operator_hostname} ${operator_box} ${hostname}" >> /etc/hosts
+
+	# IPv6
+	echo "" >> /etc/hosts
+	echo "::1     localhost. ip6-localhost ip6-loopback" >> /etc/hosts
+	echo "fe00::0 ip6-localnet" >> /etc/hosts
+	echo "ff00::0 ip6-mcastprefix" >> /etc/hosts
+	echo "ff02::1 ip6-allnodes" >> /etc/hosts
+	echo "ff02::2 ip6-allrouters" >> /etc/hosts
+	test -n "${net_ipv6_ipaddr}"&& echo "${net_ipv6_ipaddr} ${operator_hostname} ${operator_box} ${hostname}" >> /etc/hosts
+
+	# User define hosts
+	echo > /tmp/user.domain
+	conf=/tmp/dns.tmp.xml
+	nvram xml dns > ${conf}
+
+	local ca_domain="mon.controle-acces.sfr.fr"
+	local lan_ipaddr=$(nvram get lan_ipaddr)
+	if [ ${lan_ipaddr} != "192.168.1.1" ]; then
+		echo ${lan_ipaddr} ${ca_domain} >> /tmp/user.domain
+	fi
+
+	n=1
+	for ipaddr in $(roxml -q ${conf} "//host/ip")
+	do
+		ipaddr=$(roxml -q ${conf} "//host[$n]/ip")
+		domain=$(roxml -q ${conf} "//host[$n]/domain")
+		n=$(($n + 1))
+		echo ${ipaddr} ${domain} >> /tmp/user.domain
+	done
+
+	n=1
+	for ipaddr in $(roxml -q ${conf} "//host6/ip")
+	do
+		ipaddr=$(roxml -q ${conf} "//host6[$n]/ip")
+		domain=$(roxml -q ${conf} "//host6[$n]/domain")
+		n=$(($n + 1))
+		echo ${ipaddr} ${domain} >> /tmp/user.domain
+	done
+
+	# System define hosts (debug only)
+	n=1
+	for ipaddr in $(roxml -q ${conf} "//system/ipaddr")
+	do
+		ipaddr=$(roxml -q ${conf} "//system[$n]/ipaddr")
+		domain=$(roxml -q ${conf} "//system[$n]/domain")
+		n=$(($n + 1))
+		echo ${ipaddr} ${domain} >> /etc/hosts
+	done
+	rm -f ${conf}
+
+	lock -u /run/lock/hosts.lock
+
+	/etc/init.d/dnsmasq reload
+}

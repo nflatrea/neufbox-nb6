@@ -1,0 +1,17 @@
+#wl1_ssid=wlan_wl0_ssid
+#wl0_ssid=wlan_wl0_ac_ssid
+
+wl0_wpa_psk=wlan_wl0_ac_wpakey
+#wl0_wps_mode=wlan_wps_ac_mode
+#wl1_wps_mode=wlan_wps_mode
+
+wps_device_name=wlan_wl0_ssid
+wps_uuid=wlan_wps_uuid
+
+wl1_wpa_psk=wlan_wl0_wpakey
+
+#wl0.2_ssid=wlan_guest_ssid
+#wl0.2_wpa_psk=wlan_guest_wpakey
+
+wl1.2_ssid=wlan_guest_ssid
+wl1.2_wpa_psk=wlan_guest_wpakey

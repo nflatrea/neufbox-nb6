@@ -1,0 +1,109 @@
+Env.Page.Title = Accueil
+
+Env.Help.Text = Bienvenue sur l'interface de configuration de votre Box. Accédez directement à tous vos services, depuis un Smartphone, tablette ou PC. Cette page vous permet d’avoir une vue globale des équipements et services de votre Box.
+
+Env.Section.global_status.Title = Etat des services
+
+Env.Var.internet_status.Header = Internet
+Env.Var.internet_status.Value.up = Internet opérationnel
+Env.Var.internet_status.Value.down = Pas de connexion internet
+
+Env.Var.internet_access.Value.gprs = connexion clé 3G
+Env.Var.internet_access.Value.adsl = ADSL connexion
+Env.Var.internet_access.Value.ftth = FTTH
+
+Env.Var.voip_status.Header = Téléphonie
+Env.Var.voip_status.Value.up = Téléphonie active
+Env.Var.voip_status.Value.down = Téléphonie non fonctionnelle
+Env.Var.voip_status.Value.down_eco = Téléphonie désactivé par le mode eco
+
+Env.Var.voip_access.Value.gprs = Connexion clé 3G
+
+Env.Var.tv_status.Header = Télévision
+Env.Var.tv_status.Value.up = Télévision connectée
+Env.Var.tv_status.Value.down = Télévision non connectée
+
+Env.Text.NoDSL = Votre modem n'arrive pas à synchroniser votre ligne ADSL. Elle n'est peut être pas encore livrée ou le câble reliant votre ligne téléphonique à votre modem n'est peut être pas correctement branché.
+Env.Text.NoPPP = Veuillez vérifier vos identifiants et mot de passe de connexion en cliquant ici
+
+Env.Var.gruiks.configuration.Text = Voir la configuration
+Env.Var.gruiks.GPRS_PINCODE_INVALID.Title = Erreur 3G
+Env.Var.gruiks.GPRS_PINCODE_INVALID.Info = Code pin invalide
+Env.Var.gruiks.GPRS_PINCODE_INVALID.Url = /network/gprs
+
+Env.Section.ipv6_info.Title = Internet IPv6
+Env.Var.net_ipv6_status.up = Opérationnel
+Env.Var.net_ipv6_status.noconnect = Non connecté
+Env.Var.net_ipv6_status.down = Désactivé
+
+Env.Section.informations.Title = Informations
+
+Env.Var.infra_name.Header = Connexion
+Env.Var.infra_name.Value.VDSL2 = VDSL2
+Env.Var.infra_name.Value.adsl = ADSL
+Env.Var.infra_name.Value.ftth = FTTH
+Env.Var.infra_name.Value.gprs = Clé 3G
+
+Env.Var.infra_dsl_uptime.Header = Temps de service xDSL
+
+Env.Var.wan_uptime.Header = Temps d'accès
+
+Env.Var.wan_status.Header = Statut de l'accès
+Env.Var.wan_status.Value.up = Internet opérationnel
+Env.Var.wan_status.Value.down = Pas de connexion internet
+
+Env.Section.modem_infos.Title = Informations modem
+Env.Var.modem_macaddr.Header = Adresse MAC
+Env.Var.modem_model.Header = Modèle
+Env.Var.modem_mainversion.Header = Version principale
+Env.Var.modem_rescueversion.Header = Version de secours
+Env.Var.modem_uptime.Header = Temps de service
+
+Env.Var.samba.Header = Partage de fichiers
+Env.Var.printersharing.Header = Partage d'imprimantes
+Env.Var.upnpav.Header = Serveur multimédia
+Env.Var.ca.Header = Contrôle d'accès
+
+Env.Var.voip_linestatus.Header = Ligne
+Env.Var.voip_linestatus.Value.up = Active
+Env.Var.voip_linestatus.Value.down = Non fonctionnelle
+Env.Var.voip_linestatus.Value.down_eco = Désactivé (mode eco)
+Env.Var.voip_hookstatus.Header = Combiné
+Env.Var.voip_hookstatus.Value.onhook = Raccroché
+Env.Var.voip_hookstatus.Value.offhook = Décroché
+
+Env.Section.devices.Title = Equipements et services
+Env.Var.welcome.Value = Bienvenue sur l'interface de configuration de votre Box de SFR.<br/> Accédez directement à tous vos services, depuis un Smartphone, tablette ou PC.
+
+Env.Var.ont_device.Header = ONT
+Env.Var.femto_device.Header = Femtocell
+Env.Var.gprs_device.Header = Clé 3G
+
+Env.Var.modem_adslversion.Header = Version driver DSL
+
+Env.Var.ipv6_status.Header = IPv6
+Env.Var.net_ipv6_status.up = Opérationnel
+Env.Var.net_ipv6_status.noconnect = Non connecté
+Env.Var.net_ipv6_status.down = Désactivé
+
+Env.Var.decoder_detected.Header = Décodeur(s) détecté(s)
+
+Env.Section.tv.Title = TV
+Env.Section.lan.Title = Liaison Ethernet
+Env.Section.connected_computers.Title = Poste(s) connecté(s)
+Env.Section.wifi.Title = Wifi
+Env.Section.voip.Title = Téléphonie
+Env.Section.connected_hook.Title = Combiné(s) détecté(s)
+Env.Section.services.Title = Services
+Env.Section.connected_usb.Title = USB détecté(s)
+Env.Var.device.Header = device
+Env.Var.missed_call.Header = Appel(s) manqué(s)
+
+Env.Var.voip_usermissedcall.Header = Notif. d'appel manqué
+Env.Var.voip_blacklist.Header = Filtrage d'appels
+
+Env.Var.status.Header = Etat
+Env.Var.key.Header = Clé
+
+Env.Var.loop_alert.Header = Alerte
+Env.Var.loop_detection = Détection de boucle

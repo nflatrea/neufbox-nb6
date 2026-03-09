@@ -1,0 +1,215 @@
+#!/bin/sh /etc/rc.common
+
+service=firmware
+logger -t "${service}[$$]" "$action"
+
+xpath() {
+	roxml -q ${autoconf_file} $1
+}
+
+stats_inc() {
+	counter=$(status get $1)
+	status set $1 $(( ${counter:=0} + 1 ))
+}
+
+voip_busy() {
+	if [ "$(status get voip_status)" = "up" ] \
+	&& [ "$(status get voip_upgrade)" = "ko" ]; then
+		return 0
+	fi
+
+	return 1
+}
+
+save_services() {
+	logger -t "firmware[$$]" "Kill some services for upgrade..."
+
+	/etc/init.d/samba stop
+	sleep 1
+	/etc/init.d/ushare stop
+	sleep 1
+
+	killall -HUP wrapper
+	sleep 3
+
+}
+
+restore_services() {
+	logger -t "firmware[$$]" "Restart services after upgrade..."
+
+	killall -HUP wrapper
+	sleep 3
+
+	/etc/init.d/samba restart
+	sleep 1
+	/etc/init.d/ushare restart
+
+}
+
+do_upgrade() {
+	local name=$1
+	local lock=$2
+	local current=$3
+	local file=$4
+	local hash=$5
+	local cmd=$6
+
+	if [ -z "$current" ]; then
+		current="empty"
+	fi
+
+	echo "hash: ${hash}"
+	if [ ! -n "${hash}" ]; then
+		logger -t "${service}[$$]" "${name}: no hash"
+		return 1
+	fi
+
+	if [ "${lock}" = "on" ]; then
+		logger -t "${service}[$$]" "${name}: [${current}] -> [${file}] locked"
+		return 1
+	fi
+
+	if [ "${current}" = "${file}" ]; then
+		logger -t "${service}[$$]" "${name}: [${current}] -> [${file}] up to date"
+		return 1
+	fi
+
+	if [ "${name}" != "rescue" ]; then
+		reboot=1
+	fi
+
+	if [ "${cmd}" = "dry_run" ]; then
+		jobs=1
+		return 0
+	fi
+
+	# diaglog
+	diaglog event upgrade "${name}"
+
+    autoconf set upgrade_current "${name}"
+	logger -t "firmware[$$]" "${name}: [${current}] -> [${file}] ..."
+
+	if ! upgrade ${url}/${file} ${hash}; then
+		logger -t "${service}[$$]" "${name}: [${current}] -> [${file}] failed"
+		logger -t "${service}[$$]" "failed, reschedule"
+
+		lock -u /var/lock/${service}.lock
+
+		local min=$(date +%M)
+		local hour=$((($(date +%k) + 1) % 24))
+		lock /run/lock/cron.lock
+		sed -e '/firmware reload/d' \
+		     -e "1a${min} ${hour} * * * /etc/init.d/firmware reload" \
+			/run/crontabs/root | crontab -u root -
+		lock -u /run/lock/cron.lock
+
+		restore_services
+		autoconf set status down
+
+        diaglog error upgrade "${name}"
+
+		exit 1
+	fi
+
+	logger -t "firmware[$$]" "${name}: [${current}] -> [${file}] done"
+
+	return 0
+}
+
+autoconf_upgrade() {
+	local cmd=$1
+
+	local url="$(xpath '//protocole')://$(xpath '//url')"
+
+	if [ "${cmd}" != "dry_run" ]; then
+		save_services
+	fi
+
+	eval $(nvram list lock)
+
+	do_upgrade "bootloader" "${lock_bootloader}" "$(status get version_bootloader)" \
+		"$(xpath '//bootloader')" "$(xpath '//bootloader/@hash')" "${cmd}"
+
+	if grep -q rescue /proc/mtd; then
+		do_upgrade "rescue" "${lock_rescue}" "$(status get version_rescuefirmware)" \
+			"$(xpath '//rescue')" "$(xpath '//rescue/@hash')" "${cmd}"
+	fi
+
+	do_upgrade "config" "${lock_config}" "$(nvram get version_system)" \
+		"$(xpath '//config')" "$(xpath '//config/@hash')" "${cmd}"
+
+	if test -d /etc/adsl; then
+        do_upgrade "xdsl" "${lock_dsldriver}" "$(status get version_dsldriver)" \
+			"$(xpath '//dsldriver')" "$(xpath '//dsldriver/@hash')" "${cmd}"
+	fi
+
+	if test -d /etc/mcu; then
+		do_upgrade "mcu" "${lock_mcu}" "$(status get version_mcufirmware)" \
+			"$(xpath '//mcu')" "$(xpath '//mcu/@hash')" "${cmd}"
+	fi
+
+    # disable diaglog to reduce memory footprint on nb4
+	diaglogctl poll_disable
+
+	do_upgrade "main" "${lock_main}" "$(status get version_mainfirmware)" \
+		"$(xpath '//main')" "$(xpath '//main/@hash')" "${cmd}"
+
+	diaglogctl poll_enable
+
+	if [ "${cmd}" != "dry_run" ]; then
+		restore_services
+	fi
+}
+
+process() {
+	stats_inc "upgrade_counter"
+
+	[ "$(autoconf get ${service}_enable)" != "true" ] && return 0
+	[ "$(autoconf get ${service}_status)" != "ok" ] && return 1
+
+	autoconf_file=/tmp/autoconf/$(autoconf get ${service}_file)
+	test -f ${autoconf_file} || return 1
+
+	autoconf_upgrade "dry_run"
+	if [ -z "${jobs}" ]; then
+		logger -t "${service}[$$]" "no jobs"
+		return 0
+	fi
+
+	if voip_busy; then
+		stats_inc "upgrade_failure_voipbusy"
+        status set "upgrade_failure_last" "voipbusy"
+		# schedule in 1h
+		logger -t "${service}[$$]" "VoIP busy, reschedule"
+		local min=$(date +%M)
+		local hour=$((($(date +%k) + 1) % 24))
+		lock /run/lock/cron.lock
+		sed -e '/firmware reload/d' \
+		     -e "1a${min} ${hour} * * * /etc/init.d/firmware reload" \
+			/run/crontabs/root | crontab -u root -
+		lock -u /run/lock/cron.lock
+		return 0
+	else
+		# reset any pending schedule task
+		lock /run/lock/cron.lock
+		sed -e '/firmware reload/d' \
+			/run/crontabs/root | crontab -u root -
+		lock -u /run/lock/cron.lock
+	fi
+
+	autoconf set status running
+	autoconf_upgrade
+
+	if [ "${reboot}" = "1" ]; then
+		reboot -f
+	fi
+}
+
+reload() {
+	lock /run/lock/${service}.lock
+
+	process
+	autoconf set status up
+
+	lock -u /run/lock/${service}.lock
+}

@@ -1,0 +1,23 @@
+<rsp stat="ok">
+  <lan>
+    <?cs each:iface=Var.links?>
+    <?cs if:iface.name.Value!="lan0"?>
+    <iface>
+      <name><?cs var:iface.name.Value?></name>
+      <type val="<?cs var:iface.type.Value?>" text="<?cs var:Env.Var.type.Value.host?>" />
+      <status val="<?cs var:iface.status.Value?>" text="<?cs if:iface.status.Value=='up'?><?cs var:Env.Var.LinkStatus.Value.up?><?cs else?><?cs var:Env.Var.LinkStatus.Value.down?><?cs /if?>" />
+      <speed><?cs var:iface.speed.Value?></speed>
+    </iface>
+    <?cs /if ?>
+    <?cs /each?>
+  </lan>
+<?cs if:?Var.USBStatus.Value?>
+  <usb>
+    <status val="<?cs var:Var.USBStatus.Value?>" text="<?cs call:varValue_d(Env.Var.USBStatus.Value[Var.USBStatus.Value], Env.Var.USBStatus.Value.down)?>" />
+  </usb>
+<?cs /if?>
+  <wifi>
+    <status val="<?cs var:Var.WifiStatus.Value?>" text="<?cs call:varValue_d(Env.Var.WifiStatus.Value[Var.WifiStatus.Value], Env.Var.WifiStatus.Value.off)?>" />
+    <clientcount val="<?cs var:Var.WifiCountClient.Value?>" text="<?cs call:varValue_d(Env.Var.WifiCountClient.Value[Var.WifiCountClient.Value], Env.Var.WifiCountClient.Value.many)?>" />
+  </wifi>
+</rsp>

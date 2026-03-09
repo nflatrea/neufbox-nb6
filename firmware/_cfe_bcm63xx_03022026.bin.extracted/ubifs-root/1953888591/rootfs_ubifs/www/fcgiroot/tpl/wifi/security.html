@@ -1,0 +1,568 @@
+<div class="title">
+	<h1><?cs var:Env.Section.wlan_encryption.Title ?></h1>
+</div>
+
+
+<div class="content">
+        <?cs if:Env.user.wlan.wl0.enc == "WPA-PSK" && Env.user.wlan.wl0.enctype == "aes" ?>
+        <div class="alert alert-warning" id="wpa_aes_incompatibility_notice">
+                <?cs var:Env.Form.Error.wpa_aes_incompatibility ?>
+        </div>
+        <?cs /if ?>
+	<form method="post" id="form_wlan_encryption" action="<?cs var:Env.Page.Name ?>">
+
+	<table id="wlan_encryption">
+
+		<tr>
+			<th scope="row"><?cs call:varHeader("wlan_encryptiontype") ?></th>
+			<td>
+                                <?cs if:?Query.wlan_encryptiontype && Query.wlan_encryptiontype!=Env.user.wlan.wl0.enc ?>
+                                   <?cs set:Env.user.wlan.wl0.enc = Query.wlan_encryptiontype ?>
+                                <?cs /if ?>
+                                <div class="control-group <?cs if:?Var.wlan_encryptiontype.Error ?>error<?cs /if ?>">
+                                    <select id="wlan_encryptiontype" name="wlan_encryptiontype">
+                                            <option value="OPEN"<?cs if:Env.user.wlan.wl0.enc == "OPEN" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.OPEN ?>
+                                            </option>
+                                            <option value="WEP"<?cs if:Env.user.wlan.wl0.enc == "WEP" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WEP ?>
+                                            </option>
+                                            <option value="WPA-PSK"<?cs if:Env.user.wlan.wl0.enc == "WPA-PSK" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WPA_PSK ?>
+                                            </option>
+                                            <option value="WPA2-PSK"<?cs if:Env.user.wlan.wl0.enc == "WPA2-PSK" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WPA2_PSK ?>
+                                            </option>
+                                            <option value="WPA-WPA2-PSK"<?cs if:Env.user.wlan.wl0.enc == "WPA-WPA2-PSK" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WPA_WPA2_PSK ?>
+                                            </option>
+                                    </select>
+
+                                    <?cs if:?Var.wlan_encryptiontype.Error ?>
+                                    <div class="help-inline">
+                                            <?cs var:Env.Var.wlan_encryptiontype.Error[Var.wlan_encryptiontype.Error] ?>
+                                    </div>
+                                    <?cs /if ?>
+                                </div>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_keytype"<?cs if:Env.user.wlan.wl0.enc != "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_keytype") ?></th>
+			<td>
+                                <div class="control-group <?cs if:?Var.wlan_keytype.Error ?>error<?cs /if ?>">
+                                    <?cs if:?Query.wlan_keytype && Query.wlan_keytype!=Env.user.wlan.wl0.keytype ?>
+                                       <?cs set:Env.user.wlan.wl0.keytype = Query.wlan_keytype ?>
+                                    <?cs /if ?>
+
+                                    <select id="wlan_keytype" name="wlan_keytype">
+                                            <option value="ascii"<?cs if:Env.user.wlan.wl0.keytype == "ascii" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_keytype.Value.ascii ?>
+                                            </option>
+                                            <option value="hexa"<?cs if:Env.user.wlan.wl0.keytype == "hexa" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_keytype.Value.hexa ?>
+                                            </option>
+                                    </select>
+
+                                    <?cs if:?Var.wlan_keytype.Error ?>
+                                    <div class="help-inline">
+                                            <?cs var:Env.Var.wlan_keytype.Error[Var.wlan_keytype.Error] ?>
+                                    </div>
+                                    <?cs /if ?>
+                                </div>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_wepkey"<?cs if:Env.user.wlan.wl0.enc != "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_wepkey") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.wlan_wepkey.Error ?>error<?cs /if ?>">
+                                <?cs if:?Query.wlan_wepkey && Query.wlan_wepkey!=Env.user.wlan.wl0.wepkeys.n0 ?>
+                                   <?cs set:Env.user.wlan.wl0.wepkeys.n0 = Query.wlan_wepkey ?>
+                                <?cs /if ?>
+                                
+				<input type="text" id="wlan_wepkey" name="wlan_wepkey" class="<?cs if:?Var.wlan_wepkey.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs var:html_escape(Env.user.wlan.wl0.wepkeys.n0) ?>" size="63" maxlength="63" />
+
+				<?cs if:?Var.wlan_wepkey.Error ?>
+				<div class="help-inline">
+					<?cs var:Env.Var.wlan_wepkey.Error[Var.wlan_wepkey.Error] ?>
+				</div>
+				<?cs /if ?>
+                            </div>
+			</td>
+			<td class="col_action">
+                                <button class="btn" id="wlan_wepkey_generator" title="<?cs var:Env.Text.Refresh ?>" name="refresh" type="button" ><i class="icon-refresh icon-white"></i></button>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_wpaenctype"<?cs if:Env.user.wlan.wl0.enc == "OPEN" || Env.user.wlan.wl0.enc == "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_wpaenctype") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.wlan_wpaenctype.Error ?>error<?cs /if ?>">
+                                <?cs if:?Query.wlan_wpaenctype && Query.wlan_wpaenctype!=Env.user.wlan.wl0.enctype ?>
+                                   <?cs set:Env.user.wlan.wl0.enctype = Query.wlan_wpaenctype ?>
+                                <?cs /if ?>
+				<select id="wlan_wpaenctype" name="wlan_wpaenctype" class="<?cs if:?Var.wlan_wpaenctype.Error ?>error<?cs else ?>text<?cs /if ?>">
+					<option value="tkip"<?cs if:Env.user.wlan.wl0.enctype == "tkip" ?> selected="selected"<?cs /if ?> <?cs if:Env.user.wlan.wl0.enc == "WPA2-PSK" ?>disabled="disabled"<?cs /if ?>>
+						<?cs var:Env.Var.wlan_wpaenctype.Value.tkip ?>
+					</option>
+					<option value="aes"<?cs if:Env.user.wlan.wl0.enctype == "aes" ?> selected="selected"<?cs /if ?>>
+						<?cs var:Env.Var.wlan_wpaenctype.Value.aes ?>
+					</option>
+					<option value="tkipaes"<?cs if:Env.user.wlan.wl0.enctype == "tkipaes" ?> selected="selected"<?cs /if ?> <?cs if:Env.user.wlan.wl0.enc == "WPA2-PSK" ?>disabled="disabled"<?cs /if ?>>
+						<?cs var:Env.Var.wlan_wpaenctype.Value.tkipaes ?>
+					</option>
+				</select>
+
+                                <?cs call:varErrorDiv_gd("wlan_wpaenctype", Env.Text.InvalidValue)?>
+                            </div>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_wpakey"<?cs if:Env.user.wlan.wl0.enc == "OPEN" || Env.user.wlan.wl0.enc == "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_wpakey") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.wlan_wpakey.Error ?>error<?cs /if ?>">
+                                <?cs if:?Query.wlan_wpakey && Query.wlan_wpakey!=Env.user.wlan.wl0.wpakey ?>
+                                   <?cs set:Env.user.wlan.wl0.wpakey = Query.wlan_wpakey ?>
+                                <?cs /if ?>
+                                
+				<input type="text" id="wlan_wpakey" name="wlan_wpakey" class="<?cs if:?Var.wlan_wpakey.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs var:html_escape(Env.user.wlan.wl0.wpakey) ?>" size="63" maxlength="63" />
+
+				<?cs if:?Var.wlan_wpakey.Error ?>
+				<div class="help-inline">
+					<?cs var:Env.Var.wlan_wpakey.Error[Var.wlan_wpakey.Error] ?>
+				</div>
+				<?cs /if ?>
+                            </div>
+			</td>
+			<td class="col_action">
+                                <button class="btn" id="wlan_wpakey_generator" title="<?cs var:Env.Text.Refresh ?>" name="refresh" type="button" ><i class="icon-refresh icon-white"></i></button>
+			</td>
+		</tr>
+
+	</table>
+
+            <button type="submit" name="submit_ap" class="btn"><?cs var:Button.Submit ?></button>
+
+	</form>
+</div>
+
+
+<div class="title">
+	<h1><?cs var:Env.Section.wlan_ac_encryption.Title ?></h1>
+</div>
+
+
+<div class="content">
+	<?cs if:Env.user.wlan.wl0.ac.enc == "WPA-PSK" && Env.user.wlan.wl0.ac.enctype == "aes" ?>
+        <div class="alert alert-warning" id="wpa_aes_incompatibility_notice">
+                <?cs var:Env.Form.Error.wpa_aes_incompatibility ?>
+        </div>
+        <?cs /if ?>
+	<form method="post" id="form_wlan_ac_encryption" action="<?cs var:Env.Page.Name ?>">
+
+	<table id="wlan_ac_encryption">
+
+		<tr>
+			<th scope="row"><?cs call:varHeader("wlan_encryptiontype") ?></th>
+			<td>
+                                <?cs if:?Query.wlan_ac_encryptiontype && Query.wlan_ac_encryptiontype!=Env.user.wlan.wl0.ac.enc ?>
+                                   <?cs set:Env.user.wlan.wl0.ac.enc = Query.wlan_ac_encryptiontype ?>
+                                <?cs /if ?>
+                                <div class="control-group <?cs if:?Var.wlan_ac_encryptiontype.Error ?>error<?cs /if ?>">
+                                    <select id="wlan_ac_encryptiontype" name="wlan_ac_encryptiontype">
+                                            <option value="OPEN"<?cs if:Env.user.wlan.wl0.ac.enc == "OPEN" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.OPEN ?>
+                                            </option>
+<!--
+                                            <option value="WEP"<?cs if:Env.user.wlan.wl0.ac.enc == "WEP" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WEP ?>
+                                            </option>
+-->
+                                            <option value="WPA-PSK"<?cs if:Env.user.wlan.wl0.ac.enc == "WPA-PSK" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WPA_PSK ?>
+                                            </option>
+                                            <option value="WPA2-PSK"<?cs if:Env.user.wlan.wl0.ac.enc == "WPA2-PSK" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WPA2_PSK ?>
+                                            </option>
+                                            <option value="WPA-WPA2-PSK"<?cs if:Env.user.wlan.wl0.ac.enc == "WPA-WPA2-PSK" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WPA_WPA2_PSK ?>
+                                            </option>
+                                    </select>
+
+                                    <?cs if:?Var.wlan_ac_encryptiontype.Error ?>
+                                    <div class="help-inline">
+                                            <?cs var:Env.Var.wlan_encryptiontype.Error[Var.wlan_ac_encryptiontype.Error] ?>
+                                    </div>
+                                    <?cs /if ?>
+                                </div>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_ac_keytype"<?cs if:Env.user.wlan.wl0.ac.enc != "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_keytype") ?></th>
+			<td>
+                                <div class="control-group <?cs if:?Var.wlan_ac_keytype.Error ?>error<?cs /if ?>">
+                                    <?cs if:?Query.wlan_ac_keytype && Query.wlan_ac_keytype!=Env.user.wlan.wl0.ac.keytype ?>
+                                       <?cs set:Env.user.wlan.wl0.ac.keytype = Query.wlan_ac_keytype ?>
+                                    <?cs /if ?>
+
+                                    <select id="wlan_ac_keytype" name="wlan_ac_keytype">
+                                            <option value="ascii"<?cs if:Env.user.wlan.wl0.ac.keytype == "ascii" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_keytype.Value.ascii ?>
+                                            </option>
+                                            <option value="hexa"<?cs if:Env.user.wlan.wl0.ac.keytype == "hexa" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_keytype.Value.hexa ?>
+                                            </option>
+                                    </select>
+
+                                    <?cs if:?Var.wlan_ac_keytype.Error ?>
+                                    <div class="help-inline">
+                                            <?cs var:Env.Var.wlan_keytype.Error[Var.wlan_ac_keytype.Error] ?>
+                                    </div>
+                                    <?cs /if ?>
+                                </div>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_ac_wepkey"<?cs if:Env.user.wlan.wl0.ac.enc != "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_wepkey") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.wlan_ac_wepkey.Error ?>error<?cs /if ?>">
+                                <?cs if:?Query.wlan_ac_wepkey && Query.wlan_ac_wepkey!=Env.user.wlan.wl0.ac.wepkeys.n0 ?>
+                                   <?cs set:Env.user.wlan.wl0.ac.wepkeys.n0 = Query.wlan_ac_wepkey ?>
+                                <?cs /if ?>
+                                
+				<input type="text" id="wlan_ac_wepkey" name="wlan_ac_wepkey" class="<?cs if:?Var.wlan_ac_wepkey.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs var:html_escape(Env.user.wlan.wl0.ac.wepkeys.n0) ?>" size="63" maxlength="63" />
+
+				<?cs if:?Var.wlan_ac_wepkey.Error ?>
+				<div class="help-inline">
+					<?cs var:Env.Var.wlan_wepkey.Error[Var.wlan_ac_wepkey.Error] ?>
+				</div>
+				<?cs /if ?>
+                            </div>
+			</td>
+			<td class="col_action">
+                                <button class="btn" id="wlan_ac_wepkey_acgenerator" title="<?cs var:Env.Text.Refresh ?>" name="refresh" type="button" ><i class="icon-refresh icon-white"></i></button>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_ac_wpaenctype"<?cs if:Env.user.wlan.wl0.ac.enc == "OPEN" || Env.user.wlan.wl0.ac.enc == "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_wpaenctype") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.wlan_ac_wpaenctype.Error ?>error<?cs /if ?>">
+                                <?cs if:?Query.wlan_ac_wpaenctype && Query.wlan_ac_wpaenctype!=Env.user.wlan.wl0.ac.enctype ?>
+                                   <?cs set:Env.user.wlan.wl0.ac.enctype = Query.wlan_ac_wpaenctype ?>
+                                <?cs /if ?>
+				<select id="wlan_ac_wpaenctype" name="wlan_ac_wpaenctype" class="<?cs if:?Var.wlan_ac_wpaenctype.Error ?>error<?cs else ?>text<?cs /if ?>">
+					<option value="tkip"<?cs if:Env.user.wlan.wl0.ac.enctype == "tkip" ?> selected="selected"<?cs /if ?> <?cs if:Env.user.wlan.wl0.ac.enc == "WPA2-PSK" ?>disabled="disabled"<?cs /if ?>>
+						<?cs var:Env.Var.wlan_wpaenctype.Value.tkip ?>
+					</option>
+					<option value="aes"<?cs if:Env.user.wlan.wl0.ac.enctype == "aes" ?> selected="selected"<?cs /if ?>>
+						<?cs var:Env.Var.wlan_wpaenctype.Value.aes ?>
+					</option>
+					<option value="tkipaes"<?cs if:Env.user.wlan.wl0.ac.enctype == "tkipaes" ?> selected="selected"<?cs /if ?> <?cs if:Env.user.wlan.wl0.ac.enc == "WPA2-PSK" ?>disabled="disabled"<?cs /if ?>>
+						<?cs var:Env.Var.wlan_wpaenctype.Value.tkipaes ?>
+					</option>
+				</select>
+
+                                <?cs call:varErrorDiv_gd("wlan_ac_wpaenctype", Env.Text.InvalidValue)?>
+                            </div>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_ac_wpakey"<?cs if:Env.user.wlan.wl0.ac.enc == "OPEN" || Env.user.wlan.wl0.ac.enc == "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_wpakey") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.wlan_ac_wpakey.Error ?>error<?cs /if ?>">
+                                <?cs if:?Query.wlan_ac_wpakey && Query.wlan_ac_wpakey!=Env.user.wlan.wl0.ac.wpakey ?>
+                                   <?cs set:Env.user.wlan.wl0.ac.wpakey = Query.wlan_ac_wpakey ?>
+                                <?cs /if ?>
+                                
+				<input type="text" id="wlan_ac_wpakey" name="wlan_ac_wpakey" class="<?cs if:?Var.wlan_ac_wpakey.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs var:html_escape(Env.user.wlan.wl0.ac.wpakey) ?>" size="63" maxlength="63" />
+
+				<?cs if:?Var.wlan_ac_wpakey.Error ?>
+				<div class="help-inline">
+					<?cs var:Env.Var.wlan_wpakey.Error[Var.wlan_ac_wpakey.Error] ?>
+				</div>
+				<?cs /if ?>
+                            </div>
+			</td>
+			<td class="col_action">
+                                <button class="btn" id="wlan_ac_wpakey_acgenerator" title="<?cs var:Env.Text.Refresh ?>" name="refresh" type="button" ><i class="icon-refresh icon-white"></i></button>
+			</td>
+		</tr>
+
+	</table>
+
+            <button type="submit" name="submit_ac" class="btn"><?cs var:Button.Submit ?></button>
+
+	</form>
+</div>
+
+<div class="title">
+	<h1><?cs var:Env.Section.wlan_guest_encryption.Title ?></h1>
+</div>
+
+
+<div class="content" >
+	<?cs if:Env.user.wlan.guest.enc == "WPA-PSK" && Env.user.wlan.guest.enctype == "aes" ?>
+        <div class="alert alert-warning" id="wpa_aes_incompatibility_notice">
+                <?cs var:Env.Form.Error.wpa_aes_incompatibility ?>
+        </div>
+        <?cs /if ?>
+	<form method="post" id="form_wlan_guest_encryption" action="<?cs var:Env.Page.Name ?>">
+
+	<table id="wlan_guest_encryption">
+
+		<tr>
+			<th scope="row"><?cs call:varHeader("wlan_encryptiontype") ?></th>
+			<td>
+                                <?cs if:?Query.wlan_guest_encryptiontype && Query.wlan_guest_encryptiontype!=Env.user.wlan.guest.enc ?>
+                                   <?cs set:Env.user.wlan.guest.enc = Query.wlan_guest_encryptiontype ?>
+                                <?cs /if ?>
+                                <div class="control-group <?cs if:?Var.wlan_guest_encryptiontype.Error ?>error<?cs /if ?>">
+                                    <select id="wlan_guest_encryptiontype" name="wlan_guest_encryptiontype">
+                                            <option value="OPEN"<?cs if:Env.user.wlan.guest.enc == "OPEN" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.OPEN ?>
+                                            </option>
+<!--
+                                            <option value="WEP"<?cs if:Env.user.wlan.guest.enc == "WEP" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WEP ?>
+                                            </option>
+-->
+                                            <option value="WPA-PSK"<?cs if:Env.user.wlan.guest.enc == "WPA-PSK" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WPA_PSK ?>
+                                            </option>
+                                            <option value="WPA2-PSK"<?cs if:Env.user.wlan.guest.enc == "WPA2-PSK" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WPA2_PSK ?>
+                                            </option>
+                                            <option value="WPA-WPA2-PSK"<?cs if:Env.user.wlan.guest.enc == "WPA-WPA2-PSK" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_encryptiontype.Value.WPA_WPA2_PSK ?>
+                                            </option>
+                                    </select>
+
+                                    <?cs if:?Var.wlan_guest_encryptiontype.Error ?>
+                                    <div class="help-inline">
+                                            <?cs var:Env.Var.wlan_encryptiontype.Error[Var.wlan_guest_encryptiontype.Error] ?>
+                                    </div>
+                                    <?cs /if ?>
+                                </div>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_guest_keytype"<?cs if:Env.user.wlan.guest.enc != "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_keytype") ?></th>
+			<td>
+                                <div class="control-group <?cs if:?Var.wlan_guest_keytype.Error ?>error<?cs /if ?>">
+                                    <?cs if:?Query.wlan_guest_keytype && Query.wlan_guest_keytype!=Env.user.wlan.guest.keytype ?>
+                                       <?cs set:Env.user.wlan.guest.keytype = Query.wlan_guest_keytype ?>
+                                    <?cs /if ?>
+
+                                    <select id="wlan_guest_keytype" name="wlan_guest_keytype">
+                                            <option value="ascii"<?cs if:Env.user.wlan.guest.keytype == "ascii" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_keytype.Value.ascii ?>
+                                            </option>
+                                            <option value="hexa"<?cs if:Env.user.wlan.guest.keytype == "hexa" ?> selected="selected"<?cs /if ?>>
+                                                    <?cs var:Env.Var.wlan_keytype.Value.hexa ?>
+                                            </option>
+                                    </select>
+
+                                    <?cs if:?Var.wlan_guest_keytype.Error ?>
+                                    <div class="help-inline">
+                                            <?cs var:Env.Var.wlan_keytype.Error[Var.wlan_guest_keytype.Error] ?>
+                                    </div>
+                                    <?cs /if ?>
+                                </div>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_guest_wepkey"<?cs if:Env.user.wlan.guest.enc != "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_wepkey") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.wlan_guest_wepkey.Error ?>error<?cs /if ?>">
+                                <?cs if:?Query.wlan_guest_wepkey && Query.wlan_guest_wepkey!=Env.user.wlan.guest.wepkeys.n0 ?>
+                                   <?cs set:Env.user.wlan.guest.wepkeys.n0 = Query.wlan_guest_wepkey ?>
+                                <?cs /if ?>
+                                
+				<input type="text" id="wlan_guest_wepkey" name="wlan_guest_wepkey" class="<?cs if:?Var.wlan_guest_wepkey.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs var:html_escape(Env.user.wlan.guest.wepkeys.n0) ?>" size="63" maxlength="63" />
+
+				<?cs if:?Var.wlan_guest_wepkey.Error ?>
+				<div class="help-inline">
+					<?cs var:Env.Var.wlan_wepkey.Error[Var.wlan_guest_wepkey.Error] ?>
+				</div>
+				<?cs /if ?>
+                            </div>
+			</td>
+			<td class="col_action">
+                                <button class="btn" id="wlan_guest_wepkey_guestgenerator" title="<?cs var:Env.Text.Refresh ?>" name="refresh" type="button" ><i class="icon-refresh icon-white"></i></button>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_guest_wpaenctype"<?cs if:Env.user.wlan.guest.enc == "OPEN" || Env.user.wlan.guest.enc == "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_wpaenctype") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.wlan_guest_wpaenctype.Error ?>error<?cs /if ?>">
+                                <?cs if:?Query.wlan_guest_wpaenctype && Query.wlan_guest_wpaenctype!=Env.user.wlan.guest.enctype ?>
+                                   <?cs set:Env.user.wlan.guest.enctype = Query.wlan_guest_wpaenctype ?>
+                                <?cs /if ?>
+				<select id="wlan_guest_wpaenctype" name="wlan_guest_wpaenctype" class="<?cs if:?Var.wlan_guest_wpaenctype.Error ?>error<?cs else ?>text<?cs /if ?>">
+					<option value="tkip"<?cs if:Env.user.wlan.guest.enctype == "tkip" ?> selected="selected"<?cs /if ?> <?cs if:Env.user.wlan.guest.enc == "WPA2-PSK" ?>disabled="disabled"<?cs /if ?>>
+						<?cs var:Env.Var.wlan_wpaenctype.Value.tkip ?>
+					</option>
+					<option value="aes"<?cs if:Env.user.wlan.guest.enctype == "aes" ?> selected="selected"<?cs /if ?>>
+						<?cs var:Env.Var.wlan_wpaenctype.Value.aes ?>
+					</option>
+					<option value="tkipaes"<?cs if:Env.user.wlan.guest.enctype == "tkipaes" ?> selected="selected"<?cs /if ?> <?cs if:Env.user.wlan.guest.enc == "WPA2-PSK" ?>disabled="disabled"<?cs /if ?>>
+						<?cs var:Env.Var.wlan_wpaenctype.Value.tkipaes ?>
+					</option>
+				</select>
+
+                                <?cs call:varErrorDiv_gd("wlan_guest_wpaenctype", Env.Text.InvalidValue)?>
+                            </div>
+			</td>
+		</tr>
+
+		<tr id="row_wlan_guest_wpakey"<?cs if:Env.user.wlan.guest.enc == "OPEN" || Env.user.wlan.guest.enc == "WEP" ?> style="display: none;"<?cs /if ?>>
+			<th scope="row"><?cs call:varHeader("wlan_wpakey") ?></th>
+			<td>
+                            <div class="control-group <?cs if:?Var.wlan_guest_wpakey.Error ?>error<?cs /if ?>">
+                                <?cs if:?Query.wlan_guest_wpakey && Query.wlan_guest_wpakey!=Env.user.wlan.guest.wpakey ?>
+                                   <?cs set:Env.user.wlan.guest.wpakey = Query.wlan_guest_wpakey ?>
+                                <?cs /if ?>
+                                
+				<input type="text" id="wlan_guest_wpakey" name="wlan_guest_wpakey" class="<?cs if:?Var.wlan_guest_wpakey.Error ?>error<?cs else ?>text<?cs /if ?>" value="<?cs var:html_escape(Env.user.wlan.guest.wpakey) ?>" size="63" maxlength="63" />
+
+				<?cs if:?Var.wlan_guest_wpakey.Error ?>
+				<div class="help-inline">
+					<?cs var:Env.Var.wlan_wpakey.Error[Var.wlan_guest_wpakey.Error] ?>
+				</div>
+				<?cs /if ?>
+                            </div>
+			</td>
+			<td class="col_action">
+                                <button class="btn" id="wlan_guest_wpakey_guestgenerator" title="<?cs var:Env.Text.Refresh ?>" name="refresh" type="button" ><i class="icon-refresh icon-white"></i></button>
+			</td>
+		</tr>
+
+	</table>
+
+            <button type="submit" name="submit_guest" class="btn"><?cs var:Button.Submit ?></button>
+
+	</form>
+</div>
+
+<div class="title" id="wps_title">
+  <h1><?cs var:Env.Section.wps.Title ?></h1>
+</div>
+
+<div class="content" id="wps_content">
+
+        <?cs if:(Var.ap_active.Value == "off" && Var.ap_active_ac.Value == "off") ?>
+            <?cs set:info_notice = Env.Text.AboutWifiOff?>
+            <?cs set:wps_show = 0 ?>
+        <?cs elif:Env.user.wlan.wl0.enc == "WEP" ?>
+            <?cs set:info_notice = Env.Text.AboutWPSwithWep?>
+            <?cs set:wps_show = 0 ?>
+        <?cs elif:(Env.user.wlan.wl0.enc == "OPEN" && Env.user.wlan.wl0.ac.enc == "OPEN") ?>
+            <?cs set:info_notice = Env.Text.AboutWPSwithOpen?>
+            <?cs set:wps_show = 0 ?>
+        <?cs elif:(Env.user.wlan.closed == "1" && Env.user.wlan.ac.closed == "1")?>
+            <?cs set:info_notice = Env.Text.AboutWlanClosed?>
+            <?cs set:wps_show = 0 ?>
+        <?cs /if ?>
+        
+        <?cs if:?wps_show ?>
+        <div class="alert alert-info">
+            <?cs var:info_notice ?>
+        </div>
+
+        <?cs else ?>
+
+        <form action="<?cs var:Env.Page.Name ?>" method="post">
+        <input type="hidden" name="action" value="wps_mode" />
+        <table id="wps_activation">
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.wps_status.Header ?></th>
+                        <?cs if:Env.user.wlan.wl0.wps.mode == "disabled" ?>
+                                <?cs set:state="disabled" ?>
+                        <?cs elif:Env.status.wlan.wps.proc.status == "down" || Env.status.wlan.wps.proc.status == "wait" || Env.status.wlan.wps.proc.status == "processing"?>
+                                <?cs set:state="unused" ?>
+                        <?cs elif:Env.status.wlan.wps.proc.status == "success"?>
+                                <?cs set:state="enabled" ?>
+                        <?cs else ?>
+                                <?cs set:state="disabled" ?>
+                        <?cs /if ?>
+
+                        <td id="wps_status" class="<?cs var:state ?>">
+                               <?cs if:Env.user.wlan.wl0.wps.mode == "disabled" ?>
+                                        <?cs var:Env.Var.wps_mode.Value.disabled ?>
+                               <?cs else ?>
+                                        <?cs call:varValue_d(Env.Var.wps_status.Value[Env.status.wlan.wps.proc.status], Env.Var.wps_status.Value.error) ?>
+                                        <?cs if:Env.status.wlan.wps.proc.status == "success" && string.length(Env.status.wlan.wps.proc.staname) > 0?>
+                                                 (<?cs var:Env.status.wlan.wps.proc.staname?>)
+                                        <?cs /if?>
+                               <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.wps_mode.Header ?></th>
+                        <td>
+                                 <?cs call:div_onoff("wps_mode", Env.user.wlan.wl0.wps.mode == "enabled") ?>
+                        </td>
+                </tr>
+        </table>
+            <button type="submit" name="submit" class="btn"><?cs var:Button.Submit ?></button>
+        </form>
+
+        <br/>
+
+        <div id="wps_method_content"<?cs if:Env.user.wlan.wl0.wps.mode != "enabled" ?> style="display: none;"<?cs /if ?>>
+
+        <p>
+                <?cs var:Env.Text.AboutWPSMethods?>
+        </p>
+
+        <form action="<?cs var:Env.Page.Name ?>" method="post">
+        <input type="hidden" name="action" value="wps_method" />
+        <table id="wps_method">
+                <tr>
+		        <th scope="col" colspan="1">
+                            <label for="wps_method_pbc">
+                               <input type="radio" value="pbc" name="wps_method" id="wps_method_pbc"<?cs if:Env.status.wlan.wps.proc.method == "pbc" ?> checked="checked"<?cs /if ?> />
+                               <?cs var:Env.Var.wps_method.Value.pbc?>
+                            </label>
+                        </th>
+                        <td id="wps_method_pbc">
+                               <?cs var:Env.Text.AboutPBCMethod?> 
+                        </td>
+                        <td class="col_action" valign="top" rowspan="3">
+                        <img src="/img/img_btn_wps_nb6vac.png?v=3.4" alt="" width="150" />
+
+                        </td>
+                </tr>
+                <tr>
+		        <th scope="col" colspan="1">
+                            <label for="wps_method_pinsta"><input type="radio" value="pinsta" name="wps_method" id="wps_method_pinsta"<?cs if:Env.status.wlan.wps.proc.method == "pinsta" ?> checked="checked"<?cs /if ?> />
+                               <?cs var:Env.Var.wps_method.Value.pinsta?></label>
+                        </th>
+                        <td id="wps_method_pinsta">
+                                <?cs var:Env.Text.AboutPINSTA?>&nbsp;:&nbsp;<input type="text" class="text" value="<?cs var:Env.status.wlan.wps.proc.stapin?>" name="wps_pinsta" size="10" maxlength="8" autocomplete="off" />
+                        </td>
+                </tr>
+                <tr style="display: none;">
+		        <th scope="col" colspan="1">
+                               <label for="wps_method_pinap"><input type="radio" value="pinap" name="wps_method" id="wps_method_pinap"<?cs if:Env.status.wlan.wps.proc.method == "pinap" ?> checked="checked"<?cs /if ?> disabled="disabled" />
+                               <?cs var:Env.Var.wps_method.Value.pinap?></label>
+                        </th>
+                        <td id="wps_method_pinap">
+                                <?cs var:Env.Text.AboutPINAP?>&nbsp;<input type="text" class="text" value="<?cs var:Env.status.wlan.wps.proc.appin?>" name="wps_pinap" size="10" maxlength="8" disabled="disabled" autocomplete="off" />
+                        </td>
+                </tr>
+        </table>
+        <button type="submit" name="submit" class="btn"><?cs var:Button.Launch ?></button>
+        </form>
+        </div>
+        <?cs /if ?>
+</div>

@@ -1,0 +1,19 @@
+<div class="title">
+	<h1 class="large"><?cs var:Env.Section.ADSLStat.Title ?></h1>
+</div>
+
+<div class="content">
+	<pre><?cs each:part = Var.ADSLStats ?><?cs var:part.Value?><?cs /each?></pre>
+</div>
+
+<div class="title">
+	<h1 class="large"><?cs var:Env.Section.ADSLDiag.Title ?></h1>
+</div>
+
+<div class="content">
+
+        <div class="button_submit" id="toggle_diag_div">
+		<button id="toggle_diag" class="btn" type="button"><?cs var:Env.Btn.ShowHideDump.Value ?></button>
+	</div>
+	<pre id="diag_dump"><?cs each:part = Var.ADSLLineDiag ?><?cs var:part.Value?><?cs /each?></pre>
+</div>

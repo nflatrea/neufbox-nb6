@@ -1,0 +1,128 @@
+<?cs if:Env.status.gpon.mode == "on" ?>
+	<div class="title">
+		<h1><?cs var:Env.Section.gpon.Title ?></h1>
+	</div>
+
+	<div class="content">
+		<?cs if:Var.gpon_model.Value == "" ?>
+		<p><?cs var:Env.Var.gpon.unavailable ?></p>
+		<?cs else ?>
+		<table id="gpon_infos">
+			<tr>
+				<th scope="row"><?cs call:varHeader("gpon_model") ?></th>
+				<td><?cs if:?Var.gpon_model_full.Value  ?><?cs var:Var.gpon_model_full.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><?cs call:varHeader("gpon_sn") ?></th>
+				<td><?cs if:?Var.gpon_sn.Value  ?><?cs var:Var.gpon_sn.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><?cs call:varHeader("gpon_uptime") ?></th>
+				<td><?cs if:?Var.ftth_port_uptime.day.Value  ?>
+					<?cs var:Var.ftth_port_uptime.day.Value ?> <?cs var:Env.Text.dayAbbr?>
+					<?cs var:Var.ftth_port_uptime.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+					<?cs var:Var.ftth_port_uptime.min.Value ?> <?cs var:Env.Text.minAbbr?>
+					<?cs var:Var.ftth_port_uptime.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+					<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><?cs call:varHeader("gpon_ranging") ?></th>
+				<td><?cs if:?Var.gpon_ranging.Value  ?><?cs var:Var.gpon_ranging.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><?cs call:varHeader("gpon_rssi_receive") ?></th>
+				<td><?cs if:?Var.gpon_rssi_receive.Value  ?><?cs var:Var.gpon_rssi_receive.Value ?> dBm<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><?cs call:varHeader("gpon_rssi_transmit") ?></th>
+				<td><?cs if:?Var.gpon_rssi_transmit.Value  ?><?cs var:Var.gpon_rssi_transmit.Value ?> dBm<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><?cs call:varHeader("gpon_rssi_bias") ?></th>
+				<td><?cs if:?Var.gpon_rssi_bias.Value  ?><?cs var:Var.gpon_rssi_bias.Value ?> mA<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><?cs call:varHeader("gpon_rssi_temp") ?></th>
+				<td><?cs if:?Var.gpon_rssi_temp.Value  ?><?cs var:Var.gpon_rssi_temp.Value ?> °C<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><?cs call:varHeader("gpon_rssi_vcc") ?></th>
+				<td><?cs if:?Var.gpon_rssi_vcc.Value  ?><?cs var:Var.gpon_rssi_vcc.Value ?> V<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+		</table>
+		<?cs /if ?>
+	</div>
+
+<?cs else ?>
+
+<div class="title">
+		<h1><?cs var:Env.Section.ont.Title ?></h1>
+	</div>
+
+	<div class="content">
+		<?cs if:Var.ont_type.Value == "" ?>
+		<p><?cs var:Env.Var.ont.unavailable ?></p>
+		<?cs else ?>
+		<table id="ont_infos">
+			<tr>
+				<th scope="row"><?cs call:varHeader("ont_model") ?></th>
+				<td><?cs if:?Var.ont_type_full.Value  ?><?cs var:Var.ont_type_full.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+			<?cs if:Var.ont_type.Value=="I-010" && Var.ont_status.Value == "up" ?>
+				<tr>
+					<th scope="row"><?cs call:varHeader("ont_version_active") ?></th>
+					<td><?cs if:?Var.ont_version_active.Value  ?><?cs var:Var.ont_version_active.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+				</tr>
+				<tr>
+					<th scope="row"><?cs call:varHeader("ont_version_passive") ?></th>
+					<td><?cs if:?Var.ont_version_passive.Value  ?><?cs var:Var.ont_version_passive.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+				</tr>
+				<tr>
+					<th scope="row"><?cs call:varHeader("ont_uptime") ?></th>
+					<td><?cs if:?Var.ont_uptime.day.Value  ?>
+						<?cs var:Var.ont_uptime.day.Value ?> <?cs var:Env.Text.dayAbbr?>
+						<?cs var:Var.ont_uptime.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+						<?cs var:Var.ont_uptime.min.Value ?> <?cs var:Env.Text.minAbbr?>
+						<?cs var:Var.ont_uptime.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+						<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+				</tr>
+				<tr>
+					<th scope="row"><?cs call:varHeader("ont_refresh") ?></th>
+					<td><?cs if:?Var.ont_refresh.HHMMSS.Value  ?><?cs var:Env.Text.Day[Var.ont_refresh.n_day.Value] ?> <?cs var:Var.ont_refresh.day.Value ?> <?cs var:Env.Text.Month[Var.ont_refresh.n_month.Value] ?> <?cs var:Var.ont_refresh.year.Value ?> <?cs var:Var.ont_refresh.HHMMSS.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+				</tr>
+				<tr>
+					<th scope="row"><?cs call:varHeader("ont_sn") ?></th>
+					<td><?cs if:?Var.ont_sn.Value  ?><?cs var:Var.ont_sn.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+				</tr>
+			<?cs /if ?>
+			<tr>
+				<th scope="row"><?cs call:varHeader("ont_ranging") ?></th>
+				<td><?cs if:?Var.ont_ranging.Value  ?><?cs var:Var.ont_ranging.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+			</tr>
+			<?cs if:Var.ont_type.Value=="I-010" ?>
+				<tr>
+					<th scope="row"><?cs call:varHeader("ont_rssi_receive") ?></th>
+					<td><?cs if:?Var.ont_rssi_receive.Value  ?><?cs var:Var.ont_rssi_receive.Value ?> dBm<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+				</tr>
+				<tr>
+					<th scope="row"><?cs call:varHeader("ont_rssi_transmit") ?></th>
+					<td><?cs if:?Var.ont_rssi_transmit.Value  ?><?cs var:Var.ont_rssi_transmit.Value ?> dBm<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+				</tr>
+				<tr>
+					<th scope="row"><?cs call:varHeader("ont_rssi_bias") ?></th>
+					<td><?cs if:?Var.ont_rssi_bias.Value  ?><?cs var:Var.ont_rssi_bias.Value ?> mA<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+				</tr>
+				<tr>
+					<th scope="row"><?cs call:varHeader("ont_rssi_temp") ?></th>
+					<td><?cs if:?Var.ont_rssi_temp.Value  ?><?cs var:Var.ont_rssi_temp.Value ?> °C<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+				</tr>
+				<tr>
+					<th scope="row"><?cs call:varHeader("ont_rssi_vcc") ?></th>
+					<td><?cs if:?Var.ont_rssi_vcc.Value  ?><?cs var:Var.ont_rssi_vcc.Value ?> V<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+				</tr>
+			<?cs /if ?>
+
+		</table>
+		<?cs /if ?>
+	</div>
+<?cs /if ?>

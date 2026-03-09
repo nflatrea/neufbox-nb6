@@ -1,0 +1,452 @@
+<div class="title">
+        <h1><?cs var:Env.Section.wifi_info_2_4.Title ?></h1>
+</div>
+
+<div class="content">
+        <table id="wifi_info" class="magictable">
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_status") ?></th>
+                        <td id="wlan_status" class="<?cs if:Var.wifi_status.Value == "off" ?>disabled<?cs else ?><?cs if:Env.user.wlan.active == "on" ?>enabled<?cs else ?>disabled<?cs /if ?><?cs /if ?>">
+                                <?cs if:Var.wifi_status.Value == "on" ?>
+                                    <?cs if:Env.user.wlan.active == "on" ?>
+                                        <?cs var:Env.Var.wifi_status.Value.on ?>
+                                    <?cs else ?>
+                                        <?cs var:Env.Var.wifi_status.Value.off ?>
+                                    <?cs /if ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.wifi_status.Value[Var.wifi_off_cause.Value] ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_ssid") ?></th>
+                        <td><?cs var:Env.user.wlan.wl0.ssid ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_closed") ?></th>
+                        <td>
+                                <?cs if:Env.user.wlan.closed == "0" ?>
+                                        <?cs var:Env.Var.wifi_closed.Value.0 ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.wifi_closed.Value.1 ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_channel") ?></th>
+                        <td>
+                                <?cs if:Var.wifi_autochannel.Value == "on"?>
+                                        <?cs var:Env.Text.auto?> ( <?cs var:Env.Text.currentChannel?>: <?cs var:Var.wifi_channel.Value ?> )
+                                <?cs else?>
+                                        <?cs var:Var.wifi_channel.Value ?>
+                                <?cs /if?>
+
+                                <?cs if:Var.wifi_mode.Value == "11n" && Var.wifi_ht40.Value == "on"?>
+                                        ( <?cs var:Env.Text.ht40Enabled?> )
+                                <?cs /if?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_mode") ?></th>
+                        <td>
+				<?cs call:varValue(Env.Var.wifi_mode.Value[Var.wifi_mode.Value])?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_encryption") ?></th>
+                        <td>
+                                <?cs if:Var.wifi_encryption.Value == "OPEN" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.OPEN ?>
+                                <?cs elif:Var.wifi_encryption.Value == "WEP" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WEP ?>
+                                <?cs elif:Var.wifi_encryption.Value == "WPA-PSK" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WPA_PSK ?> ( <?cs if:Var.wifi_keytype.Value == "tkip" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkip ?><?cs elif:Var.wifi_keytype.Value == "aes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.aes ?><?cs elif:Var.wifi_keytype.Value == "tkipaes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkipaes ?><?cs /if ?> )
+                                <?cs elif:Var.wifi_encryption.Value == "WPA2-PSK" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WPA2_PSK ?> ( <?cs if:Var.wifi_keytype.Value == "tkip" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkip ?><?cs elif:Var.wifi_keytype.Value == "aes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.aes ?><?cs elif:Var.wifi_keytype.Value == "tkipaes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkipaes ?><?cs /if ?> )
+                                <?cs elif:Var.wifi_encryption.Value == "WPA-WPA2-PSK" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WPA_WPA2_PSK ?> ( <?cs if:Var.wifi_keytype.Value == "tkip" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkip ?><?cs elif:Var.wifi_keytype.Value == "aes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.aes ?><?cs elif:Var.wifi_keytype.Value == "tkipaes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkipaes ?><?cs /if ?> )
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_key") ?></th>
+                        <td>
+                                <?cs if:Var.wifi_encryption.Value == "OPEN" ?>
+                                        <?cs var:Env.Var.wifi_key.Value.none ?>
+                                <?cs else ?>
+                                        <?cs var:html_escape(Var.wifi_key.Value) ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_macfiltering") ?></th>
+                        <td>
+                                <?cs if:Var.wifi_macfiltering.Value != "off" ?>
+                                        <?cs var:Env.Var.wifi_macfiltering.Value.on ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.wifi_macfiltering.Value.off ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("qrcode_wifi") ?></th>
+                        <td>
+                            <div id="easy2connect">
+                                <p><?cs var:Env.Text.qrcode_wifi ?></p>
+                                <div id="qrcode">
+                                    <input type="hidden" name="ssid" value="<?cs var:js_escape(Env.user.wlan.wl0.ssid) ?>" />
+                                    <input type="hidden" name="type" value="<?cs var:Env.user.wlan.wl0.enc ?>" />
+                                        <?cs set:pass="" ?>
+                                        <?cs if: string.find( Env.user.wlan.wl0.enc, "WPA") != -1 ?>
+                                            <?cs set:pass=Env.user.wlan.wl0.wpakey ?>
+                                        <?cs /if ?>
+                                        <?cs if: string.find( Env.user.wlan.wl0.enc, "WEP") != -1  ?>
+                                            <?cs set:pass=Env.user.wlan.wl0.wepkeys.n0 ?>
+                                        <?cs /if ?>
+                                    <input type="hidden" name="pass" value="<?cs var:js_escape(pass) ?>" />
+                                    <input type="hidden" name="hide" value="<?cs var:Env.user.wlan.closed ?>" />
+                                </div>
+
+                            </div>
+                        </td>
+                </tr>
+        </table>
+</div>
+
+
+
+<?cs if:Env.Box.Have_5GHz == "1" ?>
+<div class="title">
+    <h1><?cs var:Env.Section.wifi_info_5.Title ?></h1>
+</div>
+
+<div class="content">
+        <table id="wifi_info_ac" class="magictable">
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_status") ?></th>
+                        <td id="wlan_status_ac" class="<?cs if:Var.wifi_status.Value == "off" ?>disabled<?cs else ?><?cs if:Env.user.wlan.ac.active == "on" ?>enabled<?cs else ?>disabled<?cs /if ?><?cs /if ?>">
+                                <?cs if:Var.wifi_status.Value == "on" ?>
+                                    <?cs if:Env.user.wlan.ac.active == "on" ?>
+                                        <?cs var:Env.Var.wifi_status.Value.on ?>
+                                    <?cs else ?>
+                                        <?cs var:Env.Var.wifi_status.Value.off ?>
+                                    <?cs /if ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.wifi_status.Value[Var.wifi_off_cause.Value] ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_ssid") ?></th>
+                        <td><?cs var:Env.user.wlan.wl0.ac.ssid ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_closed") ?></th>
+                        <td>
+                                <?cs if:Env.user.wlan.ac.closed == "0" ?>
+                                        <?cs var:Env.Var.wifi_closed.Value.0 ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.wifi_closed.Value.1 ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_dfs") ?></th>
+			<td>
+                                <?cs if:Env.user.wlan.ac.dfs == "on" ?>
+                                        <?cs var:Env.Var.wifi_status.Value.on ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.wifi_status.Value.off ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+		        <th scope="row"><?cs call:varHeader("wifi_bwcap") ?></th>
+			<td><?cs var:Env.user.wlan.ac.bwcap?><?cs var:Env.Text.MHz ?></td>
+                </tr>
+		<tr>
+                        <th scope="row"><?cs call:varHeader("wifi_channel") ?></th>
+                        <td>
+                                <?cs if:Var.wifi_autochannel_ac.Value == "on"?>
+                                        <?cs var:Env.Text.auto?> ( <?cs var:Env.Text.currentChannel?>: <?cs var:Var.wifi_channel_ac.Value ?> )
+                                <?cs else?>
+                                        <?cs var:Var.wifi_channel_ac.Value ?>
+                                <?cs /if?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_mode") ?></th>
+                        <td>
+				<?cs var:Env.user.wlan.ac.mode ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_encryption") ?></th>
+                        <td>
+                                <?cs if:Var.wifi_encryption_ac.Value == "OPEN" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.OPEN ?>
+                                <?cs elif:Var.wifi_encryption_ac.Value == "WEP" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WEP ?>
+                                <?cs elif:Var.wifi_encryption_ac.Value == "WPA-PSK" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WPA_PSK ?> ( <?cs if:Var.wifi_keytype_ac.Value == "tkip" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkip ?><?cs elif:Var.wifi_keytype_ac.Value == "aes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.aes ?><?cs elif:Var.wifi_keytype_ac.Value == "tkipaes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkipaes ?><?cs /if ?> )
+                                <?cs elif:Var.wifi_encryption_ac.Value == "WPA2-PSK" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WPA2_PSK ?> ( <?cs if:Var.wifi_keytype_ac.Value == "tkip" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkip ?><?cs elif:Var.wifi_keytype_ac.Value == "aes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.aes ?><?cs elif:Var.wifi_keytype_ac.Value == "tkipaes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkipaes ?><?cs /if ?> )
+                                <?cs elif:Var.wifi_encryption_ac.Value == "WPA-WPA2-PSK" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WPA_WPA2_PSK ?> ( <?cs if:Var.wifi_keytype_ac.Value == "tkip" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkip ?><?cs elif:Var.wifi_keytype_ac.Value == "aes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.aes ?><?cs elif:Var.wifi_keytype_ac.Value == "tkipaes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkipaes ?><?cs /if ?> )
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_key") ?></th>
+                        <td>
+                                <?cs if:Var.wifi_encryption_ac.Value == "OPEN" ?>
+                                        <?cs var:Env.Var.wifi_key.Value.none ?>
+                                <?cs else ?>
+                                        <?cs var:html_escape(Var.wifi_key_ac.Value) ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_macfiltering") ?></th>
+                        <td>
+                                <?cs if:Var.wifi_macfiltering.Value != "off" ?>
+                                        <?cs var:Env.Var.wifi_macfiltering.Value.on ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.wifi_macfiltering.Value.off ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+		<tr>
+                        <th scope="row"><?cs call:varHeader("qrcode_wifi") ?></th>
+                        <td>
+                            <div id="easy2connect5">
+                                <p><?cs var:Env.Text.qrcode_wifi ?></p>
+                                <div id="qrcode5">
+                                    <input type="hidden" name="ssid" value="<?cs var:js_escape(Env.user.wlan.wl0.ac.ssid) ?>" />
+                                    <input type="hidden" name="type" value="<?cs var:Env.user.wlan.wl0.ac.enc ?>" />
+                                        <?cs set:pass="" ?>
+                                        <?cs if: string.find( Env.user.wlan.wl0.ac.enc, "WPA") != -1 ?>
+                                            <?cs set:pass=Env.user.wlan.wl0.ac.wpakey ?>
+                                        <?cs /if ?>
+                                        <?cs if: string.find( Env.user.wlan.wl0.ac.enc, "WEP") != -1  ?>
+                                            <?cs set:pass=Env.user.wlan.wl0.ac.wepkeys.n0 ?>
+                                        <?cs /if ?>
+                                    <input type="hidden" name="pass" value="<?cs var:js_escape(pass) ?>" />
+                                    <input type="hidden" name="hide" value="<?cs var:Env.user.wlan.ac.closed ?>" />
+                                </div>
+
+                            </div>
+                        </td>
+                </tr>
+        </table>
+</div>
+<?cs /if ?>
+
+<div class="title">
+    <h1><?cs var:Env.Section.wifi_info_guest.Title ?></h1>
+</div>
+<div class="content">
+            <table id="wifi_info_guest" class="magictable">
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_status") ?></th>
+                        <td id="wlan_status_guest" class="<?cs if:Var.wifi_status.Value == "off" ?>disabled<?cs else ?><?cs if:Env.user.wlan.guest.active == "on" ?>enabled<?cs else ?>disabled<?cs /if ?><?cs /if ?>">
+                                <?cs if:Var.wifi_status.Value == "on" ?>
+                                    <?cs if:Env.user.wlan.guest.active == "on" ?>
+                                        <?cs var:Env.Var.wifi_status.Value.on ?>
+                                    <?cs else ?>
+                                        <?cs var:Env.Var.wifi_status.Value.off ?>
+                                    <?cs /if ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.wifi_status.Value[Var.wifi_off_cause.Value] ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_ssid") ?></th>
+                        <td><?cs var:Env.user.wlan.guest.ssid ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_closed") ?></th>
+                        <td>
+                                <?cs if:Env.user.wlan.guest.closed == "0" ?>
+                                        <?cs var:Env.Var.wifi_closed.Value.0 ?>
+                                <?cs else ?>
+                                        <?cs var:Env.Var.wifi_closed.Value.1 ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_encryption") ?></th>
+                        <td>
+                                <?cs if:Env.user.wlan.guest.enc== "OPEN" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.OPEN ?>
+                                <?cs elif:Env.user.wlan.guest.enc == "WEP" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WEP ?>
+                                <?cs elif:Env.user.wlan.guest.enc == "WPA-PSK" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WPA_PSK ?> ( <?cs if:Env.user.wlan.guest.enctype == "tkip" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkip ?><?cs elif:Env.user.wlan.guest.enctype == "aes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.aes ?><?cs elif:Env.user.wlan.guest.enctype == "tkipaes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkipaes ?><?cs /if ?> )
+                                <?cs elif:Env.user.wlan.guest.enc == "WPA2-PSK" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WPA2_PSK ?> ( <?cs if:Env.user.wlan.guest.enctype == "tkip" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkip ?><?cs elif:Env.user.wlan.guest.enctype == "aes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.aes ?><?cs elif:Env.user.wlan.guest.enctype == "tkipaes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkipaes ?><?cs /if ?> )
+                                <?cs elif:Env.user.wlan.guest.enc == "WPA-WPA2-PSK" ?>
+                                        <?cs var:Env.Var.wifi_encryption.Value.WPA_WPA2_PSK ?> ( <?cs if:Env.user.wlan.guest.enctype == "tkip" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkip ?><?cs elif:Env.user.wlan.guest.enctype == "aes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.aes ?><?cs elif:Env.user.wlan.guest.enctype == "tkipaes" ?><?cs var:Env.Var.wifi_wpaenctype.Value.tkipaes ?><?cs /if ?> )
+                                <?cs /if ?>
+                        </td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs call:varHeader("wifi_key") ?></th>
+                        <td>
+                                <?cs if:Env.user.wlan.guest.enc == "OPEN" ?>
+                                        <?cs var:Env.Var.wifi_key.Value.none ?>
+                                <?cs else ?>
+                                        <?cs var:html_escape(Env.user.wlan.guest.wpakey) ?>
+                                <?cs /if ?>
+                        </td>
+                </tr>
+		<tr>
+			<th scope="row"><?cs call:varHeader("guest_schedule") ?></th>
+			<td>
+			    <?cs each:mode = Env.Var.guest_schedule.List ?>
+				<?cs if:Env.user.wlan.guest.schedule == mode.Value ?>
+					<?cs var:mode.Label ?>
+				<?cs /if ?>
+			    <?cs /each?>
+			</td>
+		</tr>
+		<tr>
+                        <th scope="row"><?cs call:varHeader("qrcode_wifi") ?></th>
+                        <td>
+                            <div id="easy2connectGuest">
+                                <p><?cs var:Env.Text.qrcode_wifi ?></p>
+                                <div id="qrcodeGuest">
+                                    <input type="hidden" name="ssid" value="<?cs var:js_escape(Env.user.wlan.guest.ssid) ?>" />
+                                    <input type="hidden" name="type" value="<?cs var:Env.user.wlan.guest.enc ?>" />
+                                        <?cs set:pass="" ?>
+                                        <?cs if: string.find( Env.user.wlan.guest.enc, "WPA") != -1 ?>
+                                            <?cs set:pass=Env.user.wlan.guest.wpakey ?>
+                                        <?cs /if ?>
+                                        <?cs if: string.find( Env.user.wlan.guest.enc, "WEP") != -1  ?>
+                                            <?cs set:pass=Env.user.wlan.guest.wepkeys.n0 ?>
+                                        <?cs /if ?>
+                                    <input type="hidden" name="pass" value="<?cs var:js_escape(pass) ?>" />
+                                    <input type="hidden" name="hide" value="<?cs var:Env.user.wlan.guest.closed ?>" />
+                                </div>
+
+                            </div>
+                        </td>
+                </tr>
+        </table>
+</div>
+
+
+
+<div id="ctn_hotspot_disable" <?cs if:Env.autoconf.hotspot.enable != "false"?>style="display:none;"<?cs /if?>>
+<div class="title">
+	<h1><?cs var:Env.Section.hotspot_info.Title ?></h1>
+</div>
+
+<div class="content">
+        <div class="alert alert-warning">
+            <?cs call:varValue_d(Env.Var.hotspot_enable.Value[Env.autoconf.hotspot.enable], Env.Var.hotspot_enable.Value.false)?>
+        </div>
+</div>
+</div>
+
+<?cs if:Env.status.net.cgnat.status != "up" ?>
+<div id="ctn_hotspot_enable" <?cs if:Env.autoconf.hotspot.enable == "false"?>style="display:none;"<?cs /if?>>
+<div class="title">
+	<h1><?cs var:Env.Section.hotspot_info.Title ?></h1>
+</div>
+
+<div class="content">
+	<table id="hotspot_info">
+		<tr>
+			<th scope="row"><?cs call:varHeader("hotspot_status") ?></th>
+			<td class="<?cs if:Env.status.hotspot.status == "up" ?>enabled<?cs elif:(Env.status.hotspot.status == "starting"  || Env.status.hotspot.status == "stopping") ?>unused<?cs else ?>disabled<?cs /if ?>" id="hotspot_status">
+			    	<?cs call:varValue(Env.Var.hotspot_status.Value[Env.status.hotspot.status])?>
+			</td>
+		</tr>
+		<tr id="row_ssid"<?cs if:Env.status.hotspot.status != "up"?> style="display:none"<?cs /if?>>
+			<th scope="row"><?cs call:varHeader("hotspot_ssid") ?></th>
+			<td id="col_ssid">
+                                                                <?cs var:Env.status.hotspot.ssids ?>
+			</td>
+		</tr>
+	</table>
+</div>
+</div>
+<?cs /if?>
+
+<div class="title">
+        <h1><?cs var:Env.Section.wifi_assoc.Title ?></h1>
+</div>
+
+<div class="content">
+    <?cs set:cpt = 0?>
+        <table id="wifi_assoc" class="magictable">
+                <thead>
+			<tr>
+				<th scope="col" class="col_number">#</th>
+				<th scope="col" class="col_mac"><?cs var:Env.Var.mac_addr.Header?></th>
+                                <th scope="col" class="col_hostname"><?cs var:Env.Var.Sys.Hostname.Header ?></th>
+				<th scope="col" class="col_ip"><?cs var:Env.Var.ip_addr.Header?></th>
+				<th scope="col" class="col_ssid"><?cs var:Env.Var.ssid.Header?></th>
+				<th scope="col" class="col_type"><?cs var:Env.Var.type.Header?></th>
+			</tr>
+		</thead>
+		<tbody>
+
+			<?cs each:host = Env.status.lan.topology.device ?>
+                            <?cs if:host.status=="online" && (host.port=="wl0" || host.port=="wl1" || host.port=="guest") && (host.ipaddr != '' || host.ip6masteraddr != '') ?>
+                            <?cs set:cpt = #cpt +1?>
+                            <tr>
+                                    <td data-title="#" class="col_number">
+                                            <?cs var:cpt ?>
+                                    </td>
+                                    <td data-title="<?cs var:Env.Var.mac_addr.Header?>">
+                                            <?cs var:host.macaddr ?>
+                                    </td>
+                                    <td data-title="<?cs var:Env.Var.Sys.Hostname.Header ?>">
+                                            <?cs if:host.hostname != ''  ?>
+                                            <?cs var:host.hostname ?>
+                                            <?cs else?>
+                                            -
+                                            <?cs /if?>
+                                    </td>
+                                    <td data-title="<?cs var:Env.Var.ip_addr.Header?>">
+                                            <?cs var:host.ipaddr ?>
+                                            <?cs if:host.ip6masteraddr != ''  ?>
+                                            <br/><?cs var:host.ip6masteraddr ?>
+                                            <?cs /if?>
+
+                                    </td>
+
+
+				    <td data-title="<?cs var:Env.Var.ssid.Header ?>">
+					    <?cs if:host.port=="wl0"?>
+					    <?cs var:Env.user.wlan.wl0.ac.ssid ?>
+					    <?cs elif:host.port=="wl1"?>
+					    <?cs var:Env.user.wlan.wl0.ssid ?>
+					    <?cs elif:host.port=="guest"?>
+					    <?cs var:Env.user.wlan.guest.ssid ?>
+                                            <?cs /if?>
+                                    </td>
+				    <td data-title="<?cs var:Env.Var.type.Header ?>">
+					    <?cs if:host.port=="wl0"?>
+					    <?cs var:Env.Text.5 ?>
+					    <?cs else ?>
+					    <?cs var:Env.Text.2_4 ?>
+                                            <?cs /if?>
+                                    </td>
+                            </tr>
+                            <?cs /if ?>
+			<?cs /each ?>
+
+                        <?cs if:#cpt==0 ?>
+                        <tr>
+                            <td colspan="3" align="center">
+                                <?cs var:Env.Text.NoConnectedClients ?>
+                            </td>
+                        </tr>
+                        <?cs /if ?>
+		</tbody>
+	</table>
+</div>

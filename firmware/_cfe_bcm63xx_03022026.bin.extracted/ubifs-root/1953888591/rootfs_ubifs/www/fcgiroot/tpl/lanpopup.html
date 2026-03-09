@@ -1,0 +1,120 @@
+<div class="title">
+    <h1 class="large"><?cs var:Env.Section.connected_computers.Header?> <?cs if:Var.PortFilter.Value=='wlan'?><?cs var:Env.Text.InWifi?><?cs /if?></h1>
+</div>
+
+<?cs if:!?Query.any_type ?>
+<?cs set:Query.any_type="lan" ?>
+<?cs /if ?>
+
+<?cs set:cpt = 0?>
+<?cs if:subcount(Env.status.lan.topology.device) > 0 ?>
+    <?cs each:host = Env.status.lan.topology.device ?>
+        <?cs if:(Var.PortFilter.Value=="wlan" && (host.port=="wl0" || host.port=="wl1")) || (Var.PortFilter.Value=="" && host.type=="pc" && host.port!="guest")  ?>
+            <?cs if:(Var.IPVersion.Value == "6" && (host.ip6masteraddr!="")) || (Var.IPVersion.Value != "6" && host.ipaddr!="") ?>
+                <?cs if:?Query.prefix ?>
+                    <?cs if:string.find(host.ip6masteraddr, Query.prefix) != -1 ?>
+                        <?cs set:cpt = #cpt +1?>
+                        <?cs set:host_index[cpt] = name(host) ?>
+                    <?cs /if ?>
+                <?cs else ?>
+                    <?cs set:cpt = #cpt +1?>
+                    <?cs set:host_index[cpt] = name(host) ?>
+                <?cs /if ?>
+            <?cs /if ?>
+        <?cs /if ?>
+    <?cs /each ?>
+<?cs /if?>
+
+        <?cs if:cpt==0?>
+            <?cs var:Env.Text.NoClient?>
+	<?cs /if?>
+	
+	<table id="network_clients" class="magictable">
+		<thead>
+			<tr>
+				<th scope="col" class="col_mac"><?cs var:Env.Var.mac_addr.Header?></th>
+				<th scope="col" class="col_ip"><?cs var:Env.Var.ip_addr.Header?></th>
+				<?cs if:Var.PortFilter.Value!='wlan'?><th scope="col" class="col_port"><?cs var:Env.Var.port.Header?></th><?cs /if?>
+				<th scope="col" class="col_choice"><?cs var:Env.Var.choice.Header?></th>
+			</tr>
+		</thead>
+                <?cs if:?Query.any && ?Query.any_type ?>
+                <tfoot>
+                    <tr>
+                        <td></td>
+                        <td><?cs var:html_escape(Env.Var.Any[Query.any_type]) ?></td>
+                        <td></td>
+                        <td>
+                            <input type="hidden" id="mac_any" value="*" />
+                            <input type="hidden" id="ip_any" value="*" />
+                            <input type="hidden" id="name_any" value="*" />
+                            <button name="submit" id="plc_valid-any" value="*" class="pull-right btn"><?cs var:Env.Var.Any ?></button>
+                        </td>
+                    </tr>
+                </tfoot>
+                <?cs /if ?>
+		<tbody>
+                        <?cs if:Query.any_type=="lan"?>
+                        <?cs each:i = host_index ?>
+                        <?cs with:host = Env.status.lan.topology.device[i] ?>
+                        <tr class="<?cs if:host.status != "online" ?>muted<?cs /if ?>">
+				<td data-title="<?cs var:Env.Var.mac_addr.Header?>">
+					<input type="hidden" id="mac_<?cs name:host?>" value="<?cs var:host.macaddr ?>" />
+					<?cs var:host.macaddr ?>
+				</td> 
+                                <?cs if:Var.IPVersion.Value == "6" ?>
+                                    <?cs set:ip6 = "" ?>
+                                    <?cs if:host.ip6masteraddr != ""?>
+                                        <?cs set:ip6 = host.ip6masteraddr ?>
+                                    <?cs elif:host.ip6masteraddr!="" ?>
+                                        <?cs set:ip6 = host.ip6masteraddr ?>
+                                    <?cs /if?>
+				<td data-title="<?cs var:Env.Var.ip_addr.Header?>" >
+					<input type="hidden" id="ip_<?cs name:host?>" value="<?cs var:ip6 ?>" />
+                                        <input type="hidden" id="name_<?cs name:host?>" value="<?cs var:host.hostname ?>" />
+					<?cs var:ip6 ?>
+                                        <?cs if:host.hostname != ''  ?>
+                                        (<?cs var:host.hostname ?>)
+                                        <?cs /if?>
+				</td>
+                                <?cs else ?>
+                                <td data-title="<?cs var:Env.Var.ip_addr.Header?>" >
+					<input type="hidden" id="ip_<?cs name:host?>" value="<?cs var:host.ipaddr ?>" />
+                                        <input type="hidden" id="name_<?cs name:host?>" value="<?cs var:host.hostname ?>" />
+					<?cs var:host.ipaddr ?>
+                                        <?cs if:host.hostname != ''  ?>
+                                        (<?cs var:host.hostname ?>)
+                                        <?cs /if?>
+				</td>
+                                <?cs /if ?>
+				<?cs if:Var.PortFilter.Value!='wlan'?>
+				<td data-title="<?cs var:Env.Var.port.Header?>" class="col_port">
+					<?cs call:IfaceToPortName(host.port)?> <?cs if:host.status != "online" ?>(<?cs var:Env.Text.Offline ?>)<?cs /if ?>
+				</td>
+				<?cs /if?>
+				<td data-title="<?cs var:Env.Var.choice.Header?>" colspan="2">
+                                        <button name="submit" id="plc_valid-<?cs name:host?>" class="btn"><?cs var:Env.Text.Validate?></button>
+				</td>
+				<?cs if:Var.RemoteAddress.Value == host.ipaddr?>
+				<td data-title="" >
+					<img src="/img/icon_home.png?v=3.4" border="0" alt="Votre poste" style="position: relative; top: -2px;" />
+				</td>
+				<?cs /if?>
+			</tr>
+			<?cs /with ?>
+			<?cs /each ?>
+                        <?cs /if?>
+		</tbody>
+	</table>
+        
+<script>
+$(document).ready(function(){
+	$('button[id^=plc_valid-]').click(function() {
+            var num = $(this).attr('id').match(/^plc_valid-(\w+)$/);
+            if(num[1]!="")
+                validLanPopup(num[1]);
+	});
+        $('.popup h3').text( $('.popup_content h1').text() );
+        $('.popup_content h1').remove();
+}); 
+</script>

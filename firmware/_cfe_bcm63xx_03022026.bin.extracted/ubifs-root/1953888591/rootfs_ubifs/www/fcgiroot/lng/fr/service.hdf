@@ -1,0 +1,31 @@
+Env.Page.Title = Applications
+
+Env.Help.Text = L'onglet <b>Applications</b> permet de gérer les applications partage de fichiers, partage d’imprimantes, serveurs multimédia et contrôle d’accès proposées par votre Box.A noter que ces applications fonctionnent seulement en IPv4.
+
+Env.Section.Applications.Value = Applications
+
+Env.Header.samba.Value = Partage de fichiers
+
+Env.Var.samba_status.Value.up = Démarré
+Env.Var.samba_status.Value.down = Arrêté
+Env.Var.samba_status.Value.starting = En cours d'initialisation
+Env.Var.samba_status.Value.installing = En cours d'installation
+Env.Var.samba_status.Value.error_unknown = Erreur inconnue
+
+Env.Header.p910nd.Value = Partage d'imprimantes
+
+Env.Var.p910nd_status.Value.up = Actif
+Env.Var.p910nd_status.Value.down = Inactif
+
+Env.Header.upnpav.Value = Serveur multimédia
+
+Env.Var.upnpav_status.Value.up = Démarré
+Env.Var.upnpav_status.Value.down = Arrêté
+Env.Var.upnpav_status.Value.starting = En cours d'initialisation
+Env.Var.upnpav_status.Value.installing = En cours d'installation
+Env.Var.upnpav_status.Value.error_unknown = Erreur inconnue
+
+Env.Header.ac.Value = Contrôle d'accès
+
+Env.Var.ac_status.Value.enable = Actif
+Env.Var.ac_status.Value.disable = Inactif

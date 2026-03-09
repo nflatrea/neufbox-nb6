@@ -1,0 +1,81 @@
+#!/bin/sh /etc/rc.common
+
+logger -t "odhcp6c[$$]" "$action"
+
+strlen() {
+	local str=$1
+	echo -n ${str} | wc -c
+}
+
+base16encode() {
+	local str=$1
+	echo -n ${str} | hexdump -e "$(strlen ${str})/1 \"%02x\""
+}
+
+reload() {
+	test -e /run/odhcp6c.pid && pid=$(cat /run/odhcp6c.pid)
+	# if dynamic file is invalid or empty
+	test -z ${pid} && pid=$(ps | grep [o]dhcp6c | awk '{print $1}')
+
+	# client's pid not found
+	if [ -z ${pid} ]; then
+		logger -t "odhcp6c[$$] reload: client not running"
+		exit 1
+	fi
+
+	# send reload signal to dhcpv6 client
+	kill -SIGUSR2 ${pid}
+}
+
+start() {
+	local net_ipv6_ifname=$(status get net_ipv6_ifname)
+	local lan_ifname=$(status get lan_ifname)
+	local sfr_id="0000a00c"
+	local vendorid="neufbox_$(status get productID)_$(cat /etc/efixo_release)"
+	test -d /etc/adsl && vendorid="${vendorid}_$(status get version_dsldriver)"
+	vendoropt="$(base16encode ${vendorid})"
+	vendoropt_len="$(printf %04x $(strlen ${vendorid}))"
+	dnsmaskopt=""
+
+	# the net_ipv6_ifname is unknown so we are before the autoconf
+	# is up, fallback to wan ifname
+	if [ -z "${net_ipv6_ifname}" ]; then
+		[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+		topology_conf=/etc/config/topology${mode}.xml
+		[ -e ${topology_conf} ] || topology_conf=/etc/default/topology${mode}.xml
+		net_ipv6_ifname=$(roxml -q ${topology_conf} "//interface[@name=wan]/@ifname")
+		status set net_ipv6_ifname "${net_ipv6_ifname}"
+	fi
+	
+	if [ "$(status get dhcp6c_access)" = "boot" ]; then
+		dnsmaskopt="-M $(nvram get ipv6_dnsmask)"
+	fi
+
+	exec odhcp6c -N none -P 0 -D ${lan_ifname} -s /etc/dhcp/ipv6.script -p /run/odhcp6c.pid \
+                 -V ${sfr_id}${vendoropt_len}${vendoropt} ${dnsmaskopt} ${net_ipv6_ifname}
+
+	logger -t "odhcp6c[$$]" "start failed"
+	stop
+	exit 1
+}
+
+stop() {
+	test -e /run/odhcp6c.pid && pid=$(cat /run/odhcp6c.pid)
+    
+	# sometimes the dhcpv4 get an answer early the dhcpv6 is not
+	# completely running and the pid file does not exist
+	if [[ -z "${pid}" ]]; then
+		logger -t "odhcp6c[$$]" "early stop, wait for pid file"
+		sleep 2
+
+		test -e /run/odhcp6c.pid && pid=$(cat /run/odhcp6c.pid)
+		if [[ -z "${pid}" ]]; then 
+			logger -t "odhcp6c[$$]" "unable to find process pid"
+			return
+		fi
+	fi
+
+	status set dhcp6c_access
+
+	kill ${pid}
+}

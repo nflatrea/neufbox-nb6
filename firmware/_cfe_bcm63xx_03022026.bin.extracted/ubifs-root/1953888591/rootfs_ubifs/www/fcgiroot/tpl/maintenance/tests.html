@@ -1,0 +1,132 @@
+<div class="title">
+    <h1><?cs var:Env.Section.ping.Title ?></h1>
+</div>
+
+<div id="ping_nojs_content" class="content">
+    <?cs var:Env.Text.nojs?>
+    <pre></pre>
+</div>
+
+<div id="ping_content" class="content" style="display: none;">
+    <fieldset>
+        
+        <table id="ping">
+            <tr>
+                <th scope="row"><?cs var:Env.Var.ping_dest_hostname.Header ?></th>
+                <td>
+                    <input type="text" class="text" name="dest_hostname" id="ping_dest_hostname" size="20" maxlength="255" />
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs var:Env.Text.ping_sent ?></th>
+                <td id="ping_sent">0</td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs var:Env.Text.ping_recv ?></th>
+                <td id="ping_recv">0</td>
+            </tr>
+            <tr>
+                <th scope="row"><?cs var:Env.Text.ping_avgrtt ?></th>
+                <td id="ping_avgrtt"></td>
+            </tr>
+        </table>
+        
+        <div>
+            <div id="div_submit_ping" class="button_submit">
+                <button class="btn" id="button_ping_start" name="submit">
+                        <?cs var:Button.Launch ?>
+                </button>
+                <button class="btn" id="button_ping_stop" name="submit">
+                        <?cs var:Button.Stop ?>
+                </button>
+            </div>
+            
+            <div class="status">
+                <span class="status_starting">
+                    <?cs var:Env.Var.ping_status.Value.starting?>
+                </span>
+                
+                <span class="status_stopping">
+                    <?cs var:Env.Var.ping_status.Value.stopping?>
+                </span>
+                
+                <span class="status_custom"></span>
+                
+            </div>
+        </div>
+        
+        <div class="toggleterm"><a href="#"><?cs var:Env.Text.toggle.terminal ?></a></div>
+        <textarea id="termping" class="terminal" readonly="readonly"></textarea>
+
+        
+    </fieldset>
+    
+</div>
+
+<div class="title">
+    <h1><?cs var:Env.Section.traceroute.Title ?></h1>
+</div>
+
+<?cs if:Env.status.net.ipv6.status == "up" ?>
+    <div class="alert alert-warning">
+        <?cs var:Env.Var.traceroute.ipv6_warning.Value?> 
+    </div>
+<?cs /if ?>
+
+<div id="traceroute_nojs_content" class="content">
+    <?cs var:Env.Text.nojs?>
+</div>
+
+<div id="traceroute_content" class="content" style="display: none;">
+    <fieldset>
+        <table id="traceroute">
+            <tr>
+                <th scope="row"><?cs var:Env.Var.traceroute_dest_hostname.Header ?></th>
+                <td>
+                    <input type="text" class="text" name="dest_hostname" id="traceroute_dest_hostname" size="20" maxlength="255" />
+                </td>
+            </tr>
+        </table>
+        
+        <div>
+            <div id="div_submit_traceroute" class="button_submit">
+                <button class="btn" id="button_traceroute_start" name="submit">
+                        <?cs var:Button.Launch ?>
+                </button>
+                <button class="btn" id="button_traceroute_stop" name="submit">
+                        <?cs var:Button.Stop ?>
+                </button>
+            </div>
+            <div class="status">
+                <span class="status_starting">
+                    <?cs var:Env.Var.traceroute_status.Value.starting?>
+                </span>
+                
+                <span class="status_stopping">
+                    <?cs var:Env.Var.traceroute_status.Value.stopping?>
+                </span>
+                
+                <span class="status_custom"></span>
+                
+            </div>
+        </div>
+        
+        <div class="toggleterm"><a href="#"><?cs var:Env.Text.toggle.terminal ?></a></div>
+        <textarea id="termtraceroute" class="terminal" readonly="readonly"></textarea>
+        
+        <div id="traceroute_result" style="display: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="row"><?cs var:Env.Text.jump?></th>
+                        <th scope="row"><?cs var:Env.Text.hostname?></th>
+                        <th scope="row"><?cs var:Env.Text.loop_time?></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        
+    </fieldset>
+    
+</div>

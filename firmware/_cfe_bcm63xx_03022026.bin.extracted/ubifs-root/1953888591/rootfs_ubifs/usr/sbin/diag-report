@@ -1,0 +1,415 @@
+#!/bin/sh
+
+if [ "$1" = "--light" ] ; then
+     	LIGHT=1
+	shift
+fi
+
+FILE=$1
+[ -z "$1" ] && FILE='/tmp/diag_report'
+
+infra=`status get net_data_access`
+DATE=$(date)
+
+
+hr() {
+    echo '***********************************************************************' >> $FILE
+    #echo '-----------------------------------------------------------------------' >> $FILE
+}
+
+echo "nbdump: $DATE" > $FILE
+
+hr
+echo '* XTM' >> $FILE
+hr
+
+# dsl
+xdslctl info --stats >> $FILE
+xdslctl --version >> $FILE 2>&1
+xtmctl operate intf --stats >> $FILE
+xdslctl info --pbParams >> $FILE
+
+
+# wireless
+log_cmd() {
+    hr >> $FILE
+    echo " $ $@ " >> $FILE
+    "$@"  >> $FILE
+}
+
+hr
+echo '* wireless' >> $FILE
+
+log_cmd wlctl -i wl1 dump
+log_cmd dhdctl -i wl0 dump
+
+log_cmd wlctl -i wl0  smfstats
+log_cmd wlctl -i wl1  smfstats
+
+log_cmd wlctl -i wl0  assoc
+log_cmd wlctl -i wl1  assoc
+
+log_cmd wlctl -i wl0  country
+log_cmd wlctl -i wl1  country
+
+log_cmd wlctl -i wl0  counters
+log_cmd wlctl -i wl1  counters
+
+for wlif in $(ifconfig -a | awk '/^wl/ { print $1 }')
+do
+    log_cmd wlctl -i ${wlif} ssid
+    log_cmd wlctl -i ${wlif} bss
+    log_cmd wlctl -i ${wlif} bssid
+    log_cmd wlctl -i ${wlif} bss_peer_info
+    for mac in $(wlctl -i ${wlif} assoclist|awk '{print $2}')
+    do
+        log_cmd wlctl -i ${wlif} sta_info ${mac}
+    done
+done
+
+log_cmd acs_cli -i wl1 dump bss
+log_cmd acs_cli -i wl1 dump chanim
+log_cmd acs_cli -i wl1 dump candidate
+
+log_cmd acs_cli -i wl0 dump bss
+log_cmd acs_cli -i wl0 dump chanim
+log_cmd acs_cli -i wl0 dump candidate
+
+log_cmd cat /proc/wfd/stats
+
+hr
+
+echo '* switch' >> $FILE
+hr
+[ -x /usr/sbin/robo-switch ] && robo-switch stats >> $FILE
+[ -x /usr/sbin/rtk-switch ] && rtk-switch stats show >> $FILE
+hr
+
+hr
+echo '* sfp-diag' >> $FILE
+hr
+sfp-diag >> $FILE
+
+hr
+echo '* cat /proc/fcache/*' >> $FILE
+hr
+cat /proc/fcache/* >> $FILE
+
+hr
+echo '* cat /proc/driver/xtm/rxinfo' >> $FILE
+hr
+cat /proc/driver/xtm/rxinfo >> $FILE
+
+hr
+echo '* cat /proc/driver/xtm/txdmainfo' >> $FILE
+hr
+cat /proc/driver/xtm/txdmainfo >> $FILE
+
+hr
+echo '* cat /proc/driver/eth0/dma_summary' >> $FILE
+hr
+cat /proc/driver/eth0/dma_summary >> $FILE
+
+hr
+echo '* ledctl list' >> $FILE
+hr
+ledctl list >> $FILE
+
+if [ -z "${LIGHT}" ] ; then
+	hr
+	echo '* status show' >> $FILE
+	hr
+	status show >> $FILE
+
+	hr
+	echo '* nvram show' >> $FILE
+	hr
+	nvram show >> $FILE
+
+	hr
+	echo '* autoconf show' >> $FILE
+	hr
+	autoconf show >> $FILE
+
+	if [ "${infra}" == "ftth" ]; then
+		hr
+		echo '* ont show' >> $FILE
+		hr
+		ont show >> $FILE
+	fi
+fi
+
+hr
+echo '* cat /etc/config/ca.xml' >> $FILE
+hr
+cat /etc/config/ca.xml >> $FILE
+
+for i in /tmp/autoconf/*
+do
+	echo '************************************************************************' >> $FILE
+	echo "* cat $i" >> $FILE
+	echo '************************************************************************' >> $FILE
+	cat $i >> $FILE
+done
+
+hr
+echo '* cat /var/log/*' >> $FILE
+hr
+for file in $(ls /var/log/* | grep -v /var/log/log)
+do
+	echo      ----- Start $file ----- >> $FILE
+	cat $file >> $FILE
+	echo      -----  End $file  ----- >> $FILE
+done
+
+hr
+echo '* ps faux' >> $FILE
+hr
+ps faux >> $FILE
+
+hr
+echo '* ifconfig' >> $FILE
+hr
+ifconfig >> $FILE
+
+hr
+echo 'cat /etc/hosts' >> $FILE
+hr
+cat /etc/hosts >> $FILE
+
+hr
+echo 'cat /etc/resolv.conf' >> $FILE
+hr
+cat /etc/resolv.conf >> $FILE
+
+hr
+echo 'ip neigh show' >> $FILE
+hr
+ip neigh show >> $FILE
+
+hr
+echo 'ip rule show' >> $FILE
+hr
+ip rule show >> $FILE
+
+hr
+echo 'ip route' >> $FILE
+hr
+ip route >> $FILE
+
+hr
+echo 'ip mroute' >> $FILE
+hr
+ip mroute >> $FILE
+
+hr
+echo 'ip route show table lan_t' >> $FILE
+hr
+ip route show table lan_t >> $FILE
+
+hr
+echo 'ip route show table hotspot_t' >> $FILE
+hr
+ip route show table hotspot_t >> $FILE
+
+hr
+echo 'ip route show table data_t' >> $FILE
+hr
+ip route show table data_t >> $FILE
+
+hr
+echo 'ip route show table local' >> $FILE
+hr
+ip route show table local >> $FILE
+
+hr
+echo 'ip route show table main' >> $FILE
+hr
+ip route show table main >> $FILE
+
+hr
+echo 'ip route show table default' >> $FILE
+hr
+ip route show table default >> $FILE
+
+hr
+echo 'ip -6 neigh show' >> $FILE
+hr
+ip -6 neigh show >> $FILE
+
+hr
+echo 'ip -6 rule show' >> $FILE
+hr
+ip -6 rule show >> $FILE
+
+hr
+echo 'ip -6 route' >> $FILE
+hr
+ip -6 route >> $FILE
+
+hr
+echo 'ip -6 mroute' >> $FILE
+hr
+ip -6 mroute >> $FILE
+
+hr
+echo 'ip -6 route show table lan_t' >> $FILE
+hr
+ip -6 route show table lan_t >> $FILE
+
+hr
+echo 'ip -6 route show table hotspot_t' >> $FILE
+hr
+ip -6 route show table hotspot_t >> $FILE
+
+hr
+echo 'ip -6 route show table data_t' >> $FILE
+hr
+ip -6 route show table data_t >> $FILE
+
+hr
+echo 'ip -6 route show table local' >> $FILE
+hr
+ip -6 route show table local >> $FILE
+
+hr
+echo 'ip -6 route show table main' >> $FILE
+hr
+ip -6 route show table main >> $FILE
+
+hr
+echo 'ip -6 route show table default' >> $FILE
+hr
+ip -6 route show table default >> $FILE
+
+hr
+echo 'iptables -L -n' >> $FILE
+hr
+iptables -L -n -v >> $FILE
+
+hr
+echo 'iptables -L -n -t nat' >> $FILE
+hr
+iptables -L -n -v -t nat >> $FILE
+
+hr
+echo 'iptables -L -n -t mangle' >> $FILE
+hr
+iptables -L -n -v -t mangle >> $FILE
+
+hr
+echo 'ip6tables -L -n' >> $FILE
+hr
+ip6tables -L -n -v >> $FILE
+
+hr
+echo 'ip6tables -L -n -t nat' >> $FILE
+hr
+ip6tables -L -n -v -t nat >> $FILE
+
+hr
+echo 'brctl show' >> $FILE
+hr
+brctl show >> $FILE
+
+hr
+echo 'ip6tables -L -n -t mangle' >> $FILE
+hr
+ip6tables -L -n -v -t mangle >> $FILE
+
+hr
+echo 'cat /var/dnsmasq.leases' >> $FILE
+hr
+cat /var/dnsmasq.leases >> $FILE
+
+hr
+echo 'cat /proc/bus/usb/devices' >> $FILE
+hr
+cat /proc/bus/usb/devices >> $FILE
+
+hr
+echo 'df -h' >> $FILE
+hr
+df -h >> $FILE
+
+hr
+echo 'netstat -s' >> $FILE
+hr
+netstat -s >> $FILE
+
+hr
+echo 'netstat -plantugewox' >> $FILE
+hr
+netstat -plantugewox >> $FILE
+
+hr
+echo 'cat /proc/interrupts' >> $FILE
+hr
+cat /proc/interrupts >> $FILE
+
+hr
+echo 'cat /proc/stat' >> $FILE
+hr
+cat /proc/stat >> $FILE
+
+hr
+echo 'cat /proc/loadavg' >> $FILE
+hr
+cat /proc/loadavg >> $FILE
+
+for i in /proc/net/*
+do
+        [ ! -f $i ] && continue
+	hr
+	echo "cat $i" 		>> $FILE
+	hr
+	cat $i 			>> $FILE
+done
+
+for i in /proc/net/stat/*
+do
+	hr
+	echo "cat $i" 		>> $FILE
+	hr
+	cat $i 			>> $FILE
+done
+
+hr
+echo 'cat /proc/meminfo' >> $FILE
+hr
+cat /proc/meminfo >> $FILE
+
+hr
+echo 'cat /proc/slabinfo' >> $FILE
+hr
+cat /proc/slabinfo >> $FILE
+
+hr
+echo 'cat /proc/diskstats' >> $FILE
+hr
+cat /proc/diskstats >> $FILE
+
+hr
+echo 'nanddump /dev/mtd-bootloader' >> $FILE
+hr
+nanddump -l 1 /dev/mtd-bootloader 2>> $FILE
+
+hr
+echo 'nanddump /dev/mtd-data' >> $FILE
+hr
+nanddump -l 1 /dev/mtd-data 2>> $FILE
+
+hr
+echo 'nanddump /dev/mtd-rootfs' >> $FILE
+hr
+nanddump -l 1 /dev/mtd-rootfs 2>> $FILE
+
+hr
+echo 'nanddump /dev/mtd-upgrade' >> $FILE
+hr
+nanddump -l 1 /dev/mtd-upgrade 2>> $FILE
+
+echo "nbdump: End of dump (`date`)" >> $FILE
+
+# Remove '\0' characters to make the file readable after
+sed -i 's/£$¤//g' $FILE

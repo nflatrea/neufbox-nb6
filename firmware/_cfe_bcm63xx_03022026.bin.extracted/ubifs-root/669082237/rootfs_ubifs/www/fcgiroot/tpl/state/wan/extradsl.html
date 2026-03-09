@@ -1,0 +1,12 @@
+
+<div class="title">
+	<h1 class="large">DSL SNR</h1>
+</div>
+
+<div class="content">
+    
+        <div class="button_submit" id="toggle_diag_div">
+		<button class="btn" id="toggle_diag" type="button"><?cs var:Env.Btn.ShowHideDump.Value ?></button>
+	</div>
+	<pre id="diag_dump"><?cs each:part = Var.DslSnrStats ?><?cs var:part.Value?><?cs /each?></pre>
+</div>

@@ -1,0 +1,156 @@
+#!/bin/sh /etc/rc.common
+
+service=mapt
+logger -t "${service}[$$]" "$action"
+
+
+reload() {
+	lock /run/lock/${service}.lock
+	mapt conf_check
+
+	local mapt_reboot="$(nvram get mapt_reboot)"
+	local mapt_status="$(status get net_mapt_status)"
+	local conf_status="$(status get net_mapt_confstatus)"
+	
+	if [ "${conf_status}" = "ko" ]; then
+		diaglog error ipv6-conf
+	elif [ "${conf_status}" = "outofservice" ]; then
+		diaglog error ipv6-conf
+
+		if [ "${mapt_reboot}" = "on" ]; then
+			safe-reboot
+		else
+			stop
+			status set net_mapt_confstatus ko
+		fi
+	elif [ "${conf_status}" = "ok" ]; then
+		if [ "${mapt_status}" = "down" ]; then
+			start
+		fi
+	elif [ "${conf_status}" = "update" ]; then
+		diaglog event migrate
+
+		if [ "${mapt_reboot}" = "on" ]; then
+			safe-reboot
+		else
+			stop
+			start
+			status set net_mapt_confstatus ok
+		fi
+	fi
+
+	lock -u /run/lock/${service}.lock
+}
+
+
+start() {
+	local control="/proc/net/nat46/control"
+	local ifname="$(status get net_mapt_ifname)"
+	local ifnamev6="$(status get net_ipv6_ifname)"
+	local localv4="$(status get net_mapt_bmr_prefixv4)/$(status get net_mapt_bmr_maskv4)"
+	local localv6="$(status get net_ipv6_prefix)"
+	local remotev6="$(status get net_mapt_dmr_prefixv6)/$(status get net_mapt_dmr_maskv6)"
+	local ealen="$(status get net_mapt_ealen)"
+	local offset="$(status get net_mapt_offset)"
+	local ip6addr="$(status get net_mapt_ip6addr)"
+	local ipaddr="$(status get net_mapt_ipaddr)"
+	local ipmask="$(status get net_mapt_bmr_maskv4)"	
+	local portsets="$(status get net_mapt_portsets)"
+	local mapt_subnet="$(status get net_ipv6_prefix | sed s:/56:/64:)"
+
+	echo add ${ifname} > ${control}
+	echo config ${ifname} local.style MAP local.v4 ${localv4} \
+		local.v6 ${localv6} local.ea-len ${ealen} \
+		local.psid-offset ${offset} remote.v4 0.0.0.0/0 \
+		remote.v6 ${remotev6} remote.style RFC6052 \
+		remote.ea-len 0 remote.psid-offset 0 > ${control}
+
+	ip -6 address add ${ip6addr} dev ${ifname}
+	ip address add ${ipaddr}/${ipmask} dev ${ifname}
+	ip route delete local ${ip6addr} via :: dev lo
+
+  if [ -e /proc/sys/net/ipv4/port_ranges ] # kernel 2.6.30 with tanguy patch 
+  then
+	    echo ${portsets} | sed "s/-/ /g" > /proc/sys/net/ipv4/port_ranges
+
+	    # only one range is required for icmp
+	    local range=$(echo ${portsets} | sed "s/ .*//")
+
+	    # ipv4 SNAT
+	    iptables -t nat -F POSTROUTING
+	    iptables -t nat -A POSTROUTING -p icmp -o ${ifname} \
+               -j SNAT --to-source ${ipaddr}:${range}
+	    iptables -t nat -A POSTROUTING -p tcp -o ${ifname} \
+	             -j SNAT --to-source ${ipaddr} --random
+	    iptables -t nat -A POSTROUTING -p udp -o ${ifname} \
+		           -j SNAT --to-source ${ipaddr} --random
+  else
+      iptables -t nat -F POSTROUTING
+      for p in $(status get net_mapt_portsets)
+      do
+          min=$(echo $p|cut -d"-" -f1)
+	        max=$(echo $p|cut -d"-" -f2)
+	        size=$((max-min))
+          iptables -t nat -A POSTROUTING -p icmp -m connlimit --connlimit-daddr --connlimit-upto $size -o $ifname -j SNAT --to $ipaddr:$min-$max
+	        iptables -t nat -A POSTROUTING -p tcp -m connlimit --connlimit-daddr --connlimit-upto $size -o $ifname -j SNAT --to $ipaddr:$min-$max
+	        iptables -t nat -A POSTROUTING -p udp -m connlimit --connlimit-daddr --connlimit-upto $size -o $ifname -j SNAT --to $ipaddr:$min-$max
+      done
+  fi
+
+	# user nat
+	iptables -t nat -F PREROUTING
+	iptables -t nat -A PREROUTING -d ${ipaddr} -j USER_NAT
+	iptables -t nat -A PREROUTING -d ${ipaddr} -j MINIUPNPD
+	/etc/init.d/nat user_nat
+
+	xtables -F MAPT_FILTER
+	xtables -D FORWARD -j MAPT_FILTER
+	xtables -A FORWARD -j MAPT_FILTER
+
+	# ipv6 forward
+	ip6tables -A MAPT_FILTER -i ${ifname} -s ${mapt_subnet} \
+		  -o ${ifnamev6} -d ${remotev6} -j ACCEPT
+	ip6tables -A MAPT_FILTER -o ${ifname} -d ${mapt_subnet} \
+		  -i ${ifnamev6} -s ${remotev6} -j ACCEPT
+
+	# ipv4 forward
+	iptables -A MAPT_FILTER -o ${ifname} -m state --state INVALID -j DROP
+	iptables -A MAPT_FILTER -i ${ifname} -m state --state NEW -j WIN_FILTER
+	iptables -A MAPT_FILTER -o ${ifname} -m state --state NEW -j WIN_FILTER
+	iptables -A MAPT_FILTER -o ${ifname} -p tcp -m tcp --dport 25 -j SMTP_FILTER
+
+	# use mapt0 as default ipv4 route
+	ifconfig ${ifname} up
+	ip route delete default
+	ip route add default dev ${ifname}
+	ip route delete default table lan_t
+	ip route add default dev ${ifname} table lan_t
+
+	# update status
+	status set net_mapt_status up
+	/etc/init.d/nat algs
+	diaglog event mapt
+	event notify mapt-up
+}
+
+
+stop() {
+	local control="/proc/net/nat46/control"
+	local ifname="$(status get net_mapt_ifname)"
+
+	# cleanup firewall
+	iptables -t nat -F POSTROUTING
+	iptables -t nat -F PREROUTING
+
+	xtables -F MAPT_FILTER
+	xtables -D FORWARD -j MAPT_FILTER
+
+	# clean up mapt iface
+	ifconfig ${ifname} down
+	echo del ${ifname} > ${control}
+
+	# update status
+	status set net_mapt_status down
+	/etc/init.d/nat algs
+	event notify mapt-down
+}

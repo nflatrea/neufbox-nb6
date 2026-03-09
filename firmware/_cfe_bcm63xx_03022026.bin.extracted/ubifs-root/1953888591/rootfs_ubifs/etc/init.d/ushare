@@ -1,0 +1,107 @@
+#!/bin/sh /etc/rc.common
+
+logger -t "ushare[$$]" "$action"
+
+CONFIGFILE=/run/ushare.conf
+PIDFILE=/run/ushare.pid
+PORT=49153
+
+mkconfig() {
+	local upnpav_config=/tmp/upnpav.xml
+	local disk_config=/tmp/disk.xml
+
+	# general configuration
+	echo "USHARE_NAME=$(nvram get upnpav_name)" > $1
+	echo "USHARE_IFACE=$(status get lan_ifname)" >> $1
+	echo "USHARE_PID_FILE=${PIDFILE}" >> $1
+	echo "USHARE_PORT=${PORT}" >> $1
+	echo "USHARE_ENABLE_WEB=no" >> $1
+	echo "USHARE_ENABLE_TELNET=no" >> $1
+	echo "USHARE_ENABLE_XBOX=yes" >> $1
+	echo "USHARE_ENABLE_DLNA=no" >> $1
+	# share
+	echo -n "USHARE_DIR=" >> $1
+	nvram xml upnpav > ${upnpav_config}
+	disk block_list > ${disk_config}
+	local n=1
+	for rule in $(roxml -q ${upnpav_config} '//upnpav/share/uuid')
+	do
+		eval $(roxml -o ${upnpav_config} "//upnpav/share[$n]")
+		n=$(($n + 1))
+		eval $(roxml -o ${disk_config} "//partition[uuid=\"${uuid}\"]")
+		if [ ${mounted} = "1" ]; then
+			echo -n "${mntpath}${dir}," >> $1
+		else
+			logger -t "ushare[$$]" "disk uuid"\
+				"${uuid} not mounted"
+		fi
+		unset mounted
+		unset mntpath
+	done
+	rm -f ${upnpav_config}
+	rm -f ${disk_config}
+	echo "" >> $1
+}
+
+do_start() {
+	[ "$(nvram get upnpav_active)" != "on" ] && return
+	if [ "$(status get upnpav_status)" = "up" ];then
+		logger -t "ushare[$$]" "ushare already running"
+		return
+	fi
+
+
+	status set upnpav_status starting
+
+	mkconfig ${CONFIGFILE}
+
+	if ! ushare -D -f ${CONFIGFILE}; then
+		status set upnpav_status error_unknown
+		return
+	fi
+
+	iptables -A LAN_FILTER -p tcp -m tcp --dport ${PORT} -j ACCEPT
+	status set upnpav_status up
+}
+
+do_stop() {
+	iptables -D LAN_FILTER -p tcp -m tcp --dport ${PORT} -j ACCEPT
+	status set upnpav_status down
+
+	test -f ${PIDFILE} && local pid=$(cat ${PIDFILE})
+	[ -n "${pid}" ] && kill -INT ${pid}
+	sleep 2
+	kill -KILL ${pid}
+	rm -f ${CONFIGFILE}
+	rm -f ${PIDFILE}
+}
+
+start() {
+	lock /run/lock/ushare.lock
+	do_start
+	lock -u /run/lock/ushare.lock
+}
+
+stop() {
+	lock /run/lock/ushare.lock
+	do_stop
+	lock -u /run/lock/ushare.lock
+}
+
+restart() {
+	lock /run/lock/ushare.lock
+	do_stop
+	sleep 1
+	do_start
+	lock -u /run/lock/ushare.lock
+}
+
+reload() {
+	lock /run/lock/ushare.lock
+	test -f ${PIDFILE} && local pid=$(cat ${PIDFILE})
+	if [ -n "${pid}" ]; then
+		mkconfig ${CONFIGFILE}
+		kill -HUP ${pid}
+	fi
+	lock -u /run/lock/ushare.lock
+}

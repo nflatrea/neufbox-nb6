@@ -1,0 +1,22 @@
+#!/bin/sh
+
+local net_data_ipaddr=$(status get net_data_ipaddr)
+local ipaddr=$2
+if [ "$(autoconf get hotspot_pat)" = "true" ]; then
+	local ports=$(status list_get hotspot_assoc ipaddr ${ipaddr} ports)
+fi
+
+case "$1" in
+"add")
+	iptables -t nat -I HOTSPOT_PAT -j SNAT --to ${net_data_ipaddr} -s ${ipaddr}
+	if test -n "${ports}"; then
+		iptables -t nat -I HOTSPOT_PAT -p udp -j SNAT --to ${net_data_ipaddr}:${ports} -s ${ipaddr}
+		iptables -t nat -I HOTSPOT_PAT -p tcp -j SNAT --to ${net_data_ipaddr}:${ports} -s ${ipaddr}
+	fi
+	;;
+"del")
+	iptables -t nat -D HOTSPOT_PAT -p tcp -j SNAT --to ${net_data_ipaddr}:${ports} -s ${ipaddr}
+	iptables -t nat -D HOTSPOT_PAT -p udp -j SNAT --to ${net_data_ipaddr}:${ports} -s ${ipaddr}
+	iptables -t nat -D HOTSPOT_PAT -j SNAT --to ${net_data_ipaddr} -s ${ipaddr}
+	;;
+esac

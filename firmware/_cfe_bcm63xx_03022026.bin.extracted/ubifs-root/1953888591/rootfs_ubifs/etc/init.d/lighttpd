@@ -1,0 +1,32 @@
+#!/bin/sh /etc/rc.common
+
+START=55
+
+logger -t "lighttpd[$$]" "$action"
+
+start() {
+    mkdir -p /var/tmp
+    chmod a+rw /var/tmp
+
+    local main_conf=/etc/lighttpd/main.conf
+    local conf_base=/etc/lighttpd/_base.conf
+    local conf_proxy=/run/lighttpd-proxy.conf
+
+    echo "include \"$conf_base\"" > $main_conf
+    if [ -f $conf_proxy ]; then
+            echo "include \"$conf_proxy\"" >> $main_conf
+    fi
+
+    lighttpd -f $main_conf
+
+}
+
+stop() {
+    killall lighttpd
+}
+
+boot() {
+	# Stop the server because it has been already started by the ca script, if the server is not stopped it will complain about someone (itself) who is bound to the port 80
+	stop
+	start
+}

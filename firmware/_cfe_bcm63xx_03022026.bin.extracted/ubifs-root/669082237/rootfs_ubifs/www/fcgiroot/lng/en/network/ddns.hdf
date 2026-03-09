@@ -1,0 +1,44 @@
+Env.Page.Title = DynDNS
+
+Env.Help.Text = In the <b>DynDNS</b> section, you can enable the dynamic DNS service, which allows to access your computer from the Internet without knowing your IP address.
+
+Env.Section.ddns_configuration.Title = DynDNS
+
+Env.Var.ddns_status.Header = Service status
+Env.Var.ddns_status.Value.down = Down
+Env.Var.ddns_status.Value.starting = Starting
+Env.Var.ddns_status.Value.up = Started - Waiting ...
+Env.Var.ddns_status.Value.updated = Update successful
+Env.Var.ddns_status.Value.waiting_wan = Disabled (Waiting internet connection)
+Env.Var.ddns_status.Value.err_update = Error while trying to update. Another attempt will be made in a few seconds.
+Env.Var.ddns_status.Value.err_gprs = Dyndns service doesn't work with 3G backup.
+Env.Var.ddns_status.Value.error_server = The server returned an error.
+Env.Var.ddns_status.Value.error_unknown = An unknown error occurred.
+Env.Var.ddns_status.Value.error_syntax = The update request is invalid.
+Env.Var.ddns_status.Value.error_account = Your account is invalid. Check your parameters.
+Env.Var.ddns_status.Value.error_account_loginpass = The username and/or password are invalid.
+Env.Var.ddns_status.Value.error_account_hostname = The domain name is invalid.
+Env.Var.ddns_status.Value.error_account_abuse = The hostname specified is blocked for update abuse.
+
+Env.Var.ddns_lastupdate.Header = Last update
+
+Env.Var.ddns_active.Header = DynDNS
+Env.Var.ddns_active.Value.on = Enabled
+Env.Var.ddns_active.Value.off = Disabled
+Env.Var.ddns_active.Error.value = Invalid format
+
+Env.Var.ddns_service.Header = Service
+
+Env.Var.ddns_username.Header = Username
+Env.Var.ddns_username.Error.value = The user name must be composed of 1 to 99 characters.
+
+Env.Var.ddns_password.Header = Password
+Env.Var.ddns_password.Error.value = The password must be composed of 1 to 99 characters.
+
+Env.Var.ddns_hostname.Header = Domain name
+Env.Var.ddns_hostname.Error.value = The host name must be composed of 1 to 99 characters.
+
+Env.Text.Desactivated = Disabled
+Env.Text.UnknownError = Unknown
+
+Env.Text.Refresh = Refresh

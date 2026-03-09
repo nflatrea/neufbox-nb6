@@ -1,0 +1,6 @@
+#!/bin/sh
+iptables $*
+ret=$?
+ip6tables $*
+let "ret=$?|$ret"
+exit $ret

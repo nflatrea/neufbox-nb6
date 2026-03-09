@@ -1,0 +1,94 @@
+Env.Page.Title = Settings
+
+Env.Help.Text << EOM
+In the <b>General settings</b> section, you can select different settings for your Wifi access points. You can change the name of your networks (SSID), choose if you want this names to be seen by nearby Wifi equipments (SSID broadcasting), set a specific Wifi channel and finally set the radio mode to 11n, 11b/g/n ou 11b/g in 2.4GHz.
+<br /><br />Depending on the chosen radio mode, it could be needed to change the encryption system. The <b>11n</b> radio mode works only with the <b>WPA2 Personnal (PSK)</b> encryption system, the <b>11b/g/n</b> mode works only with the <b>WPA Personnal (PSK)</b> and/or the <b>WPA2 Personnal (PSK)</b> and the <b>11b/g</b> mode works with all the encryption systems.
+<br /><br />In <b>11n</b> mode on 2.4GHz bandwidth, you can enable <b>wide channels</b> (HT40) to improve the Wifi bandwidth.
+<br /><br />On 5GHz bandwidth, you can choose wider channels (40MHz or 80MHz) to improve the Wifi bandwidth.
+<br /><br />However, be careful, this option may cause disturbances if other wireless networks are nearby and can also cause harmful interference in Bluetooth connections. It is strongly recommended to use this option only in environments devoid of other Wifi networks.
+EOM
+
+Env.Section.configuration.Title = General settings
+Env.Section.configuration.Title_24GHz = Settings 2.4GHz
+Env.Section.configuration.Title_5GHz = Settings 5GHz
+Env.Section.configuration.Title_Guest = Guest settings
+
+Env.Var.ap_active.Header = Wifi access point
+Env.Var.ap_active.Value.on = Enabled
+Env.Var.ap_active.Value.off = Disabled
+Env.Var.Nb6WifiDisabled = Disabled by Wifi button.
+Env.Var.Nb6WifiEnabled = Activated by Wifi button.
+
+Env.Var.ap_ssid.Header = SSID
+Env.Var.ap_ssid.Error.value = Invalid value. Only alphanumeric characters, the space and the following characters are allowed: # + - _ .
+
+Env.Var.ap_closed.Header = SSID broadcasting
+Env.Var.ap_closed.Value.on = Enabled
+Env.Var.ap_closed.Value.off = Disabled
+
+Env.Var.ap_channel.Header = Channel
+Env.Var.ap_channel.Error.value = Invalid value
+
+Env.Var.ap_mode.Header = Radio mode
+Env.Var.ap_mode.Error.value = Invalid value
+
+Env.Var.ap_mode.List.1.Value = 11n
+Env.Var.ap_mode.List.1.Label = 11n
+
+Env.Var.ap_mode.List.2.Value = 11ng
+Env.Var.ap_mode.List.2.Label = 11b/g/n
+
+Env.Var.ap_mode.List.3.Value = 11g
+Env.Var.ap_mode.List.3.Label = 11b/g
+
+Env.Var.ap_dfs_ac.Header = DFS channel
+
+Env.Var.ap_mode_ac.List.1.Value = 11n
+
+Env.Var.ap_mode_ac.List.1.Label = 11n
+
+Env.Var.ap_mode_ac.List.2.Value = auto
+Env.Var.ap_mode_ac.List.2.Label = 11n/ac
+
+Env.Var.ap_mode_ac.List.3.Value = 11ac
+Env.Var.ap_mode_ac.List.3.Label = 11ac
+
+
+Env.Var.ap_bw_ac.Header = Bandwidth
+Env.Var.ap_bw_ac.Error.value = Invalid value
+
+Env.Var.ap_bw_ac.List.1.Value = 20
+Env.Var.ap_bw_ac.List.1.Label = 20MHz
+
+Env.Var.ap_bw_ac.List.2.Value = 40
+Env.Var.ap_bw_ac.List.2.Label = 40MHz
+
+Env.Var.ap_bw_ac.List.3.Value = 80
+Env.Var.ap_bw_ac.List.3.Label = 80MHz
+
+Env.Var.guest_active.Header = Enabling guest Wifi
+Env.Var.guest_active.Value.on = Enabled
+Env.Var.guest_active.Value.off = Disabled
+
+Env.Var.guest_schedule.Header = Broadcasting time
+Env.Var.guest_schedule.Error.value = Invalid value
+
+Env.Var.guest_schedule.List.1.Value = 0
+Env.Var.guest_schedule.List.1.Label = Always
+Env.Var.guest_schedule.List.2.Value = 1
+Env.Var.guest_schedule.List.2.Label = 1 day
+
+Env.Var.guest_schedule.List.3.Value = 7
+Env.Var.guest_schedule.List.3.Label = 1 week
+
+Env.Var.guest_schedule.List.4.Value = 30
+Env.Var.guest_schedule.List.4.Label = 1 month
+
+Env.Var.AccessPointOption.Header = Options
+
+Env.Var.ap_ht40.Header = Use wide channels <i>(provides for a higher rate, but can interfere with nearby wireless networks)</i>
+
+Env.Form.Error.enc_mode_incompatibility = The radio mode you have selected is not compatible with the currently used encryption system. Please change the encryption system on page "Security" before changing the radio mode.
+
+Env.Var.diag_spect = Wifi congestion
+

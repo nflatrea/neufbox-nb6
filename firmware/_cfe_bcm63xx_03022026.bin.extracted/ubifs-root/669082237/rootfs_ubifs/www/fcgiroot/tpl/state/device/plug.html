@@ -1,0 +1,42 @@
+<div class="title">
+        <h1 class="large"><?cs var:Env.Section.General.Title ?></h1>
+</div>
+
+<div class="content">
+        
+        <form id="form_cpl" action="<?cs var:Env.Page.Name ?>" method="post">
+            <p><label><?cs var:Env.Choices.Value ?> : </label>&nbsp;<select id="cpl_master" name="cpl_master">
+                                <?cs each:host = Env.status.lan.topology.device ?>
+                                <?cs if:host.type=="plc" ?>
+                                <option value="<?cs var:host.macaddr ?>" <?cs if:Var.cpl_master_selected.Value == host.macaddr ?>selected="selected"<?cs /if ?> ><?cs var:host.macaddr ?></option>
+                                <?cs /if ?>
+                                <?cs /each ?>
+                        </select>
+                        <span>et</span>
+                        <select id="cpl_slave" name="cpl_slave">
+                                <?cs each:host = Env.status.lan.topology.device ?>
+                                <?cs if:host.type=="plc" ?>
+                                <option value="<?cs var:host.macaddr ?>" <?cs if:Var.cpl_slave_selected.Value == host.macaddr ?>selected="selected"<?cs /if ?>><?cs var:host.macaddr ?></option>
+                                <?cs /if ?>
+                                <?cs /each ?>
+                        </select>
+                        <input type="submit" class="btn" value="OK" />
+
+                </p>
+                
+                <h3><?cs var:Env.stat_plc.Value ?> : </h3>
+                <pre><?cs each:part = Var.CPL_plugs_speed ?><?cs var:part.Value?><?cs /each?></pre>
+                <pre><?cs each:part = Var.CPL_plugs_rate ?><?cs var:part.Value?><?cs /each?></pre>
+                
+                <br />
+                <h3>Tonemaps :</h3>
+                <br />
+                <div id="choices"></div>
+                <button class="btn" id="toggle_display_pre" type="button"><?cs var:Env.Btn.ShowHideDump.Value ?></button>
+                
+                <pre id="xy"><?cs each:part = Var.CPL_plugs ?><?cs var:part.Value?><?cs /each?></pre>
+                
+        </form>
+        
+    
+</div>

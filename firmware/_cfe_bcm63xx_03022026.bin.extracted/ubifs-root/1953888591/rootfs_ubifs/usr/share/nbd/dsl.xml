@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<dsl>
+	<adsl>
+		<linestatus/>
+		<profile/>
+		<training/>
+		<rate>
+			<up/>
+			<down/>
+		</rate>
+		<max>
+			<up/>
+			<down/>
+		</max>
+		<snr>
+			<up/>
+			<down/>
+		</snr>
+		<attenuation>
+            <sig>
+                <up0 />
+                <up1 />
+                <up2 />
+                <up3 />
+                <down0 />
+                <down1 />
+                <down2 />
+                <down3 />
+            </sig>
+            <line>
+                <up0 />
+                <up1 />
+                <up2 />
+                <up3 />
+                <down0 />
+                <down1 />
+                <down2 />
+                <down3 />
+            </line>
+			<up/>
+			<down/>
+		</attenuation>
+		<power>
+			<up/>
+			<down/>
+		</power>
+		<phyr>
+			<up/>
+			<down/>
+		</phyr>
+		<bitswap>
+			<up/>
+			<down/>
+		</bitswap>
+		<rtx>
+            <mode />
+			<up/>
+			<down/>
+		</rtx>
+		<rtxcorr>
+			<up/>
+			<down/>
+		</rtxcorr>
+		<rtxuncorr>
+			<up/>
+			<down/>
+		</rtxuncorr>
+		<linemode/>
+		<crc>
+			<up/>
+			<down/>
+		</crc>
+		<fec>
+            <up/>
+            <down/>
+        </fec>
+		<hec>
+            <up/>
+            <down/>
+        </hec>
+		<rs>
+            <up/>
+            <down/>
+			<uncorr>
+                <up/>
+                <down/>
+            </uncorr>
+			<corr>
+                <up/>
+                <down/>
+            </corr>
+		</rs>
+		<es>
+            <up/>
+            <down/>
+		</es>
+		<as/>
+		<ses>
+			<up/>
+			<down/>
+		</ses>
+		<uas/>
+		<nitro/>
+	</adsl>
+</dsl>

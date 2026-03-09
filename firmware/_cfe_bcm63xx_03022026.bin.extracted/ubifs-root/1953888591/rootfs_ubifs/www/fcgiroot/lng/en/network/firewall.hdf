@@ -1,0 +1,18 @@
+Env.Page.Title = Filtering
+
+Env.Help.Text = In the <b>Filtering</b> section, you can enable the protection of ports commonly under attack by Windows worms and viruses (ports n°135, 137, 138, 139, 445). You can also block SMTP requests which don't go through SFR mail servers.<br /><br />Finally you can block IPv4 ping from internet to your Box. Go to the Network v6 section on the <b>Filtering</b> page to configure the IPv6 filtering service.
+
+Env.Section.firewall.Title = Filtering
+
+Env.Var.filter_mode.Header = Filtering
+Env.Var.filter_mode.Value.on = Custom
+Env.Var.filter_mode.Value.off = Disabled
+Env.Var.filter_mode.Error.value = Invalid format
+
+Env.Var.filter_simple.Header = Settings
+
+Env.Var.filter_simple_winsharedrop.Header = Protect your Windows computers from the Internet
+
+Env.Var.filter_simple_smtpdrop.Header = Allow sending mail only via SFR mail servers
+
+Env.Var.filter_simple_icmpdrop.Header = Block incoming ping

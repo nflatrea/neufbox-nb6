@@ -1,0 +1,3 @@
+<?cs each:item = Env.status.link.usb.devices ?>
+   <device name="<?cs var:item.name ?>" product="<?cs var:item.product ?>" bus="<?cs var:item.bus ?>"/>
+<?cs /each ?>

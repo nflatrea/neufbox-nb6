@@ -1,0 +1,93 @@
+Env.Page.Title = Configuration
+
+Env.Help.Text << EOM
+Dans la rubrique <b>Configuration générale</b>, vous pouvez modifier les principaux paramètres de vos liaisons sans fil Wifi. Vous pouvez modifier les noms de vos réseaux sans fil (SSID), définir si le nom de vos réseaux peut être vu par les équipements Wifi (Diffusion du SSID), fixer un canal Wifi spécifique et enfin définir le mode radio à 11n, 11b/g/n ou 11b/g en 2.4GHz.
+<br/><br/>Suivant le mode radio sélectionné, vous pourrez être obligé de changer de système de chiffrement. Le mode radio <b>11n</b> fonctionne uniquement avec le système de chiffrement <b>WPA2 Personnel (PSK)</b>, le <b>11b/g/n</b> fonctionne avec le <b>WPA Personnel (PSK)</b> et/ou le <b>WPA2 Personnel (PSK)</b> et le <b>11b/g</b> fonctionne avec tous les chiffrements.
+<br /><br />En mode radio <b>11n</b> sur la bande de fréquence 2.4GHz, vous pouvez activer l'utilisation des <b>canaux larges</b> (HT40) pour améliorer le débit Wifi.
+<br /><br />Sur la bande de fréquence 5GHz, vous pouvez choisir une largeur de bande plus importante (40MHz ou 80MHz), pour améliorer le débit Wifi.
+<br /><br />Néanmoins, attention, cette option peut causer des perturbations si d'autres réseaux Wifi sont à proximité et peut aussi provoquer des dysfonctionnements dans les connexions bluetooth. Il est fortement recommandé d'utiliser cette option uniquement dans des environnements dépourvus d'autres réseaux Wifi.
+EOM
+
+Env.Section.configuration.Title = Configuration générale
+Env.Section.configuration.Title_24GHz = Configuration 2.4GHz
+Env.Section.configuration.Title_5GHz = Configuration 5GHz
+Env.Section.configuration.Title_Guest = Configuration Invité
+
+Env.Var.ap_active.Header = Activation borne Wifi
+Env.Var.ap_active.Value.on = Activé
+Env.Var.ap_active.Value.off = Désactivé
+Env.Var.Nb6WifiDisabled = Désactivé par le bouton Wifi.
+Env.Var.Nb6WifiEnabled = Activé par le bouton Wifi.
+
+Env.Var.ap_ssid.Header = SSID
+Env.Var.ap_ssid.Error.value = Valeur incorrecte. Seuls les caractères alphanumériques, l'espace et les caractères suivants sont autorisés: # + - _ .
+
+Env.Var.ap_closed.Header = Diffusion du SSID
+Env.Var.ap_closed.Value.on = Activé
+Env.Var.ap_closed.Value.off = Désactivé
+
+Env.Var.ap_channel.Header = Canal
+Env.Var.ap_channel.Error.value = Valeur incorrecte
+
+Env.Var.ap_mode.Header = Mode radio
+Env.Var.ap_mode.Error.value = Valeur incorrecte
+
+Env.Var.ap_mode.List.1.Value = 11n
+Env.Var.ap_mode.List.1.Label = 11n
+
+Env.Var.ap_mode.List.2.Value = 11ng
+Env.Var.ap_mode.List.2.Label = 11b/g/n
+
+Env.Var.ap_mode.List.3.Value = 11g
+Env.Var.ap_mode.List.3.Label = 11b/g
+
+Env.Var.ap_dfs_ac.Header = Canaux DFS
+
+Env.Var.ap_mode_ac.List.1.Value = 11n
+Env.Var.ap_mode_ac.List.1.Label = 11n
+
+Env.Var.ap_mode_ac.List.2.Value = auto
+Env.Var.ap_mode_ac.List.2.Label = 11n/ac
+
+Env.Var.ap_mode_ac.List.3.Value = 11ac
+Env.Var.ap_mode_ac.List.3.Label = 11ac
+
+
+Env.Var.ap_bw_ac.Header = Largeur de bande
+Env.Var.ap_bw_ac.Error.value = Valeur incorrecte
+
+Env.Var.ap_bw_ac.List.1.Value = 20
+Env.Var.ap_bw_ac.List.1.Label = 20MHz
+
+Env.Var.ap_bw_ac.List.2.Value = 40
+Env.Var.ap_bw_ac.List.2.Label = 40MHz
+
+Env.Var.ap_bw_ac.List.3.Value = 80
+Env.Var.ap_bw_ac.List.3.Label = 80MHz
+
+Env.Var.guest_active.Header = Activation du Wifi invité
+Env.Var.guest_active.Value.on = Activé
+Env.Var.guest_active.Value.off = Désactivé
+
+Env.Var.guest_schedule.Header = Temps de diffusion
+Env.Var.guest_schedule.Error.value = Valeur incorrecte
+
+Env.Var.guest_schedule.List.1.Value = 0
+Env.Var.guest_schedule.List.1.Label = Toujours
+
+Env.Var.guest_schedule.List.2.Value = 1
+Env.Var.guest_schedule.List.2.Label = 1 jour
+
+Env.Var.guest_schedule.List.3.Value = 7
+Env.Var.guest_schedule.List.3.Label = 1 semaine
+
+Env.Var.guest_schedule.List.4.Value = 30
+Env.Var.guest_schedule.List.4.Label = 1 mois
+
+Env.Var.AccessPointOption.Header = Options
+
+Env.Var.ap_ht40.Header = Utilisation des canaux larges <i>(offre un débit supérieur mais peut perturber les réseaux situés à proximité)</i>
+
+Env.Form.Error.enc_mode_incompatibility = Le mode radio sélectionné est incompatible avec le système de chiffrement actuellement utilisé. Veuillez changer le système de chiffrement avant de changer le mode radio en allant sur la page "Sécurité".
+
+Env.Var.diag_spect = Encombrement Wifi

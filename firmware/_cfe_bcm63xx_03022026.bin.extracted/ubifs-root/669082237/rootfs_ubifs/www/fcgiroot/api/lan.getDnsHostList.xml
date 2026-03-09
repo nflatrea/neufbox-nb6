@@ -1,0 +1,3 @@
+<?cs each:item = Env.user.dns.host ?>
+   <dns ip="<?cs var:item.ip ?>" name="<?cs var:item.domain ?>" />
+<?cs /each ?>

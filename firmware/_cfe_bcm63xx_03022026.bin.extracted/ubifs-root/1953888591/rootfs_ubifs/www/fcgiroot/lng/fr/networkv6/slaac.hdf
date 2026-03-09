@@ -1,0 +1,10 @@
+Env.Page.Title = Annonce du préfix SLAAC
+
+Env.Help.Text <<EOM
+Vos équipements compatibles IPv6 obtiennent leurs adresses via le mécanisme d'auto-configuration (dit annonce du préfixe ou <b>SLAAC</b>).
+<br /><br />Vous pouvez désactiver ou activer ce mécanisme. Cependant, en désactivant celui-ci , vous risquez de perdre la connectivité en IPv6 sur les équipements ne supportant que ce mode d'adressage IPv6 .
+EOM
+
+Env.Var.dhcp_slaac.Header = Annonce du préfix (<abbr title="Stateless address autoconfiguration">SLAAC</abbr>)
+
+Env.Text.slaac_off_warning = Attention, la modification de certains paramètres peut entrainer une perte de service de vos équipements connectés en IPv6, cette section est réservée aux utilisateurs expérimentés.

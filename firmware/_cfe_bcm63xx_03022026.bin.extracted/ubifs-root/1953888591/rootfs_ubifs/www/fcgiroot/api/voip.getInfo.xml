@@ -1,0 +1,2 @@
+    <voip status="<?cs var:Env.status.voip.up ?>" infra="<?cs var:Env.status.net.voip.access?>" hook_status="<?cs var:voip.hookstatus?>" callhistory_active="<?cs var:Env.user.voip.callhistory?>" />
+    

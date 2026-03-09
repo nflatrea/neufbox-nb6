@@ -1,0 +1,5 @@
+<wifisched active="<?cs var:Env.user.eco.wifisched.active ?>">
+    <?cs  each:range = Env.user.eco.wifisched.week.range ?>
+    <range day="<?cs var:range.day ?>" start="<?cs var:range.start ?>" stop="<?cs var:range.stop ?>"/>
+    <?cs /each ?>
+</wifisched>

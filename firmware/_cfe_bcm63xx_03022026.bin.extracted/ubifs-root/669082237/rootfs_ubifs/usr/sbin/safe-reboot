@@ -1,0 +1,18 @@
+#!/bin/sh
+
+diaglog event reboot
+sleep 3
+
+while [ "$(status get voip_hookstate)" = "offhook" ]
+do
+	logger -t "$0" "voip call in progress. wait..."
+	sleep 1
+done
+
+/etc/init.d/topology stop
+
+test -d /etc/adsl && /etc/init.d/ppp-xdsl stop && sleep 8
+
+logger -t "$0" "reboot"
+
+reboot -f

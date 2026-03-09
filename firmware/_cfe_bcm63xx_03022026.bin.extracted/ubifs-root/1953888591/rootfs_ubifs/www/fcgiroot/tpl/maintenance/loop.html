@@ -1,0 +1,46 @@
+<div class="title">
+	<h1><?cs var:Env.Section.loop.Title ?></h1>
+</div>
+
+<div class="content">
+	<table id="loop_detection">
+		<tr>
+			<th scope="row"><?cs call:varHeader("lan_port1") ?></th>
+			<?cs set:state="disabled" ?>
+			<?cs if:Env.status.ca.status == "enable" ?>
+			<?cs set:state="enabled" ?>
+			<?cs /if ?>
+			<td id="port1" class="<?cs if:Env.status.link.lan1.status == "up" ?>enabled<?cs elif:Env.status.link.lan2.status == "down" ?>unused<?cs else ?>disabled<?cs /if ?>">
+				<?cs if:Env.status.link.lan1.status == "up" ?><?cs var:Env.Var.port_status.up ?><?cs /if ?>
+				<?cs if:Env.status.link.lan1.status == "down" ?><?cs var:Env.Var.port_status.down ?><?cs /if ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs call:varHeader("lan_port2") ?></th>
+			<td id="port2" class="<?cs if:Env.status.link.lan2.status == "up" ?>enabled<?cs elif:Env.status.link.lan2.status == "down" ?>unused<?cs else ?>disabled<?cs /if ?>">
+				<?cs if:Env.status.link.lan2.status == "up" ?><?cs var:Env.Var.port_status.up ?><?cs /if ?>
+				<?cs if:Env.status.link.lan2.status == "down" ?><?cs var:Env.Var.port_status.down ?><?cs /if ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs call:varHeader("lan_port3") ?></th>
+			<td id="port3" class="<?cs if:Env.status.link.lan3.status == "up" ?>enabled<?cs elif:Env.status.link.lan2.status == "down" ?>unused<?cs else ?>disabled<?cs /if ?>">
+			<?cs if:Env.status.link.lan2.status == "up" ?><?cs var:Env.Var.port_status.up ?><?cs /if ?>
+			<?cs if:Env.status.link.lan2.status == "down" ?><?cs var:Env.Var.port_status.down ?><?cs /if ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs call:varHeader("lan_port4") ?></th>
+			<td id="port4" class="<?cs if:Env.status.link.lan4.status == "up" ?>enabled<?cs elif:Env.status.link.lan2.status == "down" ?>unused<?cs else ?>disabled<?cs /if ?>">
+			<?cs if:Env.status.link.lan2.status == "up" ?><?cs var:Env.Var.port_status.up ?><?cs /if ?>
+			<?cs if:Env.status.link.lan2.status == "down" ?><?cs var:Env.Var.port_status.down ?><?cs /if ?>
+			</td>
+		</tr>
+	</table>
+	<button class="btn" id="button_reboot_port">
+		<?cs var:Env.Var.button.reboot_port ?>
+	</button>
+	<div id="spinner_reboot" class="status" style="display: none;">
+		<span class="loading"><?cs var:Env.Var.reboot_inprocess ?></span>
+	</div>
+</div>

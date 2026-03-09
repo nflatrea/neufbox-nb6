@@ -1,0 +1,25 @@
+<rsp stat="ok">
+  <status>
+    <internet>
+      <link val="<?cs var:Env.status.net.status?>" text="<?cs call:varValue_d(Env.Var.internet_status.Value[Env.status.net.status], Env.Var.internet_status.Value.down)?>" />
+      <access val="<?cs var:Env.status.net.data.access?>" text="<?cs call:varValue(Env.Var.internet_access.Value[Env.status.net.data.access])?>" />
+    </internet>
+    <voip>
+      <link val="<?cs var:Env.status.voip.up?>" text="<?cs call:varValue_d(Env.Var.voip_status.Value[Env.status.voip.up], Env.Var.voip_status.Value.down)?>" />
+      <access val="<?cs var:Env.status.net.voip.access?>" text="<?cs call:varValue(Env.Var.voip_access.Value[Env.status.net.voip.access])?>" />
+    </voip>
+    <tv>
+      <?cs set:tv_status="up"?>
+      <?cs if:Var.tv_status.Value == "0" ?><?cs set:tv_status="down"?><?cs /if ?>
+      <link val="<?cs var:tv_status ?>" text="<?cs call:varValue_d(Env.Var.tv_status.Value[tv_status], Env.Var.tv_status.Value.down)?>" />
+    </tv>
+    <system>
+      <uptime>
+        <day val="<?cs var:Var.modem_uptime.day.Value?>" posttext="<?cs var:Env.Text.dayAbbr?>" />
+        <hour val="<?cs var:Var.modem_uptime.hour.Value?>" posttext="<?cs var:Env.Text.hourAbbr?>" />
+        <min val="<?cs var:Var.modem_uptime.min.Value?>" posttext="<?cs var:Env.Text.minAbbr?>" />
+        <sec val="<?cs var:Var.modem_uptime.sec.Value?>" posttext="<?cs var:Env.Text.secAbbr?>" />
+      </uptime>
+    </system>
+  </status>
+</rsp>

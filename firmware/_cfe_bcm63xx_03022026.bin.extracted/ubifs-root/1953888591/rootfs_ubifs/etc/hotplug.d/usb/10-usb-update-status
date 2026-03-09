@@ -1,0 +1,81 @@
+#!/bin/sh
+
+# Copyright (C) 2015 Efixo
+
+set -x
+
+case "$ACTION" in
+    add)
+    lock /run/lock/usb_update_status.lock
+    # busnum and devnum are sent together only on the first call
+    if [ -n "$BUSNUM" ] && [ -n "$DEVNUM" ]; then
+        bus="$BUSNUM-$DEVNUM"
+        count=$(status list_count link_usb_devices product $PRODUCT)
+        # no similar device registered 
+        if [ ${count} == 0 ]; then
+            status list_build link_usb_devices bus "${bus}" product "$PRODUCT" name ""
+        fi
+
+        found=0
+        count=$(status list_count link_usb_devices)
+        while [ ${count} -gt 0 ]; do
+            cur_bus="$(status list_i_get link_usb_devices ${count} bus)"
+            product="$(status list_i_get link_usb_devices ${count} product)"
+
+            # this is the latest usb entry
+            if [ -z "${cur_bus}" ] && [ "${product}" == "$PRODUCT" ]; then
+                status list_i_set link_usb_devices "${count}" bus "${bus}"
+                found=0
+                break
+            fi
+
+            if [ -n "${cur_bus}" ]; then
+                # paranoia check
+                if [ "${cur_bus}" == "${bus}" ]; then
+                    found=0
+                    break
+                fi
+                # notify we found a similar device but continue
+                # looping in case we found the one without busnum
+                found=1
+            fi
+            
+            count=$((count-1))
+        done
+
+        # create a new entry
+        if [ $found == 1 ]; then
+            status list_build link_usb_devices bus "${bus}" product "$PRODUCT" name ""
+        fi
+    else
+        name=$(cat "/sys"$DEVPATH"/../product")
+        count=$(status list_count link_usb_devices product $PRODUCT)
+        # no similar device registered 
+        if [ ${count} == 0 ]; then
+            status list_build link_usb_devices name "${name}" product "$PRODUCT" bus ""
+        fi
+
+        count=$(status list_count link_usb_devices)
+        while [ ${count} -gt 0 ]; do
+            cur_name="$(status list_i_get link_usb_devices ${count} name)"
+            product="$(status list_i_get link_usb_devices ${count} product)"
+            
+            # this is the latest usb entry
+            if [ -z "${cur_name}" ] && [ "${product}" == "$PRODUCT" ]; then
+                status list_i_set link_usb_devices "${count}" name "${name}"
+                break
+            fi
+
+            count=$((count-1))
+        done
+    fi
+    lock -u /run/lock/usb_update_status.lock
+	;;
+    remove)
+        # busnum and devnum are sent together only on the first call
+        if [ -n "$BUSNUM" ] && [ -n "$DEVNUM" ]; then
+            bus="$BUSNUM-$DEVNUM"
+            status list_delete link_usb_devices product "$PRODUCT" bus "${bus}"
+        fi
+	;;
+esac	

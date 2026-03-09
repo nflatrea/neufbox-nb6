@@ -1,0 +1,37 @@
+#!/bin/sh /etc/rc.common
+
+devices_node() {
+  mknod /dev/gmac c 249 0
+	mknod -m 640 /dev/bpm c 244 0
+	mknod -m 666 /dev/bcmendpoint0 c 209 0
+	mknod /dev/brcmboard c 206 0
+}
+
+create_mtd_link() {
+	local part=$(grep "\"$2\"" /proc/mtd|sed 's/^mtd\(.*\):.*/\1/')
+
+	[ -z "$part" ] && return
+
+	if [ "$1" = "data" ] || [ "$1" = "bootloader" ]; then
+		chmod a+w /dev/mtd$part
+		chmod a+w /dev/mtdblock$part
+	fi
+
+	ln -sf /dev/mtd$part /dev/mtd-$1
+	ln -sf /dev/mtdblock$part /dev/mtdblock-$1
+}
+
+mtd_symlinks() {
+	# mtd symbolic links
+	create_mtd_link bootloader "bootloader"
+	create_mtd_link rootfs "rootfs"
+	create_mtd_link rootfs-image "rootfs-image"
+	create_mtd_link upgrade "upgrade"
+	create_mtd_link upgrade-image "upgrade-image"
+	create_mtd_link data "data"
+}
+
+start() {
+	devices_node
+	mtd_symlinks
+}

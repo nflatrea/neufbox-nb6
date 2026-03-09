@@ -1,0 +1,25 @@
+#!/bin/sh
+
+lock /run/lock/reset-factory.lock
+
+# diaglog in background since it can fail
+diaglog event btnreset &
+sleep 3
+
+# notify diag for reboot (in background again)
+diaglog event reboot &
+sleep 3
+
+[ -x /etc/init.d/ppp-xdsl ] && /etc/init.d/ppp-xdsl stop
+# deauthenticate stations
+/etc/init.d/topology stop
+
+# make sure we have enough space
+rm -f /etc/config/*xml
+touch /resetme
+sync
+
+# reboot
+reboot -f
+
+lock -u /run/lock/reset-factory.lock

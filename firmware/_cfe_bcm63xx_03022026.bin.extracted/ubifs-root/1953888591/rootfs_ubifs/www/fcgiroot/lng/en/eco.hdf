@@ -1,0 +1,29 @@
+Env.Page.Title = ECO mode
+
+Env.Help.Text = In the category <b>ECO mode</b> you find the mode "energy saving" of the Box.
+
+Env.Section.eco.Title = ECO mode
+
+Env.Var.eco_status.Header = State
+Env.Var.eco_status.Value.up = Enabled
+Env.Var.eco_status.Value.down = Disabled
+
+Env.Var.telephone.Header = Phone
+Env.Var.cpl.Header = PLC
+Env.Var.wifi_horaire.Header = Wifi Schedule
+Env.Var.powersw.Header = Power Save Wifi
+Env.Var.ethernet_pc_tv.Header = Ethernet PC/TV
+Env.Var.ethernet_lan.Header = Ethernet LAN
+Env.Var.brightness.Header = Brightness of LEDs
+
+Env.Var.mbps.Value = Mbps
+
+Env.Var.leds.off = Off
+Env.Var.leds.low = Low
+Env.Var.leds.half = Medium
+Env.Var.leds.full = High
+
+Env.Var.ethernet.off = Disabled
+Env.Var.ethernet.10 = 10 Mbps
+Env.Var.ethernet.100 = 100 Mbps
+Env.Var.ethernet.1000 = 1000 Mbps

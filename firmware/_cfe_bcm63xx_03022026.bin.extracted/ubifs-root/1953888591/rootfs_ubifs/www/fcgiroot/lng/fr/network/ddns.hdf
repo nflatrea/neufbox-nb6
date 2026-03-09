@@ -1,0 +1,44 @@
+Env.Page.Title = DynDNS
+
+Env.Help.Text = Dans la rubrique <b>DynDNS</b>, vous pouvez activer un service de DNS (Domain Name Server) dynamique, qui vous permettra par exemple de pouvoir accéder à votre ordinateur depuis Internet sans avoir besoin de connaître votre adresse IP.
+
+Env.Section.ddns_configuration.Title = DynDNS
+
+Env.Var.ddns_status.Header = Statut service
+Env.Var.ddns_status.Value.down = Arrêté
+Env.Var.ddns_status.Value.starting = En cours d'initialisation
+Env.Var.ddns_status.Value.up = Démarré - en attente
+Env.Var.ddns_status.Value.updated = Mise à jour réussie
+Env.Var.ddns_status.Value.waiting_wan = Désactivé (En attente de connexion internet)
+Env.Var.ddns_status.Value.err_update = Erreur lors de la mise à jour. Une autre tentative va être effectuée dans quelques secondes.
+Env.Var.ddns_status.Value.err_gprs = Le service Dyndns n'est pas compatible avec la connexion 3G de secours.
+Env.Var.ddns_status.Value.error_server = Le serveur a retourné une erreur.
+Env.Var.ddns_status.Value.error_unknown = Une erreur inconnue s'est produite.
+Env.Var.ddns_status.Value.error_syntax = La requête de mise à jour est invalide.
+Env.Var.ddns_status.Value.error_account = Erreur compte. Vérifiez vos paramètres.
+Env.Var.ddns_status.Value.error_account_loginpass = Nom d'utilisateur et/ou mot de passe invalide.
+Env.Var.ddns_status.Value.error_account_hostname = Le nom de domaine est invalide.
+Env.Var.ddns_status.Value.error_account_abuse = Le nom de domaine est bloqué suite à des abus.
+
+Env.Var.ddns_lastupdate.Header = Mise à jour
+
+Env.Var.ddns_active.Header = Activation DynDNS
+Env.Var.ddns_active.Value.on = Activé
+Env.Var.ddns_active.Value.off = Désactivé
+Env.Var.ddns_active.Error.value = Format incorrect
+
+Env.Var.ddns_service.Header = Service
+
+Env.Var.ddns_username.Header = Nom d'utilisateur
+Env.Var.ddns_username.Error.value = Le nom d'utilisateur doit être composé de 1 à 99 caractères.
+
+Env.Var.ddns_password.Header = Mot de passe
+Env.Var.ddns_password.Error.value = Le mot de passe doit être composé de 1 à 99 caractères.
+
+Env.Var.ddns_hostname.Header = Nom de domaine
+Env.Var.ddns_hostname.Error.value = Le nom d'hôte doit être composé de 1 à 99 caractères.
+
+Env.Text.Desactivated = Désactivé
+Env.Text.UnknownError = Erreur inconnue
+
+Env.Text.Refresh = Rafraîchir

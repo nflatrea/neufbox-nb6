@@ -1,0 +1,6 @@
+   <firewall mode="<?cs var:Env.user.filter.mode ?>">
+      <winsharedrop active="<?cs var:Env.user.filter.simple.winsharedrop?>" />
+      <icmpdrop active="<?cs var:Env.user.filter.simple.icmpdrop?>" />
+      <smtpdrop active="<?cs var:Env.user.filter.simple.smtpdrop?>" />
+   </firewall>
+   

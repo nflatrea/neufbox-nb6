@@ -1,0 +1,95 @@
+<div class="title">
+	<h1><?cs var:Env.Section.global_status.Title ?></h1>
+</div>
+<div class="content">
+	<table id="network_status">
+		<?cs if:Env.user.ipv6.enable == "on" || Env.autoconf.ipv6.force == "true" || Env.status.net.ipv6.infra == "Only" ?>
+                        <?cs if:Env.status.net.ipv6.status == "up" ?>
+                                <?cs set:net_ipv6_status = "enabled" ?>
+                        <?cs else ?>
+                                <?cs set:net_ipv6_status = "unused" ?>
+                        <?cs /if ?>
+                    <?cs else ?>
+                        <?cs set:net_ipv6_status = "disabled" ?>
+                <?cs /if ?>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.netv6.Value ?></th>
+			<td class="<?cs var:net_ipv6_status ?>" id="internet_status_v6">
+                            <?cs if:net_ipv6_status == "enabled" ?><?cs var:Env.Var.netv6.status.up ?><?cs /if ?>
+                            <?cs if:net_ipv6_status == "unused" ?><?cs var:Env.Var.netv6.status.noconnect ?><?cs /if ?>
+                            <?cs if:net_ipv6_status == "disabled" ?><?cs var:Env.Var.netv6.status.down ?><?cs /if ?>
+                        </td>
+		</tr>
+		
+		<tr>
+			<th scope="row"><?cs var:Env.Var.dhcpv6.Value ?></th>
+			<td class="<?cs if:Env.user.dhcp6.active == "on" ?>enabled<?cs else ?>disabled<?cs /if ?>">
+			    	<?cs if:Env.user.dhcp6.active == "on" ?><?cs var:Env.Text.Enabled ?><?cs else ?><?cs var:Env.Text.Disabled ?><?cs /if ?>
+			</td>
+		</tr>
+		
+		
+		<tr>
+			<th scope="row"><?cs var:Env.Var.upnpv6.Value?></th>
+			<td class="<?cs if:Env.user.upnpd.active6 == "on" ?>enabled<?cs else ?>disabled<?cs /if ?>" >
+	                       <?cs if:Env.user.upnpd.active6 == "on" ?><?cs var:Env.Text.Enabled ?><?cs else ?><?cs var:Env.Text.Disabled ?><?cs /if ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.slaac.Header ?></th>
+			<td class="<?cs if:Env.user.ipv6.slaac == "on" ?>enabled<?cs else ?>disabled<?cs /if ?>" >
+	                       <?cs if:Env.user.ipv6.slaac == "on" ?><?cs var:Env.Text.Enabled ?><?cs else ?><?cs var:Env.Text.Disabled ?><?cs /if ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.dmz6.Header ?></th>
+			<td class="<?cs if:Env.user.ipv6.dmz.active == "on" ?>enabled<?cs else ?>disabled<?cs /if ?>" >
+	                       <?cs if:Env.user.ipv6.dmz.active == "on" ?><?cs var:Env.Text.Enabled ?><?cs else ?><?cs var:Env.Text.Disabled ?><?cs /if ?>
+			</td>
+		</tr>
+	</table>
+</div>
+
+<?cs if:Env.user.ipv6.enable == "on" || Env.autoconf.ipv6.force == "true" || Env.status.net.ipv6.infra == "Only" ?>
+    <div class="title">
+        <h1><?cs var:Env.Section.connected_computers.Title  ?></h1>
+    </div>
+    <div class="content">
+        <table id="network_clients">
+            <thead>
+                <tr>
+                    <th scope="col" class="col_number">#</th>
+                    <th scope="col" class="col_mac"><?cs var:Env.Var.mac_addr.Header?></th>
+                    <th scope="col" class="col_ip"><?cs var:Env.Var.ip_addr.Header?></th>
+                    <th scope="col" class="col_port"><?cs var:Env.Var.port.Header?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?cs set:cpt = 0?>
+                <?cs each:host = Env.status.lan.topology.device ?>
+                            <?cs if:(host.status=="online" && host.ip6masteraddr!="") && (host.type=="pc" || host.type=="stb" || host.type=="femto") ?>
+                            <?cs set:cpt = #cpt +1?>
+                <tr>
+                    <td class="col_number">
+                        <?cs var:cpt ?>
+                    </td>
+                    <td>
+                        <?cs var:host.macaddr ?>
+                    </td>
+                    <td>
+                        <?cs var:host.ip6masteraddr ?>
+                                            <?cs if:host.hostname != ''  ?>
+                                            (<?cs var:host.hostname ?>)
+                                            <?cs /if?>
+
+                    </td>
+                    <td>
+                        <?cs call:IfaceToPortName(host.port)?>
+                    </td>
+                </tr>
+                            <?cs /if ?>
+                <?cs /each ?>
+            </tbody>
+        </table>
+    </div>
+<?cs /if ?>

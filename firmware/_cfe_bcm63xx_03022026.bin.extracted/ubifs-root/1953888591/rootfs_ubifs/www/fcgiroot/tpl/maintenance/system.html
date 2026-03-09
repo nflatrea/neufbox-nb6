@@ -1,0 +1,108 @@
+<div class="title">
+    <h1><?cs var:Env.Section.localization.Title?></h1>
+</div>
+
+<div class="content">
+    <form method="post" id="form_localization_config" action="<?cs var:Env.Page.Name ?>">
+    <fieldset>
+        <input type="hidden" name="action" value="chglang" />
+        <table id="localization_config">
+            <tr id="row_lang_config">
+                <th scope="row"><?cs var:Env.Var.lang.Header ?></th>
+                <td>
+                    <select name="lang" id="lang">
+                        <?cs each:lang = Env.Var.lang.Value ?>
+                        <option value="<?cs var:name(lang) ?>"<?cs if:Env.user.web.lang == name(lang) ?> selected="selected"<?cs /if ?>>
+		        <?cs var:lang ?>
+		        </option>
+                        <?cs /each ?>
+                    </select>
+                </td>
+            </tr>
+        </table>
+
+        <button type="submit" name="submit" class="btn"><?cs var:Button.Submit ?></button>
+    
+    </fieldset>
+    </form>
+</div>
+
+
+<div class="title">
+	<h1><?cs var:Env.Section.reboot.Title?></h1>
+</div>
+
+<div class="content">
+	<form method="post" action="<?cs var:Env.Page.Name ?>">
+		
+	<table id="reboot">
+		<tr>
+			<th scope="row"><?cs call:varHeader("rebootbox")?></th>
+			<td>
+				<input type="hidden" name="action" value="reboot" />
+				<button type="submit" name="submit" class="btn"><?cs var:Button.Submit ?></button>
+			</td>
+		</tr>
+	</table>
+	
+	</form>
+</div>
+
+<div class="title">
+	<h1><?cs var:Env.Section.Params.Title?></h1>
+</div>
+
+<div class="content">
+	<table id="config_user">
+		<tr>
+			<th scope="row"><?cs call:varHeader("paramexport")?></th>
+			<td>
+				<form method="post" action="<?cs var:Env.Page.Name ?>">
+				
+				<input type="hidden" name="action" value="config_user_export" />
+				<button type="submit" name="submit" class="btn"><?cs var:Button.Submit ?></button>
+				
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs call:varHeader("paramimport")?></th>
+			<td>
+				<form method="post" enctype="multipart/form-data" action="<?cs var:Env.Page.Name ?>">
+				
+				<input type="hidden" name="action" value="config_user_import" />
+				<input type="file" name="config_user_file" size="30" />
+                                <br/>
+				<button type="submit" name="submit" class="btn"><?cs var:Button.Submit ?></button>
+				
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs call:varHeader("paramrestore")?></th>
+			<td>
+				<form method="post" action="<?cs var:Env.Page.Name ?>">
+				
+				<input type="hidden" name="action" value="config_user_reset" />
+				<button type="submit" name="submit" class="btn"><?cs var:Button.Submit ?></button>
+				
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
+<div class="title">
+	<h1><?cs var:Env.Section.extended_infos.Title?></h1>
+</div>
+
+<div class="content">
+	<table id="extended_infos">
+		<tr>
+			<th scope="row"><?cs call:varHeader("webui_version")?></th>
+			<td>
+				<?cs var:Var.webui_version.Value?>
+			</td>
+		</tr>
+	</table>
+</div>

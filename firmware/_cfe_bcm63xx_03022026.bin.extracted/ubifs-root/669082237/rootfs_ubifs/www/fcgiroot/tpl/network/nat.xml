@@ -1,0 +1,6 @@
+<rsp stat="ok">
+    <status><?cs var:Env.status.net.mapt.status ?></status>
+    <portsets><?cs var:Env.status.net.mapt.portsets ?></portsets>
+    <popup_title><?cs var:Env.Var.mapt.popup.Title.Value ?></popup_title>
+    <popup-description><?cs var:Env.Var.mapt.popup.Description.Value ?></popup-description>
+</rsp>

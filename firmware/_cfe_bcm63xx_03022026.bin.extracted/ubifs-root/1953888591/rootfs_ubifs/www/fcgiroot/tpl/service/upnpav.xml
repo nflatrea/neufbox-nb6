@@ -1,0 +1,13 @@
+<rsp stat="ok">
+  <upnpav>
+    <active val="<?cs var:Env.user.upnpav.active ?>" text="<?cs call:varValue_d(Env.Var.upnpav_active.Value[Env.user.upnpav.active], Env.Var.upnpav_active.Value.off)?>" />
+    <?cs if:Env.status.upnpav.status == "error_unknow" && Env.status.swap.errno != "0" ?>
+    <?cs elif:?Env.Var.upnpav_status.Value[Env.status.upnpav.status] ?>
+        <?cs set:text = Env.Var.upnpav_status.Value[Env.status.upnpav.status] ?>
+    <?cs else ?>
+        <?cs set:text = Env.Var.upnpav_status.Value.down ?>
+    <?cs /if?>
+    <status val="<?cs var:Env.status.upnpav.status ?>" text="<?cs var:text ?>" />
+    <sharedcount val="<?cs var:Env.status.upnpav.sharedcount ?>" posttext="<?cs if:#Env.status.upnpav.sharedcount > #1?><?cs var:Env.Var.upnpav_sharedcount.Value.multiple?><?cs else?><?cs var:Env.Var.upnpav_sharedcount.Value.single?><?cs /if?>" />
+  </upnpav>
+</rsp>

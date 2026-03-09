@@ -1,0 +1,13 @@
+#!/bin/sh
+
+lock /run/lock/acs_stats.lock
+local p="/tmp/acs"
+mkdir -p $p
+acs_cli -i wl1 dump bss > $p/wl1_dump_bss
+acs_cli -i wl1 dump chanim > $p/wl1_dump_chanim
+acs_cli -i wl1 dump candidate > $p/wl1_dump_candidate
+
+acs_cli -i wl0 dump bss > $p/wl0_dump_bss
+acs_cli -i wl0 dump chanim > $p/wl0_dump_chanim
+acs_cli -i wl0 dump candidate > $p/wl0_dump_candidate
+lock -u /run/lock/acs_stats.lock

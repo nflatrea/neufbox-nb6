@@ -1,0 +1,29 @@
+#!/bin/sh
+
+action="$1"
+addr="$3"
+
+prefix_route() {
+	local prefix=$(ip6calc --netid $addr/$DNSMASQ_PREFIX_LENGTH)/$DNSMASQ_PREFIX_LENGTH
+	local iface=${DNSMASQ_INTERFACE:-$(status get lan_ifname)}
+	local ll_addr=$DNSMASQ_CLIENT_ADDRESS
+	local ipr_action=$1
+	local ipt_action
+	[ "$ipr_action" = "add" ] && ipt_action="-A" || ipt_action="-D"
+
+	ip -6 route $ipr_action $prefix via $ll_addr dev $iface > /dev/null 2>&1
+
+	ip6tables $ipt_action FORWARD -d $prefix -o $iface -j STB_IN_FORWARD > /dev/null 2>&1
+	ip6tables $ipt_action FORWARD -s $prefix -i $iface -j STB_OUT_FORWARD > /dev/null 2>&1
+}
+
+case $action in
+	add-prefix|old-prefix)
+		prefix_route add
+	;;
+	del-prefix)
+		prefix_route del
+	;;
+esac
+
+exit 0

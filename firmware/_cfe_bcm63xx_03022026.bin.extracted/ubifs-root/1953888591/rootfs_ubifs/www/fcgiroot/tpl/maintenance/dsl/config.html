@@ -1,0 +1,74 @@
+<div class="title">
+	<h1><?cs var:Env.Section.adsl_advanced_configuration.Header?></h1>
+</div>
+
+<div class="content">
+	<form method="post" action="<?cs var:Env.Page.Name ?>" id="dsl_advanced">
+
+	<table>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.dsl_mod.Header?></th>
+			<td>
+				<label for="dsl_mod_a"><input type="checkbox" name="dsl_mod_a" id="dsl_mod_a" value="a"<?cs if:string.find(Var.DslMod.Value, "a") != -1 ?> checked="checked"<?cs /if ?> />&nbsp;<?cs var:Env.Var.dsl_mod.Value.a?></label>
+				<label for="dsl_mod_d"><input type="checkbox" name="dsl_mod_d" id="dsl_mod_d" value="d"<?cs if:string.find(Var.DslMod.Value, "d") != -1 ?> checked="checked"<?cs /if ?> />&nbsp;<?cs var:Env.Var.dsl_mod.Value.d?></label>
+				<label for="dsl_mod_l"><input type="checkbox" name="dsl_mod_l" id="dsl_mod_l" value="l"<?cs if:string.find(Var.DslMod.Value, "l") != -1 ?> checked="checked"<?cs /if ?> />&nbsp;<?cs var:Env.Var.dsl_mod.Value.l?></label>
+				<label for="dsl_mod_t"><input type="checkbox" name="dsl_mod_t" id="dsl_mod_t" value="t"<?cs if:string.find(Var.DslMod.Value, "t") != -1 ?> checked="checked"<?cs /if ?> />&nbsp;<?cs var:Env.Var.dsl_mod.Value.t?></label>
+				<label for="dsl_mod_2"><input type="checkbox" name="dsl_mod_2" id="dsl_mod_2" value="2"<?cs if:string.find(Var.DslMod.Value, "2") != -1 ?> checked="checked"<?cs /if ?> />&nbsp;<?cs var:Env.Var.dsl_mod.Value.2?></label>
+				<label for="dsl_mod_p"><input type="checkbox" name="dsl_mod_p" id="dsl_mod_p" value="p"<?cs if:string.find(Var.DslMod.Value, "p") != -1 ?> checked="checked"<?cs /if ?> />&nbsp;<?cs var:Env.Var.dsl_mod.Value.p?></label>
+				<label for="dsl_mod_e"><input type="checkbox" name="dsl_mod_e" id="dsl_mod_e" value="e"<?cs if:string.find(Var.DslMod.Value, "e") != -1 ?> checked="checked"<?cs /if ?> />&nbsp;<?cs var:Env.Var.dsl_mod.Value.e?></label>
+				<label for="dsl_mod_m"><input type="checkbox" name="dsl_mod_m" id="dsl_mod_m" value="m"<?cs if:string.find(Var.DslMod.Value, "m") != -1 ?> checked="checked"<?cs /if ?> />&nbsp;<?cs var:Env.Var.dsl_mod.Value.m?></label>
+				<label for="dsl_mod_v"><input type="checkbox" name="dsl_mod_v" id="dsl_mod_m" value="v"<?cs if:string.find(Var.DslMod.Value, "v") != -1 ?> checked="checked"<?cs /if ?> />&nbsp;<?cs var:Env.Var.dsl_mod.Value.v?></label>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.dsl_lpair.Header?></th>
+			<td>
+				<label class="inline radio" for="dsl_lpair_inner"><input type="radio" value="inner" name="dsl_lpair" id="dsl_lpair_inner"<?cs if:Var.DslLpair.Value == "inner" ?> checked="checked"<?cs /if ?> />
+				<?cs var:Env.Var.dsl_lpair.Value.inner?></label>
+				<label class="inline radio" for="dsl_lpair_outer"><input type="radio" value="outer" name="dsl_lpair" id="dsl_lpair_outer"<?cs if:Var.DslLpair.Value == "outer" ?> checked="checked"<?cs /if ?> />
+				<?cs var:Env.Var.dsl_lpair.Value.outer?></label>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.dsl_trellis.Header?></th>
+			<td>
+                            <?cs call:div_onoff("dsl_trellis", (Var.DslTrellis.Value == "on")) ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.dsl_snr.Header?></th>
+			<td>
+				<input type="text" name="dsl_snr" id="dsl_snr" value="<?cs var:Var.DslSnr.Value ?>" size="4" maxlength="4" />
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.dsl_bitswap.Header?></th>
+			<td>
+                                <?cs call:div_onoff("dsl_bitswap", (Var.DslBitswap.Value == "on")) ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.dsl_sesdrop.Header?></th>
+			<td>
+                                <?cs call:div_onoff("dsl_sesdrop", (Var.DslSesdrop.Value == "on")) ?>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.dsl_sra.Header?></th>
+			<td>
+                                <?cs call:div_onoff("dsl_sra", (Var.DslSra.Value == "on")) ?>
+			</td>
+		</tr>
+                <tr>
+			<th scope="row"><?cs var:Env.Var.dsl_diag.Header?></th>
+			<td>
+                                <?cs call:div_onoff("dsl_diag", (Var.DslDiag.Value == "on")) ?>
+			</td>
+		</tr>
+
+	</table>
+
+	<span class="button_submit"><button class="btn" type="submit" name="submit"><?cs var:Button.Submit?></button></span>
+
+	</form>
+</div>

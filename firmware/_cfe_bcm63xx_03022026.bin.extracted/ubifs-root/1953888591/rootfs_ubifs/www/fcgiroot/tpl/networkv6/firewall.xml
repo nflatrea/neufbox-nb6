@@ -1,0 +1,14 @@
+<rsp stat="ok">
+  <status>
+    <?cs if:Env.user.ipv6.enable == "on" || Env.autoconf.ipv6.force == "true" || Env.status.net.ipv6.status == "up"?>
+        <?cs if:Env.status.net.ipv6.status == "up" ?>
+            <?cs set:net_ipv6_status = 1 ?>
+        <?cs else ?>
+            <?cs set:net_ipv6_status = 0 ?>
+        <?cs /if ?>
+    <?cs else ?>
+        <?cs set:net_ipv6_status = 0 ?>
+    <?cs /if ?>
+    <wan val="<?cs var:net_ipv6_status ?>"/>
+  </status>
+</rsp>

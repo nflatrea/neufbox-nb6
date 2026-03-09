@@ -1,0 +1,492 @@
+<?cs if:Env.status.net.data.access != "ftth" ?>
+<?cs set:Env.Help.Text = Env.Help.Text ?>
+<?cs /if?>
+
+<?cs if:Env.status.vsstest.state != "-1" ?>
+
+<div class="title">
+    <h1><?cs var:Env.Section.DiagPhone.Title ?></h1>
+</div>
+
+<div class="content">
+    <table id="voip_diag">
+        <tr>
+            <th scope="row"><?cs var:Env.Var.InitResult.Header ?></th>
+            <td class="<?cs if:Var.InitResult.Value == "success" ?>enabled<?cs elif:Var.InitResult.Value == "error" ?>disabled<?cs else ?>unused<?cs /if ?>">
+                <?cs if:Var.InitResult.Value == "success" ?>
+                <?cs var:Env.Var.InitResult.Value.success ?>
+                <?cs elif:Var.InitResult.Value == "error" ?>
+                <?cs if:Var.InitError.Value == "check_hook" ?>
+                <?cs var:Env.Var.InitError.Value.check_hook ?>
+                <?cs else ?>
+                <?cs var:Env.Var.InitError.Value.unknown ?>
+                <?cs /if ?>
+                <?cs else ?>
+                <?cs var:Env.Var.initResult.Value.not_launched ?>
+                <?cs /if ?>
+        </td>
+    </tr>
+    <tr>
+        <th scope="row"><?cs var:Env.Var.Gr909Result.Header ?></th>
+        <td class="<?cs if:Var.Gr909Result.Value == "success" ?>enabled<?cs elif:Var.Gr909Result.Value == "error" ?>disabled<?cs else ?>unused<?cs /if ?>">
+            <?cs if:Var.Gr909Result.Value == "success" ?>
+            <?cs var:Env.Var.Gr909Result.Value.success ?>
+            <?cs elif:Var.Gr909Result.Value == "error" ?>
+            <?cs call:varValue_d(Env.Var.Gr909Error.Value[Var.Gr909Error.Value], Env.Var.Gr909Result.Value.error)?>
+            <?cs else ?>
+            <?cs var:Env.Var.Gr909Result.Value.not_launched ?>
+            <?cs /if ?>
+    </td>
+</tr>
+<tr>
+    <th scope="row"><?cs var:Env.Var.RingResult.Header ?></th>
+    <td class="<?cs if:Var.RingResult.Value == "success" ?>enabled<?cs elif:Var.RingResult.Value == "error" ?>disabled<?cs else ?>unused<?cs /if ?>">
+        <?cs if:Var.RingResult.Value == "success" ?>
+        <?cs var:Env.Var.RingResult.Value.success ?>
+        <?cs elif:Var.RingResult.Value == "error" ?>
+        <?cs var:Env.Var.RingResult.Value.error ?>
+        <?cs else ?>
+        <?cs var:Env.Var.RingResult.Value.not_launched ?>
+        <?cs /if ?>
+</td>
+</tr>
+<tr>
+    <th scope="row"><?cs var:Env.Var.HookntoneResult.Header ?></th>
+    <td class="<?cs if:Var.HookntoneResult.Value == "success" ?>enabled<?cs elif:Var.HookntoneResult.Value == "error" ?>disabled<?cs else ?>unused<?cs /if ?>">
+        <?cs if:Var.HookntoneResult.Value == "success" ?>
+        <?cs var:Env.Var.HookntoneResult.Value.success ?>
+        <?cs elif:Var.HookntoneResult.Value == "error" ?>
+        <?cs if:Var.HookntoneError.Value == "pick_up" ?>
+        <?cs var:Env.Var.HookntoneError.Value.pick_up ?>
+        <?cs elif:Var.HookntoneError.Value == "hang_up" ?>
+        <?cs var:Env.Var.HookntoneError.Value.hang_up ?>
+        <?cs elif:Var.HookntoneError.Value == "ft_standard" ?>
+        <?cs var:Env.Var.HookntoneError.Value.ft_standard ?>
+        <?cs else ?>
+        <?cs var:Env.Var.HookntoneResult.Value.error ?>
+        <?cs /if ?>
+        <?cs else ?>
+        <?cs var:Env.Var.HookntoneResult.Value.not_launched ?>
+        <?cs /if ?>
+</td>
+</tr>
+<tr>
+    <th scope="row"><?cs var:Env.Var.DtmfResult.Header ?></th>
+    <td class="<?cs if:Var.DtmfResult.Value == "success" ?>enabled<?cs elif:Var.DtmfResult.Value == "error" ?>disabled<?cs else ?>unused<?cs /if ?>">
+        <?cs if:Var.DtmfResult.Value == "success" ?>
+        <?cs var:Env.Var.DtmfResult.Value.success ?>
+        <?cs elif:Var.DtmfResult.Value == "error" ?>
+        <?cs call:varValue_d(Env.Var.DtmfError.Value[Var.DtmfError.Value], Env.Var.DtmfResult.Value.error)?>
+        <?cs else ?>
+        <?cs var:Env.Var.DtmfResult.Value.not_launched ?>
+        <?cs /if ?>
+</td>
+</tr>
+</table>
+
+<?cs if:Var.vSStest_nextstep.Value != ""?>
+<form id="form_voip_diag" method="post" action="<?cs var:Env.Page.Name ?>">
+    <fieldset>
+        <input type="hidden" name="action" value="vSStest" />
+        <input type="hidden" name="step" value="<?cs var:Var.vSStest_nextstep.Value?>" />
+        <div class="button_submit">
+            <button type="submit" name="submit" class="btn">
+                <?cs if:!?Var.vSStest_step.Value || Var.vSStest_nextstep.Value != Var.vSStest_step.Value?>
+                <?cs if:Var.vSStest_nextstep.Value == "gr909"?>
+                <?cs var:Env.Button.Gr909 ?>
+                <?cs elif:Var.vSStest_nextstep.Value == "ring"?>
+                <?cs var:Env.Button.Ring ?>
+                <?cs elif:Var.vSStest_nextstep.Value == "hookntone"?>
+                <?cs var:Env.Button.Hookntone ?>
+                <?cs elif:Var.vSStest_nextstep.Value == "dtmf"?>
+                <?cs var:Env.Button.Dtmf ?>
+                <?cs else?>
+                <?cs var:Env.Button.Init ?>
+                <?cs /if?>
+                <?cs else?>
+                <?cs if:Var.vSStest_nextstep.Value == "gr909"?>
+                <?cs var:Env.Button.ReGr909 ?>
+                <?cs elif:Var.vSStest_nextstep.Value == "ring"?>
+                <?cs var:Env.Button.ReRing ?>
+                <?cs elif:Var.vSStest_nextstep.Value == "hookntone"?>
+                <?cs var:Env.Button.ReHookntone ?>
+                <?cs elif:Var.vSStest_nextstep.Value == "dtmf"?>
+                <?cs var:Env.Button.ReDtmf ?>
+                <?cs else?>
+                <?cs var:Env.Button.ReInit?>
+                <?cs /if?>
+                <?cs /if?>
+            </button>
+        </div>
+        <img id="loader" style="display:none;" src="/img/icon_anim_loading.gif?v=3.4" alt="<?cs var:Env.Var.pendingDiag.Value ?>" />
+        <span id="info">
+            <?cs if:Var.vSStest_nextstep.Value == "gr909"?>
+            <?cs var:Env.Text.Gr909 ?>
+            <?cs elif:Var.vSStest_nextstep.Value == "ring"?>
+            <?cs var:Env.Text.Ring ?>
+            <?cs elif:Var.vSStest_nextstep.Value == "hookntone"?>
+            <?cs var:Env.Text.Hookntone ?>
+            <?cs elif:Var.vSStest_nextstep.Value == "dtmf"?>
+            <?cs var:Env.Text.Dtmf ?>
+            <?cs else?>
+            <?cs var:Env.Text.Init?>
+            <?cs /if?></span>
+    </fieldset>
+</form>
+<?cs /if ?>
+
+<br />
+
+
+<form id="form_voip_diag_reboot" method="post" action="<?cs var:Env.Page.Name ?>">
+    <fieldset>
+        <input type="hidden" name="action" value="reboot" />
+        <span class="button_submit">
+            <button type="submit" name="submit" class="btn"><?cs if:(Var.DtmfResult.Value == "success") ?><?cs var:Button.Reboot ?><?cs else ?><?cs var:Env.Button.CancelAndReboot ?><?cs /if ?></button>
+        </span>
+        <p><b><?cs var:Env.Text.Warning ?>&nbsp;<?cs var:Env.Text.Info ?></b></p>
+    </fieldset>
+</form>
+
+</div>
+
+<?cs /if?>
+
+<?cs if:Env.status.net.data.access != "ftth" ?>
+<div class="title">
+    <h1><?cs var:Env.Section.dsltest.Title ?></h1>
+</div>
+
+<div id="dsltest_nojs_content" class="content">
+    <?cs var:Env.Text.nojs?>
+</div>
+<div id="dsltest_section" class="content" style="display: none;">
+    <div style="float: right;">
+        <img src="/img/img_dsltest_sb1.jpg?v=3.4" />
+
+    </div>
+    <div style="margin-right: 135px;">
+        <table id="table_dsltest">
+            <tr>
+                <th scope="row"><?cs var:Env.Var.dsltest_result.Header ?></th>
+                <td class="disabled">
+                    <?cs var:Env.Text.not_launched?>
+                </td>
+            </tr>
+        </table>
+
+        <?cs var:Env.Text.dsltest_instruction?>
+    </div>
+
+    <form id="form_dsltest" method="post" action="<?cs var:Env.Page.Name ?>">
+        <input type="hidden" name="action" value="dsltest" />
+
+        <div id="div_button_dsltest" class="button_submit">
+            <button type="submit" name="submit" class="btn"><?cs var:Env.Button.Test ?></button>
+        </div>
+
+        <div id="dsltest_status" class="status" style="display:none;">
+            <span class="loading"><?cs var:Env.Text.dsltest_living?></span>
+        </div>
+    </form>
+</div>
+<?cs /if ?>
+
+<div class="title">
+    <h1><?cs var:Env.Section.DiagReport.Title?></h1>
+</div>
+
+<div class="content">
+    <form method="post" action="<?cs var:Env.Page.Name ?>">
+
+        <table id="diagnostic_report">
+            <tr>
+                <th scope="row"><?cs var:Env.Text.ExportDiagReport?></th>
+                <td>
+                    <input type="hidden" name="action" value="diagreport_export" />
+                    <span class="button_submit"><button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button></span>
+                </td>
+            </tr>
+        </table>
+
+    </form>
+</div>
+
+<?cs if:Env.status.ont.status == "up" && Var.ont_type.Value == "I-010" ?>
+<div class="title">
+    <h1><?cs var:Env.Section.ont.Title ?></h1>
+</div>
+<div id="section-ont" class="content">
+
+    <table class="ont-action">
+        <tr>
+            <th scope="row"><?cs var:Env.Section.ont.Title ?></th>
+            <td>
+                <p id="notice" <?cs if:Var.ont_type.Value == "" ?>style="display:block;"<?cs /if ?>>
+                   <?cs if:Var.ont_type.Value == "" ?>
+                   <?cs var:Env.Var.ont.unavailable ?>
+                   <?cs set:Var.ont_display.Value = "off"?>
+                   <?cs /if ?>
+            </p>
+
+            <form id="form_info_ont" method="post" action="<?cs var:Env.Page.Name ?>">
+                <input id="action_diagont" type="hidden" name="action" value="action_diagont" />
+                <span class="button_submit"><button class="btn" type="submit" name="submit"><?cs var:Button.Launch ?></button></span>
+            </form>
+            <div id="loading"><img alt="<?cs var:Env.Var.pendingDiag.Value ?>" src="/img/icon_anim_loading.gif?v=3.4"  id="loader" />&nbsp;<span><?cs var:Env.Var.pendingDiag.Value ?></span></div>
+        </td>
+    </tr>
+</table>
+
+
+<?cs def:ont_color(val) ?>
+<?cs if:val == 'GREEN' ?>green<?cs /if ?>
+<?cs if:val == 'ORANGE' ?>orange<?cs /if ?>
+<?cs if:val == 'RED' ?>red<?cs /if ?>
+<?cs /def ?>
+
+<table class="ont_infos">
+    <tr id="ont_leds_eqpt">
+        <th rowspan="4">
+    <div id="leds">
+        <img class="img" src="/img/img_ont_nb6.png?v=3.4" alt="ont" />
+        <span class="eqpt px <?cs call:ont_color(Env.ont.leds.eqpt) ?> <?cs if:Env.ont.leds.eqptstate=='BLINKING' ?>blink<?cs /if ?>"></span>
+        <span class="pon px <?cs call:ont_color(Env.ont.leds.pon) ?> <?cs if:Env.ont.leds.ponstate=='BLINKING' ?>blink<?cs /if ?>"></span>
+        <span class="mgnt px <?cs call:ont_color(Env.ont.leds.mgnt) ?> <?cs if:Env.ont.leds.mgntstate=='BLINKING' ?>blink<?cs /if ?>"></span>
+        <span class="lan px <?cs call:ont_color(Env.ont.leds.lan) ?> <?cs if:Env.ont.leds.lanstate=='BLINKING' ?>blink<?cs /if ?>"></span>
+    </div>
+    </th>
+    <td><?cs var:Env.Var.ont.leds['eqpt'][Env.ont.leds.eqpt][Env.ont.leds.eqptstate] ?></td>
+    </tr>
+    <tr id="ont_leds_pon" >
+        <td><?cs var:Env.Var.ont.leds['pon'][Env.ont.leds.pon][Env.ont.leds.ponstate] ?></td>
+    </tr>
+    <tr id="ont_leds_mgnt">
+        <td><?cs var:Env.Var.ont.leds['mgnt'][Env.ont.leds.mgnt][Env.ont.leds.mgntstate] ?></td>
+    </tr>
+    <tr id="ont_leds_lan">
+        <td><?cs var:Env.Var.ont.leds['lan'][Env.ont.leds.lan][Env.ont.leds.lanstate] ?></td>
+    </tr>
+</table>
+
+<?cs if:Env.status.ont.counterupdate=="0" ?>
+<?cs set:Var.ont_display.Value="off" ?>
+<?cs /if?>
+
+<table id="ont_infos" class="ont_infos" style="display:none;">
+    <tr id="type">
+        <th scope="row"><?cs call:varHeader("ont_model") ?></th>
+        <td><?cs if:?Var.ont_type_full.Value  ?><?cs var:Var.ont_type_full.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="versiona">
+        <th scope="row"><?cs call:varHeader("ont_version_active") ?></th>
+        <td><?cs if:?Var.ont_version_active.Value  ?><?cs var:Var.ont_version_active.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="versionp">
+        <th scope="row"><?cs call:varHeader("ont_version_passive") ?></th>
+        <td><?cs if:?Var.ont_version_passive.Value  ?><?cs var:Var.ont_version_passive.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="uptime">
+        <th scope="row"><?cs call:varHeader("ont_uptime") ?></th>
+        <td><?cs if:?Var.ont_uptime.day.Value  ?>
+            <?cs var:Var.ont_uptime.day.Value ?> <?cs var:Env.Text.dayAbbr?>
+            <?cs var:Var.ont_uptime.hour.Value ?> <?cs var:Env.Text.hourAbbr?>
+            <?cs var:Var.ont_uptime.min.Value ?> <?cs var:Env.Text.minAbbr?>
+            <?cs var:Var.ont_uptime.sec.Value ?> <?cs var:Env.Text.secAbbr?>
+            <?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="refresh">
+        <th scope="row"><?cs call:varHeader("ont_refresh") ?></th>
+        <td><?cs if:?Var.ont_refresh.HHMMSS.Value  ?><?cs var:Env.Text.Day[Var.ont_refresh.n_day.Value] ?> <?cs var:Var.ont_refresh.day.Value ?> <?cs var:Env.Text.Month[Var.ont_refresh.n_month.Value] ?> <?cs var:Var.ont_refresh.year.Value ?> <?cs var:Var.ont_refresh.HHMMSS.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="sn">
+        <th scope="row"><?cs call:varHeader("ont_sn") ?></th>
+        <td><?cs if:?Var.ont_sn.Value  ?><?cs var:Var.ont_sn.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="ranging">
+        <th scope="row"><?cs call:varHeader("ont_ranging") ?></th>
+        <td><?cs if:?Var.ont_ranging.Value  ?><?cs var:Var.ont_ranging.Value ?><?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="rssir">
+        <th scope="row"><?cs call:varHeader("ont_rssi_receive") ?></th>
+        <td><?cs if:?Var.ont_rssi_receive.Value  ?><?cs var:Var.ont_rssi_receive.Value ?> dBm<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="rssit">
+        <th scope="row"><?cs call:varHeader("ont_rssi_transmit") ?></th>
+        <td><?cs if:?Var.ont_rssi_transmit.Value  ?><?cs var:Var.ont_rssi_transmit.Value ?> dBm<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="rssib">
+        <th scope="row"><?cs call:varHeader("ont_rssi_bias") ?></th>
+        <td><?cs if:?Var.ont_rssi_bias.Value  ?><?cs var:Var.ont_rssi_bias.Value ?> mA<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="temp">
+        <th scope="row"><?cs call:varHeader("ont_rssi_temp") ?></th>
+        <td><?cs if:?Var.ont_rssi_temp.Value  ?><?cs var:Var.ont_rssi_temp.Value ?> °C<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+    <tr id="vcc">
+        <th scope="row"><?cs call:varHeader("ont_rssi_vcc") ?></th>
+        <td><?cs if:?Var.ont_rssi_vcc.Value  ?><?cs var:Var.ont_rssi_vcc.Value ?> V<?cs else ?><?cs var:Env.Text.Undefined ?><?cs /if ?></td>
+    </tr>
+</table>
+
+<table id="ont_detail_info" class="ont_infos" style="display:none;">
+    <tr id="ont_status_power">
+        <th scope="row"><?cs call:varHeader("ont_status_power") ?></th>
+        <?cs if:Env.ont.status.power == "ACTIVE" ?>
+        <?cs set:status = "enabled" ?>
+        <?cs elif:Env.ont.status.power == "INACTIVE"  ?>
+        <?cs set:status = "disabled" ?>
+        <?cs else ?>
+        <?cs set:status = "unused" ?>
+        <?cs /if ?>
+        <td class="<?cs var:status ?>">
+            <?cs if:status == "enabled" ?><?cs var:Env.Var.ont_details_powered.up ?><?cs /if ?>
+            <?cs if:status == "disabled" ?><?cs var:Env.Var.ont_details_powered.down ?><?cs /if ?>
+            <?cs if:status == "unused" ?><?cs var:Env.Text.Undefined ?><?cs /if ?>
+        </td>
+    </tr>
+    <tr id="ont_status_lossframe">
+        <th scope="row"><?cs call:varHeader("ont_status_lossframe") ?></th>
+        <?cs if:Env.ont.status.lossframe == "ACTIVE" ?>
+        <?cs set:status = "disabled" ?>
+        <?cs elif:Env.ont.status.lossframe == "INACTIVE" ?>
+        <?cs set:status = "enabled" ?>
+        <?cs else ?>
+        <?cs set:status = "unused" ?>
+        <?cs /if ?>
+        <td class="<?cs var:status ?>">
+            <?cs if:status == "enabled" ?><?cs var:Env.Var.ont_details_lossframe.up ?><?cs /if ?>
+            <?cs if:status == "disabled" ?><?cs var:Env.Var.ont_details_lossframe.down ?><?cs /if ?>
+            <?cs if:status == "unused" ?><?cs var:Env.Text.Undefined ?><?cs /if ?>
+        </td>
+    </tr>
+    <tr id="ont_status_losssignal">
+        <th scope="row"><?cs call:varHeader("ont_status_losssignal") ?></th>
+        <?cs if:Env.ont.status.losssignal == "ACTIVE" ?>
+        <?cs set:status = "disabled" ?>
+        <?cs elif:Env.ont.status.losssignal == "INACTIVE" ?>
+        <?cs set:status = "enabled" ?>
+        <?cs else ?>
+        <?cs set:status = "unused" ?>
+        <?cs /if ?>
+        <td class="<?cs var:status ?>">
+            <?cs if:status == "enabled" ?><?cs var:Env.Var.ont_details_losssignal.up ?><?cs /if ?>
+            <?cs if:status == "disabled" ?><?cs var:Env.Var.ont_details_losssignal.down ?><?cs /if ?>
+            <?cs if:status == "unused" ?><?cs var:Env.Text.Undefined ?><?cs /if ?>
+        </td>
+    </tr>
+    <tr id="ont_status_omcc">
+        <th scope="row"><?cs call:varHeader("ont_status_omcc") ?></th>
+        <?cs if:Env.ont.status.omcc == "ACTIVE" ?>
+        <?cs set:status = "disabled" ?>
+        <?cs elif:Env.ont.status.omcc == "INACTIVE" || Env.ont.status.omcc == "OFF"?>
+        <?cs set:status = "enabled" ?>
+        <?cs else ?>
+        <?cs set:status = "unused" ?>
+        <?cs /if ?>
+        <td class="<?cs var:status ?>">
+            <?cs if:status == "enabled" ?><?cs var:Env.Var.ont_details_omcc.up ?><?cs /if ?>
+            <?cs if:status == "disabled" ?><?cs var:Env.Var.ont_details_omcc.down ?><?cs /if ?>
+            <?cs if:status == "unused" ?><?cs var:Env.Text.Undefined ?><?cs /if ?>
+        </td>
+    </tr>
+    <tr id="ont_status_deactivate">
+        <th scope="row"><?cs call:varHeader("ont_status_deactivate") ?></th>
+        <?cs if:Env.ont.status.deactivate == "ACTIVE" ?>
+        <?cs set:status = "disabled" ?>
+        <?cs elif:Env.ont.status.deactivate == "INACTIVE" ?>
+        <?cs set:status = "enabled" ?>
+        <?cs else ?>
+        <?cs set:status = "unused" ?>
+        <?cs /if ?>
+        <td class="<?cs var:status ?>">
+            <?cs if:status == "enabled" ?><?cs var:Env.Var.ont_details_deactivate.up ?><?cs /if ?>
+            <?cs if:status == "disabled" ?><?cs var:Env.Var.ont_details_deactivate.down ?><?cs /if ?>
+            <?cs if:status == "unused" ?><?cs var:Env.Text.Undefined ?><?cs /if ?>
+        </td>
+    </tr>
+    <tr id="ont_status_ranged">
+        <th scope="row"><?cs call:varHeader("ont_status_ranged") ?></th>
+        <?cs if:Env.ont.status.ranged == "ACTIVE" ?>
+        <?cs set:status = "enabled" ?>
+        <?cs elif:Env.ont.status.ranged == "INACTIVE" ?>
+        <?cs set:status = "disabled" ?>
+        <?cs else ?>
+        <?cs set:status = "unused" ?>
+        <?cs /if ?>
+        <td class="<?cs var:status ?>">
+            <?cs if:status == "enabled" ?><?cs var:Env.Var.ont_details_ranged.up ?><?cs /if ?>
+            <?cs if:status == "disabled" ?><?cs var:Env.Var.ont_details_ranged.down ?><?cs /if ?>
+            <?cs if:status == "unused" ?><?cs var:Env.Text.Undefined ?><?cs /if ?>
+        </td>
+    </tr>
+    <tr id="ont_status_highlow">
+        <th scope="row"><?cs call:varHeader("ont_status_highlow") ?></th>
+        <?cs set:alreadyactive = #0 ?>
+        <?cs if:Env.ont.status.high == "ACTIVE" ?>
+        <?cs set:status = "disabled" ?>
+        <?cs set:text = Env.Var.ont_details_highlow.high ?>
+        <?cs set:alreadyactive = alreadyactive + #1  ?>
+        <?cs /if ?>        
+        <?cs if:Env.ont.status.low == "ACTIVE" ?>
+        <?cs set:status = "disabled" ?>
+        <?cs set:text = Env.Var.ont_details_highlow.low ?>
+        <?cs set:alreadyactive = alreadyactive + #1  ?>
+        <?cs /if ?>        
+        <?cs if:Env.ont.status.low == "INACTIVE" && Env.ont.status.high == "INACTIVE" ?>
+        <?cs set:status = "enabled" ?>
+        <?cs set:text = Env.Var.ont_details_highlow.ok ?>
+        <?cs set:alreadyactive = alreadyactive + #1  ?>
+        <?cs /if ?>        
+        <?cs if:alreadyactive != #1 ?>
+        <?cs set:status = "unused" ?>
+        <?cs set:text = Env.Var.ont_details_highlow.undef ?>
+        <?cs /if ?>
+        <td class="<?cs var:status ?>">
+            <?cs var:text ?>
+        </td>
+    </tr>
+    <tr id="ont_status_rdi">
+        <th scope="row"><?cs call:varHeader("ont_status_rdi") ?></th>
+        <?cs if:Env.ont.status.rdi == "ACTIVE" ?>
+        <?cs set:status = "disabled" ?>
+        <?cs elif:Env.ont.status.rdi == "INACTIVE" ?>
+        <?cs set:status = "enabled" ?>
+        <?cs else ?>
+        <?cs set:status = "unused" ?>
+        <?cs /if ?>
+        <td class="<?cs var:status ?>">
+            <?cs if:status == "enabled" ?><?cs var:Env.Var.ont_details_rdi.up ?><?cs /if ?>
+            <?cs if:status == "disabled" ?><?cs var:Env.Var.ont_details_rdi.down ?><?cs /if ?>
+            <?cs if:status == "unused" ?><?cs var:Env.Text.Undefined ?><?cs /if ?>
+        </td>
+    </tr>
+    <tr id="ont_status_failure">
+        <th scope="row"><?cs call:varHeader("ont_status_failure") ?></th>
+        <?cs if:Env.ont.status.failure == "ACTIVE" ?>
+        <?cs set:status = "disabled" ?>
+        <?cs elif:Env.ont.status.failure == "INACTIVE" ?>
+        <?cs set:status = "enabled" ?>
+        <?cs else ?>
+        <?cs set:status = "unused" ?>
+        <?cs /if ?>
+        <td class="<?cs var:status ?>">
+            <?cs if:status == "enabled" ?><?cs var:Env.Var.ont_details_failure.up ?><?cs /if ?>
+            <?cs if:status == "disabled" ?><?cs var:Env.Var.ont_details_failure.down ?><?cs /if ?>
+            <?cs if:status == "unused" ?><?cs var:Env.Text.Undefined ?><?cs /if ?>
+        </td>
+    </tr>
+</table>
+
+<table class="ont-action">
+    <tr>
+        <th scope="row"><?cs var:Env.Var.ont.reboot ?></th>
+        <td>
+            <div id="ont_status_loader"><img alt="<?cs var:Env.Var.pendingDiag.Value ?>" src="/img/icon_anim_loading.gif?v=3.4"  id="loader" />&nbsp;<span></span></div>
+            <div id="ont_reboot" class="button_submit"><button class="btn" id="action_ont_reboot" type="submit" name="submit"><?cs var:Button.Submit ?></button></div>
+        </td>
+    </tr>
+</table>
+
+</div>
+<?cs /if ?>

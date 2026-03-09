@@ -1,0 +1,24 @@
+#!/bin/sh /etc/rc.common
+
+START=42
+
+logger -t "ipv6[$$]" "$action"
+
+boot() {
+	[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+	local topology_conf=/etc/config/topology${mode}.xml
+	[ -e ${topology_conf} ] || topology_conf=/etc/default/topology${mode}.xml
+	test -z "$(roxml -q ${topology_conf} '//interface[@ipv6=dhcp6]/@name')" && exit 0
+	# start wrapper
+	wrapper -t ipv6 -p /run/ipv6-wrapper.pid
+}
+
+reload() {
+	local odhcp6c_lock="/run/odhcp6c.lock"
+
+	test -e /run/ipv6-wrapper.pid && pid=$(cat /run/ipv6-wrapper.pid)
+	test -z ${pid} && return
+	lock "${odhcp6c_lock}"
+	kill -HUP ${pid}
+	lock -u "${odhcp6c_lock}"
+}

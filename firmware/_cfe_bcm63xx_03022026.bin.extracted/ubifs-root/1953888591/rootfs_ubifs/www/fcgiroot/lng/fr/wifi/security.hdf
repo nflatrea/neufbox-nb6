@@ -1,0 +1,85 @@
+Env.Page.Title = Sécurité
+
+Env.Help.Text << EOM
+Dans la rubrique <b>Chiffrement</b>, vous pouvez définir la sécurisation de la liaison sans fil Wifi. Il est vivement conseillé de crypter votre liaison Wifi. De plus, le mode de chiffrement devra être choisi en fonction de vos équipements Wifi.
+<br/><br/>Suivant le mode Wifi utilisé, vous ne pourrez pas utiliser certains systèmes de chiffrement. Les modes radio <b>11ac</b> et <b>11n</b> fonctionnent uniquement avec le <b>WPA2 Personnel (PSK)</b>, le <b>11b/g/n</b> fonctionne avec le <b>WPA Personnel (PSK)</b> et/ou le <b>WPA2 Personnel (PSK)</b> et le <b>11b/g</b> fonctionne avec tous les chiffrements.<br/><br/> Pour des raisons de sécurité, il est conseillé de privilégier le système WPA2.<br/> Pour des raisons de compatibilité, il est conseillé d'utiliser une clé de type TKIP avec le système WPA.
+<br/><br/>Dans la rubrique <b>Wifi Protected Setup (WPS)</b>, vous pouvez activer le service WPS. Ce service vous permet de connecter simplement un équipement Wi-Fi compatible à votre réseau sans fil. Ce mode est seulement utilisable avec un système de chiffrement : WPA ou WPA2.
+<br/><br/>3 méthodes d'appairage WPS sont possibles :
+<ul>
+    <li>Bouton WPS : choisissez cette méthode si votre équipement Wifi vous demande d'appuyer sur le bouton WPS de votre point d'accès. Le bouton Wifi de votre <b>Box</b> vous permet aussi de démarrer cette méthode.</li>
+    <li>Code PIN équipement : Choisissez cette méthode si votre équipement Wifi dispose d'un code PIN et entrez le dans le champ indiqué.</li>
+    <li>Code PIN Box : Choisissez cette méthode si votre équipement Wifi vous demande le code PIN du point d'accès. Un nouveau code est généré à chaque fois que cette méthode est lancée.</li>
+</ul>
+EOM
+
+Env.Text.GenerateKey = Générer une clé
+
+Env.Section.wlan_encryption.Title = Chiffrement Wifi 2.4GHz
+Env.Section.wlan_ac_encryption.Title = Chiffrement Wifi 5GHz
+Env.Section.wlan_guest_encryption.Title = Chiffrement Wifi invité
+
+Env.Var.wlan_encryptiontype.Header = Système
+Env.Var.wlan_encryptiontype.Value.OPEN = Désactivé
+Env.Var.wlan_encryptiontype.Value.WEP = WEP
+Env.Var.wlan_encryptiontype.Value.WPA_PSK = WPA Personnel (PSK)
+Env.Var.wlan_encryptiontype.Value.WPA2_PSK = WPA2 Personnel (PSK)
+Env.Var.wlan_encryptiontype.Value.WPA_WPA2_PSK = WPA/WPA2 Personnel (PSK)
+Env.Var.wlan_encryptiontype.Error.value = Format incorrect
+
+Env.Var.wlan_keytype.Header = Type&nbsp;de&nbsp;clé
+Env.Var.wlan_keytype.Value.ascii = ASCII
+Env.Var.wlan_keytype.Value.hexa = Hexadécimal
+Env.Var.wlan_keytype.Error.value = Format incorrect
+
+Env.Var.wlan_wepkey.Header = Clé
+Env.Var.wlan_wepkey.Error.ascii = La clé doit avoir une longueur de 5 caractères ou 13 caractères exactement, et ne pas comporter de " ' `.
+Env.Var.wlan_wepkey.Error.hexa = La clé doit avoir une longueur de 10 ou 26 caractères exactement, et comporter uniquement des caractères hexadécimaux.
+
+Env.Var.wlan_wpaenctype.Header = Type&nbsp;de&nbsp;clé
+Env.Var.wlan_wpaenctype.Value.tkip = TKIP
+Env.Var.wlan_wpaenctype.Value.aes = AES
+Env.Var.wlan_wpaenctype.Value.tkipaes = TKIP et AES
+
+Env.Var.wlan_wpakey.Header = Clé
+Env.Var.wlan_wpakey.Error.value = La clé doit avoir une longueur comprise entre 8 et 63 caractères, et ne pas comporter de " ' `.
+
+Env.Form.Error.wpa_aes_incompatibility = Certains périphériques Wifi ne sont pas compatibles avec le système de chiffrement 'WPA Personnel (PSK)' et le type de clé 'AES'.
+
+Env.Form.Error.enc_mode_incompatibility = Le système de chiffrement sélectionné est incompatible avec le mode radio actuellement utilisé. Veuillez changer le mode radio avant de changer le système de chiffrement en allant sur la page "Configuration".
+
+Env.Section.wps.Title = Wifi Protected Setup (WPS)
+
+Env.Var.wps_status.Header = Etat du service
+Env.Var.wps_status.Value.down = Démarré et en attente ...
+Env.Var.wps_status.Value.wait = En attente d'appairage ...
+Env.Var.wps_status.Value.success = Appairage réussi
+Env.Var.wps_status.Value.pin_ap_invalid = Le code PIN envoyé est invalide
+Env.Var.wps_status.Value.pin_sta_invalid = Le code PIN est invalide
+Env.Var.wps_status.Value.timeout = Temps d'attente dépassé
+Env.Var.wps_status.Value.processing = Appairage en cours ...
+Env.Var.wps_status.Value.pbc_overlap = Erreur&nbsp;: multiples tentatives de connexion inattendues
+Env.Var.wps_status.Value.pin_ap_lockdown = Erreur&nbsp;: multiples tentatives de connexion avec des codes PIN invalides
+Env.Var.wps_status.Value.failure = L'appairage a échoué
+Env.Var.wps_status.Value.error = Une erreur s'est produite
+
+Env.Var.wps_mode.Header = Activation WPS
+Env.Var.wps_mode.Value.enabled = Activé
+Env.Var.wps_mode.Value.disabled = Désactivé
+
+Env.Text.AboutWPSMethods = Choississez une méthode d'appairage et cliquez sur "Lancer".
+
+Env.Var.wps_method.Value.pbc = Bouton WPS
+Env.Text.AboutPBCMethod = Choississez cette méthode si votre équipement Wifi vous demande d'appuyer sur le bouton WPS. 
+
+Env.Var.wps_method.Value.pinsta = Code PIN équipement
+Env.Text.AboutPINSTA = Choississez cette méthode si votre équipement Wifi a un code PIN WPS et entrez le ci-contre
+
+Env.Var.wps_method.Value.pinap = Code PIN Box
+Env.Text.AboutPINAP = Choississez cette méthode si votre équipement Wifi vous demande le code PIN Box. Un nouveau code PIN sera généré une fois que vous aurez cliqué sur "Lancer".
+
+Env.Text.AboutWPSwithWep = Le service WPS ne fonctionne pas avec le système de chiffrement WEP.
+Env.Text.AboutWPSwithOpen = Le service WPS n'est pas disponible en mode ouvert.
+
+Env.Text.AboutWlanClosed = Pour utiliser le service WPS, veuillez <a href="/wifi/config">diffuser le SSID</a>.
+
+Env.Text.AboutWifiOff = Pour utiliser le service WPS, veuillez activer le Wifi.

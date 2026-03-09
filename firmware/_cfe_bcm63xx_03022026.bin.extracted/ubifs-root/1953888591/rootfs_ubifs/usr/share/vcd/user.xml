@@ -1,0 +1,392 @@
+<?xml version="1.0"?>
+<user>
+	<timestamp regex="^$|^\d{12}$"/>
+	<mode/>
+	<refclient regex="^[0-9A-Za-z-+]{0,20}$" />
+	<web>
+		<auth regex="^(passwd|button|all|off)$"/>
+		<login regex="^[0-9A-Za-z]{5,63}$"/>
+		<password regex="^$|^([a-zA-Z0-9]{64})$"/>
+		<lang regex="^(fr|en)$"/>
+		<interface>
+			<kit regex="^(on|off)$" />36
+			<stb regex="^(on|off)$" />
+			<wdg regex="^(on|off)$" />
+		</interface>
+		<theme>
+			<uri regex="^$|^[^:]+://.+$"/>
+		</theme>
+	</web>
+	<lan>
+		<ipaddr regex="^(?&ipaddr)$"/>
+		<netmask regex="^(?&ipaddr)$"/>
+	</lan>
+	<wol>
+		<active regex="^(on|off)$" />
+	</wol>
+	<dmz>
+		<active regex="^(on|off)$" />
+		<ipaddr regex="^$|^(?&ipaddr)$"/>
+	</dmz>
+	<adsl>
+		<snr>
+			<current "^$|.+"/>
+		</snr>
+		<config regex="^(auto|rescue|user)$"/>
+		<userprofile>
+			<mod regex="[adlt2pev]+"/>
+			<lpair regex="^(inner|outer)$"/>
+			<trellis regex="^(on|off)$" />
+			<snr regex="[[:digit:]]+"/>
+			<bitswap regex="^(on|off)$" />
+			<sesdrop regex="^(on|off)$" />
+			<sra regex="^(on|off)$" />
+			<phyR regex="^(on|off)$" />
+			<ginp regex="^(on|off)$" />
+		</userprofile>
+	</adsl>
+	<ppp>
+		<login regex="^[!#-&(-_a-~]{0,64}$"/>
+		<password regex=".+"/>
+	</ppp>
+	<plc>
+		<nmk regex="^$|.+"/>
+	</plc>
+	<ipv6>
+		<enable regex="^(on|off)$"/>
+		<slaac regex="^(on|off)$"/>
+		<dmz>
+			<active regex="^(on|off)$" />
+			<gateway>
+				<active regex="^(on|off)$"/>
+				<ipaddr regex="^$|^(?&ip6addr)$"/>
+			</gateway>
+		</dmz>
+	</ipv6>
+	<gprs>
+		<service>
+			<data regex="^(on|off|auto)$"/>
+			<voice regex="^(on|off|auto)$"/>
+		</service>
+		<pin regex="^[0-9]{4,8}$"/>
+		<apn/>
+	</gprs>
+	<hotspot>
+		<active regex="^(on|off)$"/>
+		<mode regex="^(sfr|sfr_fon|test)$"/>
+	</hotspot>
+	<net>
+		<mode regex="^(router|bridge)$"/>
+	</net>
+	<nat>
+		<rule>
+			<activated regex="^(on|off)$"/>
+			<rulename regex="^[a-zA-Z0-9_-]{1,20}$"/>
+			<proto regex="^(tcp|udp|both)$"/>
+			<extport regex="^([\d]{1,5}|[\d]{1,5}-[\d]{1,5})$"/>
+			<dstip regex="^(?&ipaddr)$"/>
+			<dstport regex="^([\d]{1,5}|[\d]{1,5}-[\d]{1,5})$"/>
+		</rule>
+		<alg>
+			<ftp regex="^(on|off)$"/>
+			<sip regex="^(on|off)$"/>
+			<pptp regex="^(on|off)$"/>
+			<proto>
+				<gre regex="^(on|off)$"/>
+			</proto>
+		</alg>
+	</nat>
+	<filter6>
+		<icmp>
+			<dstip regex="^(?&ip6addr)$"/>
+		</icmp>
+		<rule>
+			<activated regex="^(on|off)$"/>
+			<rulename regex="^[a-zA-Z0-9_-]{1,20}$"/>
+			<proto regex="^(tcp|udp|both)$"/>
+			<dstip regex="^(?&ip6addr)$"/>
+			<dstport regex="^([\d]{1,5}|[\d]{1,5}-[\d]{1,5})$"/>
+			<srcip regex="^(?&ip6addr)$"/>
+		</rule>
+		<icmpdrop regex="^(on|off)$"/>
+	</filter6>
+	<dhcp>
+		<active regex="^(on|off)$"/>
+		<start regex="^(?&ipaddr)$"/>
+		<end regex="^(?&ipaddr)$"/>
+		<static>
+			<pair>
+				<ipaddr regex="^(?&ipaddr)$"/>
+				<macaddr regex="^(?&macaddr)$"/>
+			</pair>
+		</static>
+		<lease regex="^[1-9]\d+$"/>
+	</dhcp>
+	<dhcp6>
+		<active regex="^(on|off)$"/>
+		<prefix>
+			<lan>
+				<start regex="^$|^(?&ip6addr)$"/>
+				<end regex="^$|^(?&ip6addr)$"/>
+			</lan>
+			<stb>
+				<start regex="^$|^(?&ip6addr)$"/>
+				<end regex="^$|^(?&ip6addr)$"/>
+			</stb>
+		</prefix>
+		<static>
+			<pair>
+				<ipaddr regex="^(?&ip6addr)$"/>
+				<macaddr regex="^(?&macaddr)$"/>
+			</pair>
+		</static>
+		<lease regex="^[1-9]\d+$"/>
+	</dhcp6>
+	<tftp>
+		<active regex="^(on|off)$"/>
+		<root regex="^$|(?&ipaddr)$"/>
+		<filename regex="^.*$"/>
+	</tftp>
+	<dns>
+		<cache>
+			<macaddr regex="^(?&macaddr)$"/>
+			<hostname regex="^[ a-zA-Z0-9_\-\.]+$"/>
+		</cache>
+		<system>
+			<ipaddr regex="^(?&ipaddr)$"/>
+			<domain regex="^[a-zA-Z0-9_\-\.]+$"/>
+		</system>
+		<host>
+			<ip regex="^(?&ipaddr)$"/>
+			<domain regex="^[a-zA-Z0-9_\-\.]+$"/>
+		</host>
+		<host6>
+			<ip regex="^(?&ip6addr)$"/>
+			<domain regex="^[a-zA-Z0-9_\-\.]+$"/>
+		</host6>
+	</dns>
+	<route>
+		<rule>
+			<destination regex="^(?&ipaddr)$"/>
+			<genmask regex="^(?&ipaddr)$"/>
+			<gateway regex="^(?&ipaddr)$"/>
+		</rule>
+	</route>
+	<filter>
+		<mode regex="^(simple|off)$"/>
+		<simple>
+			<winsharedrop regex="^(on|off)$"/>
+			<icmpdrop regex="^(on|off)$"/>
+			<smtpdrop regex="^(on|off)$"/>
+		</simple>
+	</filter>
+	<ddns>
+		<active regex="^(on|off)$"/>
+		<service regex="^(dyndns|no-ip|ovh|dyndnsit|changeip|sitelutions)$"/>
+		<username regex="^$|^.{1,99}$"/>
+		<password regex="^$|^.{1,99}$"/>
+		<hostname regex="^$|^.{1,99}$"/>
+	</ddns>
+	<led>
+		<brightness regex="^$|.+"/>
+		<service regex="^$|.+"/>
+	</led>
+	<p910nd>
+		<bidir regex="^(on|off)$"/>
+	</p910nd>
+	<wlan>
+		<debug regex="^(on|off)$"/>
+		<leds regex="^(on|off)$"/>
+		<active regex="^(on|off)$"/>
+		<closed regex="^(0|1)$"/>
+		<mode regex="^(11g|11n|11ng)$"/>
+                <ht40 regex="^(on|off)$"/>
+		<channel regex="^(auto|1|2|3|4|5|6|7|8|9|10|11|12|13)$"/>
+		<macmode regex="^(whitelist|off)$"/>
+		<filter>
+			<mac regex="^(?&macaddr)$"/>
+			<band regex="^(both|wl0|wl1)$"/>
+			<act regex="^(add|del)$"/>
+		</filter>
+		<wds>
+			<mac regex="^(?&macaddr)$"/>
+		</wds>
+		<wps>
+			<uuid regex="^[\-a-zA-Z0-9]{8,36}$"/>
+		</wps>
+				<ac>
+		  <channel regex="^(auto|36|40|44|48|52|56|60|64|100|104|108|112|116|132|136|140)$"/>
+		  <mode regex="^(auto|11n|11ac)$"/>
+		  <bwcap regex="^(20|40|80)$"/>
+		  <active regex="^(on|off)$"/>
+		  <dfs regex="^(on|off)$"/>
+		  <closed regex="^(0|1)$"/>
+		</ac>
+				<wl0>
+		  <ssid regex="^[0-9A-Za-z\-\ _#+\.]{1,32}$"/>
+		  		  <ac>
+			<ssid regex="^[0-9A-Za-z\-\ _#+\.]{1,32}$"/>
+			<enc regex="^(OPEN|WPA-PSK|WPA2-PSK|WPA-WPA2-PSK)$"/>
+			<enctype regex="^(tkip|aes|tkipaes)$"/>
+			<keytype regex="^(ascii|hexa)$"/>
+			<wepkeys>
+				<n0 regex="^$|^([\ !#-&(-_a-~]{5}$|[\ !#-&(-_a-~]{13}|[0-9a-fA-F]{10}|[0-9a-fA-F]{26})$"/>
+			</wepkeys>
+			<wpakey regex="^[\ !#-&(-_a-~]{8,63}$"/>
+			<wpapsk />
+		  </ac>
+		  			<enc regex="^(OPEN|WEP|WPA-PSK|WPA2-PSK|WPA-WPA2-PSK)$"/>
+			<enctype regex="^(tkip|aes|tkipaes)$"/>
+			<keytype regex="^(ascii|hexa)$"/>
+			<wepkeys>
+				<n0 regex="^$|^([\ !#-&(-_a-~]{5}$|[\ !#-&(-_a-~]{13}|[0-9a-fA-F]{10}|[0-9a-fA-F]{26})$"/>
+			</wepkeys>
+			<wpakey regex="^[\ !#-&(-_a-~]{8,63}$"/>
+			<wpapsk />
+			<wps>
+				<mode />
+			</wps>
+		</wl0>
+				<guest>
+		  <ssid regex="^[0-9A-Za-z\-\ _#+\.]{1,32}$"/>
+		  <enc regex="^(OPEN|WPA-PSK|WPA2-PSK|WPA-WPA2-PSK)$"/>
+		  <enctype regex="^(tkip|aes|tkipaes)$"/>
+		  <keytype regex="^(ascii|hexa)$"/>
+		  <wepkeys>
+		  	<n0 regex="^$|^([\ !#-&(-_a-~]{5}$|[\ !#-&(-_a-~]{13}|[0-9a-fA-F]{10}|[0-9a-fA-F]{26})$"/>
+		  </wepkeys>
+		  <wpakey regex="^[\ !#-&(-_a-~]{8,63}$"/>
+		  <wpapsk />
+		  <networkv4>
+			  <ipaddr regex="^(?&ipaddr)$"/>
+			  <netmask regex="^(?&ipaddr)$"/>
+		  </networkv4>
+		  <macmode regex="^(whitelist|off)$"/>
+		  <filter>
+			<mac regex="^(?&macaddr)$"/>
+		  </filter>
+		  <active regex="^(on|off)$"/>
+		  <closed regex="^(0|1)$"/>
+		  <schedule regex="^(0|1|7|30)$"/>
+		  <ac>
+			<active regex="^(on|off)$"/>
+		  </ac>
+		</guest>
+						<btnstate regex="^(on|off)$" />
+			</wlan>
+	<voip>
+		<callhistory regex="^(on|off)$"/>
+		<usermissedcall regex="^(on|off)$"/>
+		<threetone regex="^(on|off)$"/>
+		<service>
+			<holdcall regex="^(on|off)$"/>
+			<confcall regex="^(on|off)$"/>
+			<swapcall regex="^(on|off)$"/>
+			<waitingcall regex="^(on|off)$"/>
+		</service>
+		<blacklist>
+			<active regex="^(on|off)$"/>
+			<ndis>
+				<entry>
+					<ndi regex="^[0-9]{10,14}$"/>
+				</entry>
+			</ndis>
+		</blacklist>
+	</voip>
+	<upnpd>
+		<active regex="^(on|off)$"/>
+		<active6 regex="^(on|off)$"/>
+                <uuid regex="^[\-a-zA-Z0-9]{8,36}$"/>
+	</upnpd>
+	<upnpav>
+		<active regex="^(on|off)$"/>
+		<name regex="^$|^[-a-zA-Z0-9 ]{2,32}$"/>
+		<mode regex="^normal$"/>
+		<share>
+			<uuid regex="^[\-a-zA-Z0-9]{8,36}$"/>
+			<dir regex="^(/.[^\.]*)*/?$"/>
+		</share>
+	</upnpav>
+	<samba>
+		<debug regex="^(on|off)$"/>
+		<active regex="^(on|off)$"/>
+		<workgroup regex="^[a-zA-Z0-9 ]{2,32}$"/>
+		<name regex="^$|^[a-zA-Z0-9 ]{2,32}$"/>
+		<share>
+			<name regex="^((?!homes|printers|globals|global)\b[a-zA-Z0-9]{1,32}\b)$"/>
+			<uuid regex="^[\-a-zA-Z0-9]{8,36}$"/>
+			<dir regex="^(/.[^\.]*)*/?$"/>
+		</share>
+	</samba>
+	<nfs>
+		<active regex="^(on|off)$"/>
+		<server regex=".*"/>
+		<options regex=".*"/>
+	</nfs>
+	<stockage>
+		<device>
+			<uuid regex="^[\-a-zA-Z0-9]{8,36}$"/>
+			<ref regex="^\d$"/>
+			<pname regex="^.+$"/>
+			<type regex="^.+$"/>
+			<capacity regex="^\d+$"/>
+		</device>
+	</stockage>
+		<eco>
+		<profile regex="^(default|custom)$" />
+		<active regex="^(on|off)$"/>
+		<voip>
+			<active regex="^(on|off)$" />
+		</voip>
+		<cpl>
+			<active regex="^(on|off)$" />
+		</cpl>
+		<link>
+			<usb1>
+				<active regex="^(on|off)$" />
+			</usb1>
+			<usb2>
+				<active regex="^(on|off)$" />
+			</usb2>
+			<lan1>
+				<active regex="^(off|10|100|1000)$" />
+				<eee regex="^(off|on)$" />
+			</lan1>
+			<lan2>
+				<active regex="^(off|10|100|1000)$" />
+				<eee regex="^(off|on)$" />
+			</lan2>
+			<lan3>
+				<active regex="^(off|10|100|1000)$" />
+				<eee regex="^(off|on)$" />
+			</lan3>
+			<lan4>
+				<active regex="^(off|10|100|1000)$" />
+				<eee regex="^(off|on)$" />
+			</lan4>
+		</link>
+		<led>
+			<active regex="^(off|low|half|full)$" />
+		</led>
+                <powersw>
+                        <active regex="^(off|on)$" />
+		</powersw>
+	</eco>
+		<wifisched>
+		<profile regex="^(default|custom)$" />
+		<active regex="^(on|off)$"/>
+		<week>
+			<range>
+				<day regex="^(mo|tu|we|th|fr|sa|su)$"/>
+				<start regex="^[0-9]{2}:[0-9]{2}"/>
+				<stop regex="^[0-9]{2}:[0-9]{2}"/>
+			</range>
+		</week>
+	</wifisched>
+	<swap>
+		<active regex="^(off|on)$" />
+	</swap>
+	<ont>
+		<slid regex="^[0-9A-Za-z]{0,20}$" />
+	</ont>
+</user>

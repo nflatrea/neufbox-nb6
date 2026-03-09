@@ -1,0 +1,2 @@
+   <wan status="<?cs var:Env.status.net.status ?>" uptime="<?cs var:Env.status.net.data.uptime ?>" ip_addr="<?cs if:Env.status.net.cgnat.status == "up" ?><?cs var:Env.status.dhcpc.wan.ipaddr ?><?cs else?><?cs var:Env.status.net.data.ipaddr ?><?cs /if ?>" infra="<?cs var:Env.status.net.data.access ?>" mode="<?cs var:Env.status.net.data.infra ?>" infra6="<?cs var:Env.status.net.ipv6.infra ?>" status6="<?cs var:Env.status.net.ipv6.status ?>" uptime6="<?cs var:Env.status.net.ipv6.uptime ?>" ipv6_addr="<?cs var:Env.status.net.ipv6.ipaddr ?>" />
+   

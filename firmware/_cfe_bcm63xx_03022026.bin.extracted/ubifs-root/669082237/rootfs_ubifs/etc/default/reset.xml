@@ -1,0 +1,43 @@
+<default>
+	<services>
+		<backup>on</backup>
+	</services>
+	<status>
+		<operator>
+			<name>SFR</name>
+			<domain>neufbox.sfr.net</domain>
+			<box>neufbox</box>
+			<hostname>box</hostname>
+		</operator>
+		<net>
+			<mode>
+				<bridge>off</bridge>
+			</mode>
+		</net>
+	</status>
+	<user>
+		<wlan>
+			<wl0>
+			  <ssid>SFR_XXXX</ssid>
+			  <ac>
+				<ssid>SFR_XXXX</ssid>
+			  </ac>
+			</wl0>
+      <guest>
+      <ssid>SFR_XXXX</ssid>
+      <wpakey>_CHANGEME_</wpakey>
+      </guest>
+		</wlan>
+		<samba>
+			<name>Box</name>
+		</samba>
+		<upnpav>
+			<name>Box upnp-Av</name>
+		</upnpav>
+		<web>
+			<theme>
+				<uri>local://sfr</uri>
+			</theme>
+		</web>
+	</user>
+</default>

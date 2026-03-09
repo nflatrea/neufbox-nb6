@@ -1,0 +1,1 @@
+$(document).ready(function(){$("#button_network_dnshosts_ip").click(function(){showLanPopup(completeAddIp,{ipversion:6});return false})});function completeAddIp(ip,mac,name){if(ip){$("#dnshosts_ip").val(ip);$("#dnshosts_hostname").focus()}}

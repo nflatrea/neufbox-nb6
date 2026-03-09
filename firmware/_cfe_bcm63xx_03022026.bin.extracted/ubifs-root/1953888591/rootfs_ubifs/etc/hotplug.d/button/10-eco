@@ -1,0 +1,7 @@
+#!/bin/sh
+
+[ "${BUTTON}" != "BTN_1" ] && exit 0
+[ "${ACTION}" != "pressed" ] && exit 0
+
+/etc/init.d/eco switch
+/etc/init.d/wifisched reload

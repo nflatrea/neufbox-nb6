@@ -1,0 +1,25 @@
+<rsp stat="ok">
+  <status>
+<?cs if:Env.status.gpon.mode == "on" ?>
+    <gpon>
+        <status val="<?cs var:Var.gpon_slidchange.Value ?>" text="<?cs var:Env.Var.gpon_slidchange[Var.gpon_slidchange.Value] ?>" />
+    </gpon>
+<?cs else ?>
+    <ont>
+        <?cs set:txt = Env.Var.ont.nosync.echecslid ?>
+        <?cs set:status = "disabled" ?>
+        <?cs if:Env.ont.ranging == "IS" || Env.ont.ranging == "OPERATION(O5)" || Env.ont.ranging == "O5"  ?>
+            <?cs set:txt = Env.Var.ont.sync ?>
+            <?cs set:status = "enabled" ?>
+        <?cs /if ?>
+        <ranging val="<?cs var:status ?>" text="<?cs var:txt?>" />
+        <counterupdate val="<?cs var:Env.status.ont.counterupdate ?>" />
+        <slid val="<?cs var:Env.user.ont.slid ?>" />
+        <?cs if:Env.status.ont.return.setslid != "-1" ?>
+        <returnsetslid val="<?cs var:Env.status.ont.return.setslid ?>" text="<?cs var:Env.Var.ont_err_setslid[Env.status.ont.return.setslid] ?>" />
+        <?cs /if ?>
+        <aftersetslid text="<?cs var:Env.Var.ont_err_reboot.0.aftersetslid ?>" />
+    </ont>
+<?cs /if ?>
+  </status>
+</rsp>

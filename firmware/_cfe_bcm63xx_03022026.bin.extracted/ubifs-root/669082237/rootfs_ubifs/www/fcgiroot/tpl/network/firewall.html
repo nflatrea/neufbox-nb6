@@ -1,0 +1,45 @@
+<div class="title">
+	<h1><?cs var:Env.Section.firewall.Title ?></h1>
+</div>
+
+<div class="content">
+	<form method="post" action="<?cs var:Env.Page.Name ?>" id="form_filter">
+
+	<table id="filter_configuration">
+		<tr>
+			<th scope="row">
+				<?cs call:varHeader("filter_mode") ?>
+			</th>
+			<td>
+                            <?cs call:div_onoff("filter_mode", Env.user.filter.mode == "simple") ?>
+			</td>
+		</tr>
+
+		<tr id="filter_simple" <?cs if:Env.user.filter.mode == "off"?>style="display: none;"<?cs /if?>>
+			<th scope="row" valign="top">
+				<?cs call:varHeader("filter_simple") ?>
+			</th>
+			<td>
+                                <label for="filter_simple_winsharedrop">
+				<input type="checkbox" value="on" name="filter_simple_winsharedrop" id="filter_simple_winsharedrop" <?cs if:Env.user.filter.simple.winsharedrop == "on" ?> checked="checked"<?cs /if ?> />
+				<?cs var:Env.Var.filter_simple_winsharedrop.Header ?>
+                                </label>
+				
+				<label for="filter_simple_smtpdrop">
+				<input type="checkbox" value="on" name="filter_simple_smtpdrop" id="filter_simple_smtpdrop" <?cs if:Env.user.filter.simple.smtpdrop == "on" ?> checked="checked"<?cs /if ?> />
+				<?cs var:Env.Var.filter_simple_smtpdrop.Header ?>
+                                </label>
+				
+				<label for="filter_simple_icmpdrop">
+				<input type="checkbox" value="on" name="filter_simple_icmpdrop" id="filter_simple_icmpdrop" <?cs if:Env.user.filter.simple.icmpdrop == "on" ?> checked="checked"<?cs /if ?> />
+				<?cs var:Env.Var.filter_simple_icmpdrop.Header ?>
+                                </label>
+
+			</td>
+		</tr>
+	</table>
+	
+	<button class="btn" type="submit" name="submit"><?cs var:Button.Submit ?></button>
+	
+        </form>
+</div>

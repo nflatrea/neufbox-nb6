@@ -1,0 +1,137 @@
+#!/bin/sh /etc/rc.common
+
+START=54
+
+EXTRA_COMMANDS="cron"
+
+service=wifisched
+[ "${action}" != "cron" ] && logger -t "${service}[$$]" "$action"
+
+process() {
+	local config=/tmp/wifisched.xml
+	local n=1
+	local stop_range=0
+	local status=$(status get wifisched_status)
+	nvram xml wifisched > ${config}
+	now="$(date +%H%M |sed -r 's/^0//')"
+	for day in $(roxml -q ${config} "//wifisched/week/range/day"); do
+		if [ "$day" = $(date +%a|cut -b -2|awk '{$0=tolower($0);print}') ]; then
+			local start="$(roxml -q ${config} "//wifisched/week/range[$n]/start" |sed 's/://'|sed -r 's/^0//')"
+			local stop="$(roxml -q ${config} "//wifisched/week/range[$n]/stop" |sed 's/://'|sed -r 's/^0//')"
+			if [ "$now" -ge "$start" ] && [ "$now" -lt "$stop" ] && [ "${status:0:8}" != "forceoff" ]; then
+				stop_range=1
+				if [ "$(status get wlan_status)" = "up" ]; then
+					status set wlan_wlan0_interrupter off
+					wlan stop;
+				fi
+				status set wifisched_status "wlanstopped"
+				break
+			elif [ "${status:0:8}" = "forceoff" ]; then
+				local saved="${status:9:12}"
+				if [ "$now" -ge "$stop" ] && [ "$saved" -ge "$start" ] && [ "$saved" -lt "$stop" ]; then
+					status set wifisched_status "up"
+					break
+				fi
+			fi
+		fi
+		n=$(($n + 1))
+	done
+	if [ $stop_range -eq 0 ] && [ "$(status get wlan_status)" = "down" ]; then
+		status set wlan_wlan0_interrupter on
+		wlan start
+		status_update
+	fi
+	rm -f ${config}
+}
+
+status_update() {
+	if [ "$(nvram get wifisched_active)" = "off" ]; then
+		status set wifisched_status "down"
+		return
+	fi
+
+	local status=$(status get wifisched_status)
+	[ "${status:0:8}" = "forceoff" ] && [ "$1" != "reset" ] && return
+
+	if [ "$1" = "forceoff" ]; then
+		status set wifisched_status "forceoff_$(date +%H%M |sed -r 's/^0//')"
+		return
+	fi
+
+	# ntp not sync
+	if [ $(date +%Y) -lt 2016 ]; then
+		status set wifisched_status "sync_down"
+	else
+		status set wifisched_status "up"
+	fi
+}
+
+cron() {
+	lock /run/lock/wifisched.lock
+	if [ "$(status get wifisched_status)" != "down" ] && [ "$(status get wifisched_status)" != "sync_down" ]
+	then
+		process
+	fi
+	lock -u /run/lock/wifisched.lock
+}
+
+do_start() {
+	if [ "$(status get wifisched_status)" != "down" ] && [ "$(status get wifisched_status)" != "sync_down" ]
+	then
+		lock /run/lock/cron.lock
+		sed -e '/wifisched cron/d' \
+			-e '1a0 * * * * /etc/init.d/wifisched cron' \
+			-e '1a30 * * * * /etc/init.d/wifisched cron' \
+			/run/crontabs/root | crontab -u root -
+		process
+		lock -u /run/lock/cron.lock
+	fi
+}
+
+do_stop() {
+	if [ "$(status get wifisched_status)" = "down" ] || [ "$(status get wifisched_status)" = "sync_down" ]
+	then
+		lock /run/lock/cron.lock
+		sed -e '/wifisched cron/d' \
+			/run/crontabs/root | crontab -u root -
+		lock -u /run/lock/cron.lock
+		if [ "$(nvram get wlan_btnstate)" = "on" ]; then
+			status set wlan_wlan0_interrupter on
+			wlan start
+		else
+			status set wlan_wlan0_interrupter off
+			wlan stop
+		fi
+	fi
+}
+
+start() {
+	lock /run/lock/wifisched.lock
+	status_update
+	do_start
+	lock -u /run/lock/wifisched.lock
+}
+
+
+stop() {
+	lock /run/lock/wifisched.lock
+	status_update
+	do_stop
+	lock -u /run/lock/wifisched.lock
+}
+
+reload() {
+	lock /run/lock/${service}.lock
+	status_update $1
+	do_stop
+	do_start
+	lock -u /run/lock/${service}.lock
+}
+
+boot() {
+	if [ "$(nvram get wifisched_profile)" = "default" ]; then
+		wifisched load_default
+	fi
+	start
+}
+

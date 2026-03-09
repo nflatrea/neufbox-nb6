@@ -1,0 +1,3 @@
+  <guest active="<?cs var:Env.user.wlan.guest.active ?>">
+    <config ssid="<?cs var:html_escape(Env.user.wlan.guest.ssid) ?>" wpakey="<?cs var:html_escape(Env.user.wlan.guest.wpakey) ?>" />
+  </guest>

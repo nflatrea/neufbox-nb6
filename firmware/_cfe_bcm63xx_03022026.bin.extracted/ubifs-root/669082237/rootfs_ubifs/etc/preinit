@@ -1,0 +1,87 @@
+#!/bin/sh
+
+exec >/dev/kmsg 2>&1
+
+. /etc/functions
+
+tmpfs_union() {
+	info "tmp union..."
+	mount tmpfs /overlay -t tmpfs
+	mkdir -p /overlay/etc/adsl/
+}
+
+wipe_data_and_mount() {
+	info "wipe data partition and mount..."
+	flash_eraseall /dev/mtd-data
+	ubiattach /dev/ubi_ctrl -m 5 -d 1
+	ubimkvol /dev/ubi1 -m -N data_ubifs
+	mount -t ubifs -o noatime ubi1:data_ubifs /overlay/
+	mkdir -p /overlay/etc/adsl/
+}
+
+flash_union() {
+	info "flash union..."
+
+	if ! ubiattach /dev/ubi_ctrl -m 5 -d 1; then
+		warning "UBI attach mtd-data failed"
+		wipe_data_and_mount
+	else
+		if ! mount -t ubifs -o noatime ubi1:data_ubifs /overlay/; then
+			warning "mount UBIFS data volume failed"
+			ubidetach /dev/ubi_ctrl -d 1
+			wipe_data_and_mount
+		fi
+	fi
+	# reset requested
+	if test -e /overlay/resetme; then
+		warning "reset requested"
+		mount tmpfs /tmp -t tmpfs
+		cp -f /overlay/etc/adsl/*DSL* /tmp/
+		cp -f /overlay/etc/mcu/*MCU* /tmp/
+		umount /overlay
+		ubidetach /dev/ubi_ctrl -d 1
+		wipe_data_and_mount
+		cp -f /tmp/*DSL* /overlay/etc/adsl/
+		cp -f /tmp/*MCU* /overlay/etc/mcu/
+		umount /tmp
+	fi
+	# WAR: /etc/samba is now as symlink to /tmp/etc/samba.
+	# For 3.3.1 firmware is was a directory
+	rm -rf /overlay/etc/samba
+}
+
+usbfs_union() {
+	info "usb union..."
+	for module in usbcore ehci-hcd ohci-hcd scsi_mod sd_mod usb-storage ext2; do {
+		insmod $module
+	}; done
+
+	sleep 10
+	mount /dev/sda1 /overlay || flash_union
+}
+
+mount proc /proc -t proc
+mount sysfs /sys -t sysfs
+
+hinfo "- pre init -"
+
+/etc/init.d/early-devices boot
+
+[ -x /usr/bin/usb-boot ] && usb-boot && usbfs_union || flash_union
+
+grep -q data /proc/mounts || tmpfs_union
+
+mount -t overlayfs overlayfs -olowerdir=/,upperdir=/overlay /root
+cd /root
+pivot_root . rom
+mount -o move /rom/dev /dev 2>&-
+mount -o move /rom/proc /proc 2>&-
+mount -o move /rom/sys /sys 2>&-
+mount -o move /rom/overlay/ /overlay 2>&-
+
+hinfo "- init -"
+if [ -x /sbin/bootchartd ]; then
+    exec /usr/sbin/chroot . /sbin/bootchartd
+else
+    exec /usr/sbin/chroot . /sbin/init
+fi

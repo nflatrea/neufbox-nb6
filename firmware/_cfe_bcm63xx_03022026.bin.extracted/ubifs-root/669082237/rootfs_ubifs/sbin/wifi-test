@@ -1,0 +1,10 @@
+
+wlctl -i wl0 down
+wlctl -i wl0 bss down
+wlctl -i wl0 ap 1
+brctl addif lan0 wl0
+wlctl -i wl0 ssid test43602
+wlctl -i wl0 channel 36
+wlctl -i wl0 up
+wlctl -i wl0 bss up
+ifconfig wl0 up

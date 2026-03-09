@@ -1,0 +1,4 @@
+Env.Page.Title = Wifi congestion
+Env.Help.Text = This section show  the autochannel informations. In auto mode, selected channel (1, 6 or 11) is the less congested.
+Env.Btn.ShowHideDump.Value = Show / Hide diagnostique dump
+Env.Text.currentChannel = Current channel

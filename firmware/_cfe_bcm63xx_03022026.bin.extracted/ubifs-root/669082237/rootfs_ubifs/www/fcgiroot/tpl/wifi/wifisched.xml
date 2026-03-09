@@ -1,0 +1,19 @@
+<rsp stat="ok">
+    <?cs if:?Query.status ?>
+        <?cs if:Env.status.wifisched.status=="down" ?>
+            <?cs set:status="disabled"?>
+        <?cs elif:Env.status.wifisched.status=="up" || Env.status.wifisched.status=="wlanstopped" ?>
+             <?cs set:status="enabled"?>
+        <?cs else ?>
+             <?cs set:status="unused"?>
+        <?cs /if ?>
+		<status val="<?cs var:status ?>" text="<?cs if:string.find(Env.status.wifisched.status, "forceoff") != -1 ?><?cs var:Env.Var.wifisched.status.forceoff ?><?cs else ?><?cs var:Env.Var.wifisched.status[Env.status.wifisched.status] ?><?cs /if ?>" />
+    <?cs /if ?>
+    <?cs if:?Query.weekplanner_save ?>
+    <planner>
+         <?cs each:range = Env.user.eco.wifisched.week.range ?>
+           <range day="<?cs var:range.day ?>" start="<?cs var:range.start ?>" stop="<?cs var:range.stop ?>" />
+         <?cs /each ?>
+    </planner>
+    <?cs /if ?>
+</rsp>

@@ -1,0 +1,28 @@
+Env.Page.Title = Authentication
+
+Env.Help.Text = <em>Password identification:</em> type your login and password in order to have access to the administration interface of your Box. The default login is <strong>admin</strong> and the default password WPA-PSK key written behind your Box (right after <strong>Code Wifi (WPA-PSK)</strong>).<br/><br/><em>Button identification:</em> press the service button on your Box during several seconds until it is blinking, then click on <strong>Continue</strong> on the interface.
+
+Env.Text.AccessLock = Access locked
+Env.Text.AccessLockPlus = In order to log in, follow the instructions below:
+
+Env.Error.SESSION_INVALID = Invalid session ! Please try again.
+Env.Error.SYSTEM_ERROR = System error! Please try again.
+Env.Error.LOGINORPASS_INVALID = The login and/or password is invalid!
+Env.Error.METHOD_NOT_ALLOWED = Identification method not allowed!
+Env.Error.AUTOLOGIN_OFF = The service button hasn't been pressed.
+
+Env.Section.web_auth_passwd.Title = Password identification
+
+Env.Text.challenge_error = An internal error has occurred. Please try again.
+
+Env.Text.PasswdMethod = Type in your login and password, then click on the <strong>Apply</strong> button.
+
+Env.Var.login.Header = Login
+
+Env.Var.password.Header = Password
+
+    Env.Section.web_auth_button.Title = Button WPS
+
+    Env.Text.ButtonMethod = <strong>Press approximately 5 seconds</strong> on the WPS button of your Box until it is blinking, then click on <strong>Continue</strong> on the interface.
+
+Button.Continue = Continue

@@ -1,0 +1,5 @@
+<rsp stat="ok">
+  <eco>
+    <link val="<?cs var:Env.status.eco.status ?>" text="<?cs call:varValue(Env.Var.eco_status.Value[Env.status.eco.status])?>" />
+  </eco>
+</rsp>

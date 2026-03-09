@@ -1,0 +1,343 @@
+#!/bin/sh /etc/rc.common
+
+START=38
+
+EXTRA_COMMANDS="show"
+
+[ "$action" != "show" ] && logger -t "qos[$$]" "$action"
+
+tc=tc
+
+# htb: 
+#  root (1:) stab: EoA
+#   |
+#   +-- parent (1:1) upstream bitrate limit
+#         |
+#         +-- high qos (1:10) prio: 0 (low latencies)
+#         |                   bitrate: high qos bitrate
+#         |                   max bitrate: upstream bitrate
+#         |
+#         +-- data lan (1:20) prio: 1
+#                             bitrate: upstream bitrate - high qos bitrate
+#                             max bitrate: upstream bitrate
+
+root="1:"
+parent="1:1"
+high_qos_minor="10"
+high_qos_class="1:${high_qos_minor}"
+high_qos_qdisc="1${high_qos_minor}:"
+data_lan_minor="20"
+data_lan_class="1:${data_lan_minor}"
+data_lan_qdisc="1${data_lan_minor}:"
+
+conf_parse() {
+	local qos_config=/tmp/qos.xml
+	local n=1
+	local IPXTABLES=xtables
+	nvram xml qos system > ${qos_config}
+
+	if [ ! -f ${qos_config} ]; then
+		return 1
+	fi
+
+	while [ -n "$(roxml ${qos_config} "//qos/rule[$n]")" ]
+	do
+		local multiport=0
+		eval $(roxml -o ${qos_config} "//qos/rule[$n]")
+
+		echo ${port} | grep ",\|:" > /dev/null
+		if [ "$?" -eq "0" ]; then
+			multiport=1
+		fi
+
+		if [ "${af}" = "ipv4" ]; then
+			IPXTABLES=iptables
+		elif [ "${af}" = "ipv6" ]; then
+			IPXTABLES=ip6tables
+		else
+			IPXTABLES=xtables
+		fi
+
+		for ip in $(roxml -q ${qos_config} "//qos/rule[$n]/ip")
+		do
+			if [ $multiport -eq 0 ]; then
+				${IPXTABLES} -t mangle -A lan_Up -j "${prio}_QoS" -d ${ip} -p ${proto} -m ${proto} --dport ${port} -m comment --comment ${comment}
+			else
+				${IPXTABLES} -t mangle -A lan_Up -j "${prio}_QoS" -d ${ip} -p ${proto} -m multiport --dports ${port} -m comment --comment ${comment}
+			fi
+		done
+		n=$(($n + 1))
+	done
+	rm -f ${qos_config}
+}
+
+boot() {
+	# Setup high QoS target
+	xtables -t mangle -N high_QoS
+	xtables -t mangle -A high_QoS -j MARK --set-mark 7
+	xtables -t mangle -A high_QoS -j ACCEPT
+	
+	# Setup high QoS target
+	xtables -t mangle -N voip_Lan_High_QoS
+	dscp_rtp_org=$(nvram get dscp_rtp)
+	dscp_sip_org=$(nvram get dscp_sip)
+	dscp_target=$(nvram get dscp_target)
+	if [ -z $dscp_rtp_org ]; then
+		dscp_rtp_org=0x28
+	fi
+	if [ -z $dscp_sip_org ]; then
+		dscp_sip_org=0x2D
+	fi
+	if [ -z $dscp_target ]; then
+		dscp_target=0x2D
+	fi
+	if [ $((dscp_rtp_org)) -ne $((dscp_target)) ]; then
+		xtables -t mangle -A voip_Lan_High_QoS -j DSCP --set-dscp $dscp_target -m dscp --dscp $dscp_rtp_org
+	fi
+	if [ $((dscp_sip_org)) -ne $((dscp_target)) ]; then
+		xtables -t mangle -A voip_Lan_High_QoS -j DSCP --set-dscp $dscp_target -m dscp --dscp $dscp_sip_org
+	fi
+	xtables -t mangle -A voip_Lan_High_QoS -j MARK --set-mark 7 -m dscp --dscp $dscp_target
+	xtables -t mangle -A voip_Lan_High_QoS -j ACCEPT
+
+	# Setup local dns Qos to prio lan 
+	xtables -t mangle -N lan_QoS
+	# set a special mark to remove dscp value once we are in the lan_Qos chain
+	xtables -t mangle -A OUTPUT -j MARK --set-mark 10 -p udp -m dscp --dscp 012
+	xtables -t mangle -A OUTPUT -j lan_QoS -p udp -m dscp --dscp 012
+
+	# Setup dscp to 055: http, telnet, ssh, bootps, syslog, dhcpv6-server
+	xtables -t mangle -A OUTPUT -j DSCP --set-dscp 055 -p tcp -m tcp --dport http
+	xtables -t mangle -A OUTPUT -j DSCP --set-dscp 055 -p tcp -m multiport --sports 1287,1288
+	iptables -t mangle -A OUTPUT -j DSCP --set-dscp 055 -p udp -m multiport --dports bootps,syslog,domain
+	ip6tables -t mangle -A OUTPUT -j DSCP --set-dscp 055 -p udp -m multiport --dports dhcpv6-server,syslog,domain
+
+	# Filter output: traffic: dscp 055
+	xtables -t mangle -A OUTPUT -j high_QoS -p tcp -m dscp --dscp 055
+	xtables -t mangle -A OUTPUT -j high_QoS -p udp -m dscp --dscp 055
+
+	# Setup data QoS target
+	xtables -t mangle -A lan_QoS -j DSCP --set-dscp 0 -m mark --mark 10
+	xtables -t mangle -A lan_QoS -j MARK --set-mark 3
+	xtables -t mangle -A lan_QoS -j ACCEPT
+
+	# iptv
+	# Multicast stream early accept
+	local mcast_net="224.0.0.0/4"
+	iptables -I INPUT -d ${mcast_net} -j ACCEPT
+	iptables -I FORWARD -d ${mcast_net} -j ACCEPT
+	iptables -t mangle -I FORWARD -d ${mcast_net} -j ACCEPT
+	# accept igmp
+	iptables -A INPUT -p igmp -j ACCEPT
+
+	# stb QoS
+	xtables -t mangle -N iptv_Up
+	xtables -t mangle -A FORWARD -j iptv_Up -i $(status get lan_ifname)
+
+	# igmp dscp
+	iptables -t mangle -A OUTPUT -j DSCP --set-dscp 044 -p igmp
+	iptables -t mangle -A OUTPUT -j high_QoS -p igmp
+
+	# Setup lan QoS
+	xtables -t mangle -N lan_Up
+
+	#parse conf system
+	conf_parse
+
+	xtables -t mangle -A lan_Up -j lan_QoS
+	xtables -t mangle -A FORWARD -j lan_Up -i $(status get lan_ifname)
+}
+
+atm_length() {
+	local atm_ceil_payload=48
+	local atm_ceil_size=53
+
+	# inputs
+	local paquet_length=$1
+
+	local atm_cells=$(( $(( ${paquet_length} / ${atm_ceil_payload} )) \
+		+ $(( $(( ${paquet_length} % ${atm_ceil_payload} )) != 0 )) ))
+
+	echo $(( ${atm_cells} * ${atm_ceil_size} ))
+}
+
+atm_bitrate() {
+	# overhead: 8 (udp) + <20 (ip) | 40 (ip6)> [+ 8 (pppoe)] + 14 (ethernet) + 8 (llc) + 8 (aal5)
+	# paquet length: payload + overhead
+	# atm cells: (paquet length / 48) + ((paquet length % 48) != 0)
+	# atm length: (atm cells) * 53
+	# 
+	# e.g. g711 payload:160, bitrate: 64kbit
+	#        atm bitrate:
+	#            -> IP4oEoA  (58): 106kbit
+	#            -> PPP4oEoA (66): 106kbit
+	#            -> IP6oEoA  (78): 106kibt
+	#            -> PPP6oEoA (86): 127.2kbit
+
+	# calcul precision
+	local scale=100000
+
+	local IP4oEoA_overhead=58
+	local PPP4oEoA_overhead=68
+	local IP6oEoA_overhead=78
+	local PPP6oEoA_overhead=86
+
+	# inputs
+	local overhead=$(eval echo "\${$1_overhead}")
+
+	## FIXUP : PREVIOUS VERSIONS DOESN'T THINK ABOUT RTCP ...
+
+	# RTCP Member :
+	local rtcp_length=220
+        local rtcp_freq_sec=16
+        
+        # RTP Member :
+        local rtp_header=12
+        local rtp_freq_sec=50
+        local rtp_payload=$2
+        local rtp_length=$(( ${rtp_payload} + ${rtp_header} ))
+
+        local rtcp_length=$(atm_length $(( ${rtcp_length}+${overhead} )) )
+        local rtp_length=$(atm_length $(( ${rtp_length}+${overhead} )) )
+
+        local total_byterate=$(( ${rtp_length} * ${rtp_freq_sec} + ${rtcp_length}*${rtcp_freq_sec} )) 
+
+	echo $(( ${total_byterate} * 8 / 1024 ))
+}
+
+start() {
+	# Fixup XTM SAR scheduler for low bitrates upstream
+	if [ "$(status get net_data_access)" = "ftth" ]; then
+		lock /run/lock/qos.lock
+		${tc} qdisc add dev eth0 root sfq perturb 10
+		lock -u /run/lock/qos.lock
+		return 0
+	fi
+
+	if [ "$(status get net_data_access)" != "adsl" ]; then
+		return 0
+	fi
+
+	local adsl_rate_up=$(dsl get adsl_rate_up)
+
+	if [ "${adsl_rate_up}" -eq "0" ]; then
+		return 0
+	fi
+
+	lock /run/lock/qos.lock
+
+	# QoS shape
+	upstream_margin=$(nvram get qos_shape_all)
+	high_qos_margin=$(nvram get qos_shape_high)
+	data_lan_margin=$(nvram get qos_shape_data)
+
+	# add upstream margin (prevent xtm layer buffering)
+	local upstream_bitrate=$(( ${adsl_rate_up} - ${upstream_margin} ))
+
+	local g711_payload=160
+	local g711_bitrate=64
+	local g711_atm_bitrate=0
+	if [ "$(status get voip_network)" = "ipv6" ]
+	then
+		g711_atm_bitrate=$(atm_bitrate PPP6oEoA ${g711_payload} ${g711_bitrate})
+	else
+		g711_atm_bitrate=$(atm_bitrate PPP4oEoA ${g711_payload} ${g711_bitrate})
+	fi
+
+	# control: lcp, arp, dhcp, spy, wget...
+	local high_qos_bitrate=$(( ${g711_atm_bitrate} + ${high_qos_margin} ))
+	local data_lan_bitrate=$(( ${upstream_bitrate} - ${high_qos_bitrate} - ${data_lan_margin} ))
+
+	# mpu: Ethernet min size (64 bytes) + LLC (8 bytes) + AAL5 (8 bytes)
+	# overhead: LLC (8 bytes) + AAL5 (8 bytes)
+	local llcaal5_overhead=18
+	local high_qos_burst=$(atm_length $(( 1500 + ${llcaal5_overhead} )))
+	local data_lan_burst=$(( ${high_qos_burst} * 2 ))
+
+	[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+	local topology_conf=/etc/config/topology${mode}.xml
+	[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+	for ifname in $(roxml -q ${topology_conf} '//@qos=1/@ifname'); do
+		# root: default: high QoS -> catch arp, lcp
+		${tc} qdisc add dev ${ifname} \
+			stab linklayer atm mtu 1500 mpu 53 overhead ${llcaal5_overhead} \
+			root handle ${root} htb r2q 2 default ${high_qos_minor}
+
+		# parent: bandwitdh limit
+		${tc} class add dev ${ifname} \
+			parent ${root} classid ${parent} htb \
+			rate ${upstream_bitrate}kbit ceil ${upstream_bitrate}kbit \
+			burst ${data_lan_burst}b cburst ${data_lan_burst}b
+
+		# high QoS: (low latency) arp, lcp, dhcp, wget, voip, spy...
+		${tc} class add dev ${ifname} \
+			parent ${parent} classid ${high_qos_class} htb prio 0 \
+			rate ${high_qos_bitrate}kbit ceil ${upstream_bitrate}kbit \
+			burst ${high_qos_burst}b cburst ${high_qos_burst}b
+		# prefer paquet loss over latency win
+		${tc} qdisc add dev ${ifname} \
+			parent ${high_qos_class} handle ${high_qos_qdisc} pfifo limit 1
+
+		# data lan: sfq
+		${tc} class add dev ${ifname} \
+			parent ${parent} classid ${data_lan_class} htb prio 1 \
+			rate ${data_lan_bitrate}kbit ceil ${upstream_bitrate}kbit \
+			burst ${data_lan_burst}b cburst ${data_lan_burst}b
+		${tc} qdisc add dev ${ifname} \
+			parent ${data_lan_class} handle ${data_lan_qdisc} sfq perturb 10
+	done
+
+	# classify data traffic
+	xtables -t mangle -I lan_QoS -j CLASSIFY --set-class ${data_lan_class}
+
+	lock -u /run/lock/qos.lock
+}
+
+stop() {
+	lock /run/lock/qos.lock
+
+	xtables -t mangle -D lan_QoS -j CLASSIFY --set-class ${data_lan_class}
+
+	[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+	local topology_conf=/etc/config/topology${mode}.xml
+	[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+	for ifname in $(roxml -q ${topology_conf} '//@qos=1/@ifname'); do
+		${tc} qdisc del dev ${ifname} root
+	done
+
+	lock -u /run/lock/qos.lock
+}
+
+show_ifname() {
+	echo -e "\\033[34m        / $1 /\\033[0m"
+	echo -e "\\033[32m-- qdisc\\033[0m"
+	${tc} -s -d qdisc show dev $1
+	echo -e "\\033[32m-- class\\033[0m"
+	${tc} -s -d class show dev $1
+	echo -e "\\033[32m-- filter\\033[0m"
+	${tc} -s -d filter show dev $1
+}
+
+show() {
+	if [ ! -z $1 ]; then
+		show_ifname $1
+		exit 0
+	fi
+
+	echo -e "\\033[33m====[ adsl QoS schedulers ]====\\033[0m"
+	[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+	local topology_conf=/etc/config/topology${mode}.xml
+	[ -e ${topology_conf} ] || local topology_conf=/etc/default/topology${mode}.xml
+	for ifname in $(roxml -q ${topology_conf} '//@qos=1/@ifname'); do
+		show_ifname ${ifname}
+	done
+
+	echo -e "\\033[33m====[ Hotspot bandwidth limit ]====\\033[0m"
+	show_ifname ifb0
+	show_ifname $(status get hotspot_ifname)
+	show_ifname $(status get lan_ifname)
+	echo -e "\\033[32m-- action/police\\033[0m"
+	${tc} -s -d actions list action police
+	echo -e "\\033[32m-- action/mirred\\033[0m"
+	${tc} -s -d actions list action mirred
+}

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/sbin/xtables-multi ip6tables -w "$@"

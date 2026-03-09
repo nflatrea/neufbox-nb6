@@ -1,0 +1,55 @@
+#!/bin/sh /etc/rc.common
+
+START=10
+
+mount_all() {
+	mkdir -p /dev/pts
+	mkdir -p /dev/shm
+	mount -a
+}
+
+load_modules() {
+	local m=$*
+	[ "$(roxml -q /etc/default/reset.xml //services/backup)" != "on" ] && \
+		local m=$(echo $*|sed 's,/etc/modules.d/65-usb-serial-option ,,')
+	[ -d /etc/modules.d ] && {
+		cd /etc/modules.d
+		sed 's/^[^#]/insmod &/' $m | ash 2>&- || :
+	}
+}
+
+start() {
+	mount_all
+
+	mkdir -p /tmp/etc
+	mkdir -p /tmp/mnt
+	mkdir -p /tmp/var
+	mkdir -p /var/run
+	mkdir -p /run/network
+	mkdir -p /run/lock
+	mkdir -p /var/log
+	mkdir -p /var/state
+	mkdir -p /var/chilli
+	mkdir -p /var/voip
+	mkdir -p /tmp/autoconf
+	ln -s /run/lock /var/lock
+
+	ln -s /dev/ring0 /var/log/kern.log
+	ln -s /dev/ring1 /var/log/daemon.log
+	ln -s /dev/ring2 /var/log/voip_proto.log
+	ln -s /dev/ring3 /var/log/voip.log
+	ln -s /dev/ring4 /var/log/messages
+	ln -s /dev/ring5 /var/log/syslog
+	ln -s /dev/ring6 /var/log/fastcgi.log
+	ln -s /dev/ring7 /var/log/voip_events.log
+	ln -s /dev/ring8 /var/log/hotspot.log
+	ln -s /dev/ring9 /var/log/status.log
+	ln -s /dev/ring10 /var/log/wlan.log
+
+	grep -q debugfs /proc/filesystems && mount -t debugfs debugfs /sys/kernel/debug
+
+	load_modules /etc/modules.d/*
+
+	chmod a+r /dev/mtd*
+	chmod a+rw /dev/leds 2>/dev/null
+}

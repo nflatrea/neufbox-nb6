@@ -1,0 +1,4 @@
+  <wlan active="<?cs var:wlan.active ?>" channel="<?cs var:Env.user.wlan.channel ?>" mode="<?cs var:Env.user.wlan.mode?>" mac_filtering="<?cs var:wlan.macfiltering ?>">
+    <wl0 ssid="<?cs var:html_escape(Env.user.wlan.wl0.ssid) ?>" enc="<?cs var:Env.user.wlan.wl0.enc ?>" enctype="<?cs var:Env.user.wlan.wl0.enctype ?>" keytype="<?cs var:Env.user.wlan.wl0.keytype ?>" wpakey="<?cs var:html_escape(Env.user.wlan.wl0.wpakey) ?>" wepkey="<?cs var:html_escape(Env.user.wlan.wl0.wepkeys.n0) ?>" />
+  </wlan>
+  

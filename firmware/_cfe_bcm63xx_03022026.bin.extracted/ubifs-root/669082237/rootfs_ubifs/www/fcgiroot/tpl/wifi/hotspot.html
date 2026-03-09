@@ -1,0 +1,36 @@
+  <div class="title">
+    <h1><?cs var:Env.Section.hotspot_config.Title ?></h1>
+  </div>
+
+  <div class="content">
+    <form method="post" action="<?cs var:Env.Page.Name ?>" id="form_hotspot_config">
+      <table id="hotspot_config">
+	<tr>
+	  <th scope="row"><?cs call:varHeader("hotspot_active") ?></th>
+	  <td>
+              <?cs call:div_onoff("hotspot_active", Env.user.hotspot.active == "on") ?>
+	  </td>
+	</tr>
+	<tr>
+	  <th scope="row"><?cs call:varHeader("hotspot_status") ?></th>
+	  <td class="<?cs if:Env.status.hotspot.status == "up" ?>enabled<?cs elif:(Env.status.hotspot.status == "starting" || Env.status.hotspot.status == "stopping") ?>unused<?cs else ?>disabled<?cs /if ?>" id="hotspot_status">
+	    <?cs call:varValue(Env.Var.hotspot_status.Value[Env.status.hotspot.status])?>
+	  </td>
+	</tr>
+	<tr id="col_ssid" <?cs if:Env.status.hotspot.status != "up"?> style="display:none"<?cs /if?>>
+	  <th scope="row"><?cs call:varHeader("hotspot_ssid") ?></th>
+	  <td><?cs var:Env.status.hotspot.ssids ?></td>
+	</tr>
+      </table>
+      
+      <div id="div_submit" <?cs if:Var.Page.Action.Value == "work"?>class="button_submit_disabled"<?cs else?>class="button_submit"<?cs /if?>>
+	<button class="btn" type="submit" name="submit" id="push_the_button" <?cs if:Var.Page.Action.Value == "work"?>disabled<?cs /if?>>
+	  <?cs var:Button.Submit ?>
+        </button>
+
+        <div id="work_in_progress" class="status loading" <?cs if:Var.Page.Action.Value != "work"?>style="display:none;"<?cs /if?>>
+          <?cs var:Env.Text.work_in_progress ?>
+        </div>
+      </div>
+    </form>
+  </div>

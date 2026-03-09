@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<general version="100000000000">
+  <http_request_interval>3600</http_request_interval>
+  <upgrade-delay>0</upgrade-delay>
+  <idur/>
+  <opt82_ppp/>
+  <opt82_dhcp/>
+  <token/>
+  <migration/>
+  <service enable="false">
+    <name>firmware</name>
+  </service>
+  <service enable="false">
+    <name>voip</name>
+  </service>
+  <service enable="true">
+    <name version="100000000000">hotspot</name>
+    <file>hotspot.xml</file>
+    <url>/etc/default/autoconf</url>
+    <protocol>file</protocol>
+  </service>
+  <service enable="true">
+    <name version="100000000000">wanservices</name>
+    <file>wanservices.xml</file>
+    <url>/etc/default/autoconf</url>
+    <protocol>file</protocol>
+  </service>
+  <service enable="false">
+    <name version="100000000000">iptv</name>
+    <file>iptv.xml</file>
+    <url>/etc/default/autoconf</url>
+    <protocol>file</protocol>
+  </service>
+  <service enable="true">
+    <name version="100000000000">packages</name>
+    <file>packagesmirror.xml</file>
+    <url>/etc/default/autoconf</url>
+    <protocol>file</protocol>
+  </service>
+  <service enable="true">
+    <name version="100000000000">ca</name>
+    <file>ca.xml</file>
+    <url>/etc/default/autoconf</url>
+    <protocol>file</protocol>
+  </service>
+</general>

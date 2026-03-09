@@ -1,0 +1,31 @@
+<div class="title">
+	<h1><?cs var:Env.Section.ca.Title ?></h1>
+</div>
+
+<div class="content">
+        <table id="filter_configuration">
+                <tr>
+                        <th scope="row"><?cs call:varHeader("ca_status") ?></th>
+                        <?cs set:state="disabled" ?>
+                        <?cs if:Env.status.ca.status == "enable" ?>
+                                <?cs set:state="enabled" ?>
+                        <?cs /if ?>
+                        <td class="<?cs var:state ?>">
+                        <?cs if:Env.status.ca.status == "enable" ?>
+                                <?cs var:Env.Var.ca_status.Value.enable ?>
+                        <?cs elif:Env.status.ca.status == "disabled" ?>
+                                <?cs var:Env.Var.ca_status.Value.disabled ?>
+                        <?cs elif:Env.status.ca.status == "autoconf disabled" ?>
+                                <?cs var:Env.Var.ca_status.Value.disabled_autoconf ?>
+                        <?cs elif:Env.status.ca.status == "user disabled" ?>
+                                <?cs var:Env.Var.ca_status.Value.disabled_user ?>
+                        <?cs elif:Env.status.ca.status == "date disabled" ?>
+                                <?cs var:Env.Var.ca_status.Value.disabled_date  ?>
+                        <?cs elif:Env.status.ca.status == "data disabled" ?>
+                                <?cs var:Env.Var.ca_status.Value.disabled_data  ?>
+                        <?cs /if ?>
+                        </td>
+                </tr>
+        </table>
+        <p><?cs var:Env.Var.ca_access_page.Value ?> <a href="<?cs var:Env.autoconf.ca.portal ?>"><?cs var:Env.Var.ca_access_page.Value.link ?></a></p>
+</div>

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+ipv6_local_subnet() {
+	# use to detailed ipv6 address in order to extract safely the subnet
+	# $1 = ipv6 addr to subnet
+	# $2 = subnet number to use
+	# $3 = subnet size (ex: 64)
+	local prefix=$(ip6calc -d $1)
+	local subnet_prefix=$(echo $prefix | awk -F\: '{print $4}')
+	local subnet_size=$3
+	
+	subnet_prefix=0x${subnet_prefix}
+	subnet_prefix=$((${subnet_prefix} + $(($2 * $((1 << $((64 - ${subnet_size}))))))))
+	subnet_prefix=$(printf %x ${subnet_prefix})
+
+	# write the detailed subnet address and return the short form
+	prefix=$(echo ${prefix} | awk -F\: -v i=${subnet_prefix} -v j=${subnet_size} '{print $1":"$2":"$3":"i":0:0:0:1/"j}')
+	echo $(ip6calc -s ${prefix})
+}
+
+if [ $# -lt 3 ];then
+	echo "Usage:"
+	echo "ipv6_subnet_calc [ipv6addr] [subnet number] [prefix size]"
+else
+	ipv6_local_subnet $1 $2 $3
+fi

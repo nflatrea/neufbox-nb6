@@ -1,0 +1,233 @@
+#!/bin/sh /etc/rc.common
+
+START=57
+
+EXTRA_COMMANDS="check"
+
+net_tv_infra=$(status get net_tv_infra)
+net_tv_ifname=$(status get net_tv_ifname)
+net_tv_ipaddr=$(status get net_tv_ipaddr)
+net_tv_netmask=$(status get net_tv_netmask)
+net_tv_broadcast=$(status get net_tv_broadcast)
+net_tv_gateway=$(status get net_tv_gateway)
+net_ipv6_infra=$(status get net_ipv6_infra)
+autoconf_file=/tmp/autoconf/$(autoconf get iptv_file)
+test -e /tmp/iptv.infra && net_tv_infra=$(cat /tmp/iptv.infra)
+[ "$(nvram get net_mode)" = "bridge" ] && mode="-bridge"
+topology_conf=/etc/config/topology${mode}.xml
+[ -e ${topology_conf} ] || topology_conf=/etc/default/topology${mode}.xml
+
+logger -t "iptv[$$]" "$action [${net_tv_infra}]"
+
+boot() {
+	test -z "$(roxml -q ${topology_conf} '//interface[@service=iptv]/@name')" && exit 0
+
+	lock /run/lock/iptv.lock
+
+	# enable IGMP snooping
+	for ifname in $(roxml -q ${topology_conf} '//interface[@type=bridge]/@ifname'); do
+		local syscfg="/sys/class/net/${ifname}/bridge/multicast_snooping"
+		[ -e ${syscfg} ] && echo 0 > ${syscfg}
+	done
+	local syscfg="/sys/class/net/$(status get lan_ifname)/bridge/multicast_snooping"
+	[ -e ${syscfg} ] && echo 1 > ${syscfg}
+
+	local syscfg="/sys/class/net/$(status get lan_ifname)/bridge/igmp_snooping"
+	[ -e ${syscfg} ] && echo 2 > ${syscfg}
+
+	# Runner
+	[ -x /bin/bs ] && bs /bdmf/conf iptv lookup_method=group_ip_src_ip
+
+	# wrapper
+	[ "$(nvram get ipv6_infra)" != "Only" ] && wrapper -t iptv -p /run/iptv-wrapper.pid
+
+	lock -u /run/lock/iptv.lock
+}
+
+dhcpc_tv_setup() {
+	dhcpc_tv_ifname=$(status get dhcpc_tv_ifname)
+
+	IPADDR=${net_tv_ipaddr}
+	eval $(ipcalc -bp ${net_tv_ipaddr} ${net_tv_netmask})
+	ip link set ${dhcpc_tv_ifname} up
+	ip -6 route flush dev ${dhcpc_tv_ifname}
+	if test -n "${net_tv_broadcast}"; then
+		BROADCAST="broadcast ${net_tv_broadcast}"
+	else
+		BROADCAST="broadcast ${BROADCAST}"
+	fi
+	ip addr add ${IPADDR}/${PREFIX} ${BROADCAST} dev ${dhcpc_tv_ifname}
+	sysctl -w net.ipv4.conf.${dhcpc_tv_ifname}.rp_filter=0
+
+	[ "${net_tv_infra}" = "adsl/noip" ] && return
+
+	# snat
+	iptables -t nat -A POSTROUTING -o ${dhcpc_tv_ifname} -j SNAT --to ${net_tv_ipaddr}
+	for net in $(roxml -q ${autoconf_file} '//pfstv-list/net'); do
+		ip route add ${net} via ${net_tv_gateway} dev ${dhcpc_tv_ifname} table lan_t
+	done
+	ip route flush cache
+}
+
+dhcpc_tv_cleanup() {
+	dhcpc_tv_ifname=$(status get dhcpc_tv_ifname)
+
+	# snat
+	iptables -t nat -D POSTROUTING -o ${dhcpc_tv_ifname} -j SNAT --to ${net_tv_ipaddr}
+
+	sysctl -w net.ipv4.conf.${dhcpc_tv_ifname}.rp_filter=1
+	ip link set ${dhcpc_tv_ifname} down
+	ip addr flush dev ${dhcpc_tv_ifname}
+	ip route flush cache
+}
+
+ipv6_tv_setup() {
+	local wan_ipalias=$(roxml -q ${topology_conf} "//interface[@name=wan]/@ipalias")
+	local wan_ifname=$(roxml -q ${topology_conf} "//interface[@name=wan]/@ifname")
+
+	eval $(ipcalc -b ${wan_ipalias})
+	ip addr add ${wan_ipalias} broadcast ${BROADCAST} dev ${wan_ifname} label ${wan_ifname}:1
+	sysctl -w net.ipv4.conf.${net_tv_ifname}.rp_filter=0
+}
+
+ipv6_tv_cleanup() {
+	local wan_ipalias=$(roxml -q ${topology_conf} "//interface[@name=wan]/@ipalias")
+	local wan_ifname=$(roxml -q ${topology_conf} "//interface[@name=wan]/@ifname")
+
+	eval $(ipcalc -b ${wan_ipalias})
+	ip addr add ${wan_ipalias} broadcast ${BROADCAST} dev ${wan_ifname} label ${wan_ifname}:1
+	sysctl -w net.ipv4.conf.${net_tv_ifname}.rp_filter=1
+}
+
+igmpproxy_conf() {
+	local conf=$1
+
+	echo "# Igmpproxy config file" > ${conf}
+	for ifname in voip0 ppp0 ppp1 ppp2 tun0 hotspot0 mapt0; do
+		echo "phyint ${ifname} disabled" >> ${conf}
+	done
+	echo "# Configuration for Upstream Interface" >> ${conf}
+	echo "phyint ${net_tv_ifname} upstream ratelimit 0  threshold 1" >> ${conf}
+	for net in $(roxml -q ${autoconf_file} '//igmp-src-list/net'); do
+		echo "  altnet ${net}" >> ${conf}
+	done
+	igmp_streams=$(roxml -q ${autoconf_file} '//igmp-stream-list/net')
+	test -z "${igmp_streams}" && igmp_streams="232.0.0.0/7"
+	for net in ${igmp_streams}; do
+		echo "  whitelist ${net}" >> ${conf}
+	done
+	echo "" >> ${conf}
+	echo "# Configuration for Downstream Interface" >> ${conf}
+	echo "phyint $(status get lan_ifname) downstream ratelimit 0  threshold 1" >> ${conf}
+	for net in ${igmp_streams}; do
+		echo "  whitelist ${net}" >> ${conf}
+	done
+	echo "" >> ${conf}
+}
+
+start() {
+	lock /run/lock/iptv.lock
+
+	echo "${net_tv_infra}" > /tmp/iptv.infra
+
+	# IPTV routing
+	([ "${net_tv_infra}" = "adsl/dhcp" ] || [ "${net_tv_infra}" = "adsl/noip" ]) && \
+		dhcpc_tv_setup
+	([ "${net_ipv6_infra}" = "Only" ]) && \
+		ipv6_tv_setup
+
+	env -i \
+		ACTION="ifup" \
+		INTERFACE="iptv" \
+		DEVICE="${net_tv_ifname}" \
+		INFRA="${net_tv_infra}" \
+		/sbin/hotplug-call "iface"
+
+	[ "$(nvram get igmp_debug)" = "on" ] && debug="-v"
+	# magic sleep to make conf sync and ready
+	sleep 1
+	igmpproxy_conf /run/igmpproxy.conf
+
+	echo "${net_tv_infra}" > /tmp/iptv.infra
+	# unlock now since exec probably never return
+	lock -u /run/lock/iptv.lock
+
+	diaglog poll tv
+	exec igmpproxy -w /run/igmpproxy.conf ${debug}
+}
+
+stop() {
+	lock /run/lock/iptv.lock
+
+	rm -f /tmp/iptv.infra
+
+	killall igmpproxy
+
+	# let igmpproxy clean its multicast groups
+	sleep 3
+
+	env -i \
+		ACTION="ifdown" \
+		INTERFACE="iptv" \
+		DEVICE="${net_tv_ifname}" \
+		INFRA="${net_tv_infra}" \
+		/sbin/hotplug-call "iface"
+
+	# IPTV routing
+	([ "${net_tv_infra}" = "adsl/dhcp" ] || [ "${net_tv_infra}" = "adsl/noip" ]) && \
+		dhcpc_tv_cleanup
+	([ "${net_ipv6_infra}" = "Only" ]) && \
+		ipv6_tv_cleanup
+
+	lock -u /run/lock/iptv.lock
+}
+
+reload() {
+	lock /run/lock/iptv.lock
+
+	local conf="/tmp/iptv_lan_topology.xml"
+	local n=1
+
+	status xml lan_topology > "${conf}"
+	xtables -t mangle -F iptv_Up
+	
+	for ipaddr in $(roxml -q ${conf} "//device/macaddr")
+	do
+
+		type=$(roxml -q ${conf} "//device[$n]/type")
+		status=$(roxml -q ${conf} "//device[$n]/status")
+
+		if [ "${type}" = "stb" -a "${status}" = "online" ]
+		then
+			ipaddr=$(roxml -q ${conf} "//device[$n]/ipaddr")
+			ip6dhcpaddr=$(roxml -q ${conf} "//device[$n]/ip6dhcpaddr")
+
+			[ -n "${ipaddr}" ] && iptables -t mangle -A iptv_Up -s ${ipaddr} -m dscp --dscp 044 -j high_QoS
+			[ -n "${ip6dhcpaddr}" ] && ip6tables -t mangle -A iptv_Up -s ${ip6dhcpaddr} -m dscp --dscp 044 -j high_QoS
+		fi
+
+		n=$(($n + 1))
+	done
+
+	rm ${conf}
+
+	[ -f /run/iptv-wrapper.pid ] && kill -HUP $(cat /run/iptv-wrapper.pid)
+	lock -u /run/lock/iptv.lock
+	# prevent call of restart if reload failed
+	true
+}
+
+check() {
+	ROUTES=$(ip route show table lan_t)
+        for net in $(roxml -q /tmp/autoconf/$(autoconf get iptv_file) '//pfstv-list/net')
+	do
+		OK="\\033[32mOK\\033[0m"
+		NOK="\\033[31mNOK\\033[0m"
+		if echo $ROUTES|grep -q "$net "; then
+			ROUTE=$OK
+		else
+			ROUTE=$NOK
+		fi
+		echo -e "$net   \tROUTE:$ROUTE"
+	done
+}

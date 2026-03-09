@@ -1,0 +1,91 @@
+Env.Page.Title = NAT
+
+Env.Help.Text <<EOM
+Dans la rubrique <b>Filtrage d'adresses</b> vous pouvez définir des règles pour autoriser le trafic provenant d'internet vers un ou plusieurs de vos équipements connectés en IPv6. Certains logiciels nécessitent d'être joignables directement d'Internet pour fonctionner convenablement ( jeux, peer to peer, etc ).Vous pouvez configurer ces règles ici. Le caractère "*" , selon les cas, représente tous vos équipements connectés en IPv6 dans le Lan (IP de destination) ou tous les équipements se trouvant sur internet(IP source).
+<br/><br/>Dans la rubrique <b>UPnP v6</b> vous pouvez désactiver ou réactiver le service UPnP v6 de la. Lorsque l'UPnP v6 est activé, vous n'avez pas besoin de définir de règles de Filtrage d'adresses pour les logiciels compatibles UPnP IGD v2.
+<br/><br/>La rubrique <b>Ping v6</b> vous permet de configurer la politique de blocage des requêtes ICMPv6(Echo Request) provenant d'internet.
+<br/>Par défaut, celles-ci sont autorisées vers tous vos équipements connectés en IPv6 mais vous pouvez, si vous le souhaitez, les bloquer.
+<br/>Une fois le blocage activé, vous pouvez, suivants les besoins, autoriser de manière spécifique tels ou tels équipements à recevoir ces requêtes.
+<br/><br/>Dans la rubrique <b>DMZ</b> pour l'IPv6, vous pouvez activer ou désactiver la fonction DMZ pour l'IPv6 de la Box.
+<br/>Lorsque, la DMZ est activée, vous devez par la suite configurer manuellement les équipements que vous souhaitez inclure dans celle-ci en utilisant une Ipv6 issue du subnet fourni(subnet utilisé).
+<br/>Attention les équipements ajoutés à la DMZ ne sont plus protégés par le pare-feu de la Box. 
+<br/>Suivant vos besoins, vous pouvez également ajouter une passerelle(next hop).
+<br/><br/>Dans la rubrique <b>Filtrage</b>, vous pouvez activer la protection des ports régulièrement attaqués par les vers et les virus Windows (port 445). Vous pouvez aussi bloquer les requêtes SMTP qui n'utilisent pas le serveur SMTP du groupe SFR. Enfin vous pouvez bloquer le ping depuis internet à destination de votre Box. Ce service n'affecte que les connexions en IPv6. Rendez-vous dans la section Réseau v4 sur la page <b>Filtrage</b> pour configurer le filtrage des connexions en IPv4.
+EOM
+
+Env.Section.nat_config.Title = Filtrage d'adresses
+
+Env.Var.nat_rulename.Header = Nom
+Env.Var.nat_rulename.Error.value = Format incorrect. Seuls les caractères alphanumériques, '_' et '-' sont autorisés.
+
+Env.Var.nat_proto.Header = Protocole
+Env.Var.nat_proto.Value.tcp = TCP
+Env.Var.nat_proto.Value.udp = UDP
+Env.Var.nat_proto.Value.both = les deux
+Env.Var.nat_proto.Error.value = Format incorrect
+Env.Var.nat_proto.Error.invalid_protocol = Protocole invalide
+
+Env.Var.nat_range.Header = Type
+Env.Var.nat_range.Value.false = Port
+Env.Var.nat_range.Value.true =  Plage
+Env.Var.nat_range.Error.value = Format incorrect
+
+Env.Var.nat_extport.Header = Ports
+Env.Var.nat_extport.Error.value = Format incorrect
+Env.Var.nat_extport.Error.invalid_extport = Port externe invalide
+Env.Var.nat_extport.Error.extport_reserved = Port(s) externe(s) réservé(s)
+Env.Var.nat_extport.Error.extport_already_use = Port déjà utilisé
+Env.Var.nat_extrange_p0.Error.value = Format incorrect
+Env.Var.nat_extrange_p1.Error.value = Format incorrect
+Env.Var.nat_extrange.Error.invalid_extportrange = Plage de ports externes invalide
+Env.Var.nat_extrange.Error.extport_reserved = Port(s) externe(s) réservé(s)
+Env.Var.nat_extrange.Error.extport_already_use = Port(s) déjà utilisé(s)
+
+Env.Var.nat_dstip.Header = IP de destination (Lan)
+Env.Var.nat_dstip.Error.invalid_ip = IP invalide
+Env.Var.nat_srcip.Header = IP source (Internet)
+Env.Var.nat_srcip.Error.invalid_ip = IP invalide
+
+Env.Var.nat_dstport.Header = Ports de destination
+Env.Var.nat_dstport.Error.value = Format incorrect
+Env.Var.nat_dstport.Error.invalid_dstport = Port de destination invalide
+Env.Var.nat_dstrange_p0.Error.value = Format incorrect
+Env.Var.nat_dstrange_p1.Error.value = Format incorrect
+Env.Var.nat_dstrange.Error.invalid_dstportrange = Plage de ports de destination invalide
+
+Env.Var.nat_active.Header = Activation
+
+Env.Text.Enable = Activer
+Env.Text.Disable = Désactiver
+Env.Text.PrivatePortListError = Vous ne pouvez pas utiliser les ports suivants
+Env.Text.rule = règle
+Env.Text.rules = règles
+
+Env.Section.upnpd_config.Title = UPnP v6
+Env.Var.upnpd_active.Header = Activation de l'UPnP v6
+Env.Var.upnpd_nat_rules.Header = Règles NAT UPnP v6 actives
+
+Env.Section.pingv6.Title = Ping v6
+Env.Var.filter6_icmpdrop.Header = Bloquer le ping entrant
+Env.Var.ping6_except_device.Header = Exclusion d'IP
+Env.Var.ping6_except.Error.invalid = IP invalide
+
+Env.Section.route_config.Title = DMZ pour l'IPv6
+
+Env.Var.dmz.Header = Passerelle
+Env.Var.dmz_used.Header = Subnet utilisé
+Env.Var.dmz_ip.Header = Adresse IP
+Env.Var.dmz.Error.value = Adresse IP incorrecte
+Env.Var.dmz.Error.invalid = Adresse IP invalide
+
+Env.Var.Any = *
+
+Env.Section.firewall.Title = Filtrage
+Env.Var.filter_mode.Header = Filtrage
+Env.Var.filter_mode.Value.on = Personnalisé
+Env.Var.filter_mode.Value.off = Désactivé
+Env.Var.filter_mode.Error.value = Format incorrect
+Env.Var.filter_simple.Header = Options
+Env.Var.filter_simple_winsharedrop.Header = Protéger vos ordinateurs Windows de l'internet
+Env.Var.filter_simple_smtpdrop.Header = Autoriser l'envoi de courriels uniquement par l'intermédiaire des serveurs mail du groupe SFR
+Env.Var.filter_simple_icmpdrop.Header = Bloquer le ping entrant

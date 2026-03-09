@@ -1,0 +1,274 @@
+#!/bin/sh
+STATE="$2"
+PREFIX="$(echo "${PREFIXES}" | awk -F\, '{print $1}')"
+ODHCP6C_LOCK="/run/odhcp6c.lock"
+
+cgnat_status=$(status get net_cgnat_status)
+
+dhcp6_flush_iptables() {
+	local old_prefix=$(status get net_ipv6_prefix)
+
+	if [ -z "${old_prefix}" ]; then
+		return
+	fi
+
+	local lan_ifname=$(status get lan_ifname)
+	local prefix_iapd=$(echo "${old_prefix}"|awk -F/ '{print $1}')
+	local lan_net=$(ipv6_subnet_calc ${prefix_iapd} 1 64)
+	local dmz_net=$(ipv6_subnet_calc ${prefix_iapd} 2 64)
+	local stb_net=$(ipv6_subnet_calc ${prefix_iapd} 128 64)
+
+	if [ -n "${stb_net}" ]; then
+		ip6tables -D FORWARD -j STB_IN_FORWARD -o ${lan_ifname} -d ${stb_net}
+		ip6tables -D FORWARD -j STB_OUT_FORWARD -i ${lan_ifname} -s ${stb_net}
+	fi
+
+	ip6tables -D FORWARD -j LAN_IN_FORWARD -o ${lan_ifname} -d ${lan_net}
+	ip6tables -D FORWARD -j LAN_OUT_FORWARD -i ${lan_ifname} -s ${lan_net}
+	ip6tables -D FORWARD -o ${lan_ifname} -d ${dmz_net} -j ACCEPT
+	ip6tables -D FORWARD -i ${lan_ifname} -s ${dmz_net} -j ACCEPT
+	ip6tables -t mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+}
+
+dhcp6_notify_up() {
+	local net_ipv6_infra="$(status get net_ipv6_infra)"
+
+	[ "$(status get net_ipv6_status)" = "up" ] && return
+	[ -z "$(status get net_ipv6_infra)" ] && return
+
+	if [ "${net_ipv6_infra}" = "Native" -o "${net_ipv6_infra}" = "Only" ]; then
+		[ -z "$(status get net_ipv6_gateway)" -o -z "$(status get net_ipv6_prefix)" ] && return
+	fi
+
+	# wait the default route before notify up
+	if [ -z "$(ip -6 route | grep ^default)" ]; then
+		logger -s -t "IPv6" -p local1.info "Do no notify up the default route is not ready"
+		return
+	fi
+
+	status set net_ipv6_status "up"
+	defaultroute
+	event notify "ipv6-up"
+	diaglog event ipv6
+}
+
+dhcp6_bound() {
+	dhcp6_setup
+
+	# send router solicitation
+	kill -14 $(cat /run/odhcp6c.pid)
+}
+
+dhcp6_update() {
+	if [ "$(status get net_ipv6_dns)" != "${RDNSS}" ]; then
+		status set net_ipv6_dns "${RDNSS}"
+		status set dhcp6c_dns "${RDNSS}"
+		event notify "dhcp-wan-update"
+		update-resolv.conf
+	fi
+
+	if [ "$(status get net_ipv6_prefix)" != "${PREFIX}" ]; then
+		dhcp6_setup
+	fi
+}
+
+dhcp6_setup() {
+	lock "${ODHCP6C_LOCK}"
+	local prefix_iapd="${PREFIX}"
+	local prefix_addr=$(echo ${prefix_iapd} | awk -F :: '{print $1}')"::"
+	local lan_ifname="$(status get lan_ifname)"
+	local net_ipv6_ifname="$(status get net_ipv6_ifname)"
+	local net_ipv6_dmz_gateway="$(nvram get ipv6_dmz_gateway_ipaddr)"
+	local net_ipv6_infra="$(status get net_ipv6_infra)"
+
+	dhcp6_flush_iptables
+
+	if [ -z "${PREFIX}" ]; then
+		logger -s -t "odhcp6c[$$]" "${STATE} no prefix"
+		lock -u "${ODHCP6C_LOCK}"
+		exit 1
+	fi
+
+	# SFR provide ::/56
+	# first  ::/64 is allocated to lan. (private lan)
+	#        advertise by radvd and protected by firewall
+	# second ::/64 is allocated to lan. (dmz)
+	#        NOT advertise and NOT protected by firewall
+	# third  ::/64 is allocated to stb.
+	local lan_net=$(ipv6_subnet_calc ${prefix_iapd} 1 64)
+	local dmz_net=$(ipv6_subnet_calc ${prefix_iapd} 2 64)
+
+	ip6tables -A FORWARD -j LAN_IN_FORWARD -o ${lan_ifname} -d ${lan_net}
+	ip6tables -A FORWARD -j LAN_OUT_FORWARD -i ${lan_ifname} -s ${lan_net}
+
+	ip -6 addr flush dev ${lan_ifname} scope global
+
+	if [ "$(nvram get ipv6_dmz_active)" = "on" ]; then
+		ip -6 addr add ${dmz_net} dev ${lan_ifname}
+		ip6tables -A FORWARD -o ${lan_ifname} -d ${dmz_net} -j ACCEPT
+		ip6tables -A FORWARD -i ${lan_ifname} -s ${dmz_net} -j ACCEPT
+
+		if [ "$(nvram get ipv6_dmz_gateway_active)" = "on" -a -n "${net_ipv6_dmz_gateway}" ]; then
+			ip -6 route add ${dmz_net} via ${net_ipv6_dmz_gateway} dev ${lan_ifname}
+			ip -6 route del ${dmz_net} dev ${lan_ifname}
+		fi
+	fi
+
+	if [ "$(status get net_ipv6_prefix)" != "${PREFIX}" ]; then
+		logger -s -t "IPv6" -p local1.info "DHCP ANSWER [${STATE} ${PREFIX}]"
+	fi
+
+	status set net_ipv6_ipaddr "${lan_net}"
+	status set net_ipv6_prefix "${PREFIX}"
+	status set net_ipv6_dns "${RDNSS}"
+	status set net_ipv6_subnet_lan "${lan_net}"
+	status set net_ipv6_subnet_dmz "${dmz_net}"
+
+	if [ "$(status get dhcp6c_access)" = "boot" ]; then
+		status set net_ipv6_infra "Only"
+		net_ipv6_infra="Only"
+		[ -f /run/ppp_adsl-wrapper.pid ] && kill -HUP $(cat /run/ppp_adsl-wrapper.pid)
+		touch /tmp/ipv6dns
+	fi
+
+	status set dhcp6c_answer "${STATE}"
+	status set dhcp6c_ifname "${net_ipv6_ifname}"
+	status set dhcp6c_ipaddr "${lan_net}"
+	status set dhcp6c_dns "${RDNSS}"
+
+	# Corner case, adsl is checked before ftth because ftth_link
+	# maybe up is an client equipment is connected to the fiber
+	# port
+
+	# ADSL access
+	if [ "$(status get adsl_link)" = "up" ]; then
+		status set dhcp6c_access "adsl"
+		status set net_ipv6_access "adsl"
+		status set dhcp6c_status "up"
+	# FTTH access
+	elif [ "$(status get ftth_link)" = "up" ]; then
+		status set dhcp6c_access "ftth"
+		status set net_ipv6_access "ftth"
+		status set dhcp6c_status "up"
+	fi
+
+	if [ "$(nvram get ipv6_stbsoftwire)" = "on" -o "${net_ipv6_infra}" != "Tunnel" ]; then
+		local stb_net=$(ipv6_subnet_calc ${prefix_iapd} 128 64)
+		ip -6 addr add ${stb_net} dev ${lan_ifname}
+		ip6tables -A FORWARD -j STB_IN_FORWARD -o ${lan_ifname} -d ${stb_net}
+		ip6tables -A FORWARD -j STB_OUT_FORWARD -i ${lan_ifname} -s ${stb_net}
+		status set net_ipv6_subnet_stb "${stb_net}"
+	fi
+
+	ip -6 addr add ${lan_net} dev ${lan_ifname}
+
+	if [ "${net_ipv6_infra}" = "Tunnel" -o "${net_ipv6_infra}" = "Dual" ]; then
+		ip6tables -t mangle -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+	fi
+
+	lan update_prefix "${prefix_addr}"
+
+	update-resolv.conf
+	/etc/init.d/hosts restart
+	/etc/init.d/dnsmasq restart
+	/etc/init.d/radvd restart
+	[ "$cgnat_status" != "up" ] && /etc/init.d/miniupnpd restart
+
+	dhcp6_notify_up
+
+	lock -u "${ODHCP6C_LOCK}"
+}
+
+dhcp6_deconfig() {
+	lock "${ODHCP6C_LOCK}"
+	local lan_ifname=$(status get lan_ifname)
+	local net_ipv6_ifname=$(status get net_ipv6_ifname)
+	local old_prefix=$(status get net_ipv6_prefix)
+	local prefix_iapd=$(echo "${old_prefix}"|awk -F/ '{print $1}')
+	local dmz_net=$(ipv6_subnet_calc ${prefix_iapd} 2 64)
+
+	/etc/init.d/radvd stop
+	/etc/init.d/hosts restart
+	/etc/init.d/dnsmasq restart
+	[ "$cgnat_status" != "up" ] && /etc/init.d/miniupnpd restart
+
+	ip -6 addr flush dev ${lan_ifname} scope global
+
+	if [ "$(nvram get ipv6_dmz_gateway_active)" = "on" -a -n "${net_ipv6_dmz_gateway}" ]; then
+		ip -6 route del ${dmz_net} via ${net_ipv6_dmz_gateway} dev ${lan_ifname}
+	fi
+
+	ip -6 route del default
+
+	dhcp6_flush_iptables
+
+	status set net_ipv6_uptime
+	status set net_ipv6_ipaddr
+	status set net_ipv6_prefix
+	status set net_ipv6_dns
+	status set net_ipv6_subnet_lan
+	status set net_ipv6_subnet_stb
+	status set net_ipv6_subnet_dmz
+	status set net_ipv6_gateway
+
+	status set dhcp6c_access
+	status set dhcp6c_status
+	status set dhcp6c_answer
+	status set dhcp6c_ifname
+	status set dhcp6c_ipaddr
+	status set dhcp6c_uptime
+	status set dhcp6c_gateway
+	status set dhcp6c_dns
+	status set dhcp6c_lease
+
+	update-resolv.conf
+
+	if [ "$(status get net_ipv6_status)" != "down" ]; then
+		logger -s -t "IPv6" -p local1.info "DHCP ANSWER [${STATE} ${old_prefix}]"
+		status set net_ipv6_status "down"
+		event notify "ipv6-down"
+		diaglog event ipv6
+	fi
+	lock -u "${ODHCP6C_LOCK}"
+}
+
+ipv6_gateway_update() {
+	lock "${ODHCP6C_LOCK}"
+	local RA_ROUTE="$(echo "${RA_ROUTES}" | awk -F\, '{print $2}')"
+
+	if [ -z "$(ip -6 r list default | awk '{print $3}')" -o                 \
+        "$(ip -6 r list default | awk '{print $3}')" != "${RA_ROUTE}" -o    \
+        "$(status get net_ipv6_gateway)" != "${RA_ROUTE}" ]; then
+
+		logger -s -t "IPv6" -p local1.info "RA [${STATE} ${RA_ROUTE}]"
+
+		ip -6 route del default
+		ip -6 route add default via ${RA_ROUTE} dev $(status get net_ipv6_ifname)
+
+		status set net_ipv6_gateway "${RA_ROUTE}"
+		status set dhcp6c_gateway "${RA_ROUTE}"
+
+		dhcp6_notify_up
+	fi
+
+	lock -u "${ODHCP6C_LOCK}"
+}
+
+case "${STATE}" in
+	"bound")
+		dhcp6_bound
+		;;
+	"stopped" | "unbound")
+		dhcp6_deconfig
+		;;
+	"ra-updated")
+		ipv6_gateway_update
+		;;
+	"updated")
+		dhcp6_update
+		;;
+	*)
+	exit 1
+esac
+
+exit 0

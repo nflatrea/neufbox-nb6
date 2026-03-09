@@ -1,0 +1,102 @@
+Env.Page.Pretitle = Box -&nbsp; 
+Env.Page.Index.Title = Home
+Env.Help.Title = Help
+Env.Text.Notice = Notice
+
+Env.Form.Error.unknown = An error has occurred !
+Env.Form.Error.system = An system error has occured !
+Env.Form.Success.default = Settings have been applied successfully.
+
+Env.Var.Sys.FirmwareVersion.Header = Version
+Env.Var.Sys.MACAddress.Header = MAC address
+Env.Var.Sys.IPAddress.Header = IP address
+Env.Var.Sys.Connectivity.Header = Connectivity
+Env.Var.Sys.IPAddressv4.Header = IPv4 Address
+Env.Var.Sys.IPAddressv6.Header = IPv6 Address
+Env.Var.Sys.Hostname.Header = Hostname
+
+Env.Var.Sys.NetInfraExtra.Header = Access profile
+Env.Var.Sys.NetInfraExtra.Value.VDSL2 = vDSL2
+Env.Var.Sys.NetInfraExtra.Value.VDSL2adsl = vDSL2
+Env.Var.Sys.NetInfraExtra.Value.VDSL2gprs = Mix vDSL2/3G
+Env.Var.Sys.NetInfraExtra.Value.adsl = aDSL
+Env.Var.Sys.NetInfraExtra.Value.adslgprs = aDSL/3G Mix
+Env.Var.Sys.NetInfraExtra.Value.gprsadsl = aDSL/3G Mix
+Env.Var.Sys.NetInfraExtra.Value.ftth = FTTH
+Env.Var.Sys.NetInfraExtra.Value.ftthgprs = FTTH/3G Mix
+Env.Var.Sys.NetInfraExtra.Value.gprsftth = FTTH/3G Mix
+Env.Var.Sys.NetInfraExtra.Value.gprs = 3G Connection
+Env.Var.Sys.NetInfraExtra.Value.unknown = Unknown
+Env.Var.Sys.Connectivity.v4v6 = IPv4 & IPv6
+Env.Var.Sys.Connectivity.v4v6cgnat = IPv6 & IPv4 CGNAT
+Env.Var.Sys.Connectivity.v4 = IPv4
+Env.Var.Sys.Connectivity.v6 = IPv6
+Env.Var.Sys.Connectivity.unknown = Unknown
+
+Env.Text.NoFTTH = Check that your gateway is correctly plugged according to the installation guide.
+Env.Text.NoDSL = Check that your gateway is correctly plugged according to the installation guide.
+
+Button.Signoff = Log out
+Button.Submit = Apply
+Button.Reboot = Reboot
+Button.Launch = Start
+Button.Relaunch = Restart
+Button.Stop = Stop
+Button.Reinit = Reset
+Button.Restore = Restore
+Button.Save = Save
+
+Env.Text.General = General
+Env.Text.UnknownError = Unknown Error
+Env.Text.InternalError = Internal error!
+Env.Text.UnknownValue = Unknown value!
+Env.Text.InvalidValue = Invalid value
+Env.Text.Disabled = Disabled
+Env.Text.Enabled = Enabled
+Env.Text.Disable = Disable
+Env.Text.Enable = Enable
+Env.Text.Offline = Offline
+Env.Text.Activation = Activation
+Env.Text.Shared = Shared
+
+Env.Text.dayAbbr = d
+Env.Text.hourAbbr = h
+Env.Text.minAbbr = min.
+Env.Text.secAbbr = sec.
+
+Env.Text.Day.0 = Sunday
+Env.Text.Day.1 = Monday 
+Env.Text.Day.2 = Tuesday
+Env.Text.Day.3 = Wednesday
+Env.Text.Day.4 = Thursday
+Env.Text.Day.5 = Friday
+Env.Text.Day.6 = Saturday
+
+Env.Text.Month.1 = January
+Env.Text.Month.2 = February
+Env.Text.Month.3 = March
+Env.Text.Month.4 = April
+Env.Text.Month.5 = May
+Env.Text.Month.6 = June
+Env.Text.Month.7 = July
+Env.Text.Month.8 = August
+Env.Text.Month.9 = September
+Env.Text.Month.10 = October
+Env.Text.Month.11 = November
+Env.Text.Month.12 = December
+
+Env.Var.voip_err.Value.0 = Success
+Env.Var.voip_err.Value.generic = Your Box has detected an error with the voice service, <a href="/maintenance/diag">click here</a> to run a diagnotic of your installation. If the problem persists, please contact customer service.
+
+Env.Text.nojs = You must activate JavaScript in order to use this function.
+
+Env.Text.work_in_progress = Operation in progress ...
+
+Env.Text.Absente = Absent
+
+Env.Text.Undefined = Undefined
+
+Env.Text.Mbps = Mbit/s
+
+Env.Text.Detected = Detected
+Env.Text.Undetected = Undetected

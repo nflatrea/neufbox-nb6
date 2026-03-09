@@ -1,0 +1,27 @@
+Env.Page.Title = Réseau v6
+
+Env.Help.Text << EOM
+Dans la rubrique <b>Etat des services</b>, retrouvez le statut d'activation des services liés à l'IPv6 (SLAAC, DHCPv6, UpnPv6, etc.). 
+<br/><br />Dans la rubrique <b>Postes connectés</b> est affichée la liste des équipements compatibles IPv6 actuellement reliés à votre Box. 
+<br /><br />A noter, que dans le cas, où vos équipements possèderaient plusieurs IPV6 globales, on n'affichera ici qu'une seule IPV6 globale par équipements. (L'IPv6 affichée sera choisi suivant la priorité : dhcpv6 > eui64 > autres )
+EOM
+
+Env.Section.global_status.Title = Etat des services
+
+Env.Var.netv6.Value = Internet v6
+Env.Var.dhcpv6.Value = DHCP v6
+Env.Var.upnpv6.Value = UPnP v6
+
+Env.Var.netv6.status.up = Opérationnel
+Env.Var.netv6.status.noconnect = Non connecté
+Env.Var.netv6.status.down = Désactivé
+
+Env.Section.connected_computers.Title = Postes connectés
+
+Env.Var.hostname.Header = Nom d'hôte
+Env.Var.mac_addr.Header = Adresse MAC
+Env.Var.ip_addr.Header = Adresse IPv6
+Env.Var.port.Header = Port
+
+Env.Var.slaac.Header = SLAAC
+Env.Var.dmz6.Header = DMZ v6

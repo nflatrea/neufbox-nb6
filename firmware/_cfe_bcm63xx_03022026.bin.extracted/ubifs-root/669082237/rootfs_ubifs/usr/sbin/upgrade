@@ -1,0 +1,304 @@
+#!/bin/sh
+
+usage() {
+	echo "usage: $0 <uri> [sha256sum]"
+	echo "       upgrade tftp://192.168.22.222/openwrt-nb6v-main"
+	echo "       upgrade http://192.168.22.222/openwrt-nb6v-main"
+	echo "       upgrade /mnt/usb/sda1/openwrt-nb6v-main"
+}
+
+if [ "$#" -lt "1" ]; then
+	usage
+	exit 127
+fi
+
+mode=$(ledctl mode)
+
+stats_inc() {
+	counter=$(status get $1)
+	status set $1 $(( ${counter:=0} + 1 ))
+}
+
+abort() {
+	local code=$2
+
+	stats_inc "upgrade_failure_total"
+	diaglog error upgrade
+
+	echo "$1 failed! [code=${code}] Abort..."
+	logger -t "upgrade[$$]" "$1 failed! [code=${code}] Abort..."
+	case "${PROTO}" in
+	"tftp"|"http")
+		if [ "${code}" = "2" ] || [ "${code}" = 3 ]; then
+			# wget timeout. Do not delete
+			true
+		else
+			rm -f ${FILE}
+		fi
+		cd -
+		;;
+	esac
+	ledctl mode $mode
+	autoconf set status ""
+	[ -x /sbin/mcu_state ] && mcu_state update_in_progress 0
+	lock -u /run/lock/upgrade.lock
+	exit $2
+}
+
+upgrade_bootloader() {
+	echo "verif crc..."
+
+	wfi_eval=$(wfi-tag-verif $1 2>&1 >/dev/null);
+	res=$?
+	CRC="";
+	LENGTH="";
+	BTRM="";
+	if [ $res -eq 0 ]; then
+		eval $wfi_eval;
+	else
+		abort "wfi-tag-verif" 6
+	fi
+	
+	if [ -z "$CRC" -o -z "$LENGTH" ]; then
+		abort "wfi-tag-verif" 6
+	fi
+
+	# NB6VAC Secure Boot image check
+	# Allowing upgrade only if OTP SECBOOT_ENABLE correspond to WFI_TAG BTRM flag
+	if [ -z "$BTRM" -o "$BTRM" != "$(status get version_secureboot)" ]; then
+		abort "Bootloader wfi-tag doesn't match SecBoot OTP value" 6
+	fi
+	echo "verif size..."
+	local size=$(ls -l $1|awk '{print $5}')
+	if [ "${size}" -gt "1048576" ]; then
+		abort "invalid bootloader $1 size ${size}" 7
+	fi
+	
+	echo "cfe nvram copy..."
+	if ! cfe-nvram-copy /dev/mtd-bootloader $1; then
+		abort "cfe-nvram-copy /dev/mtd-bootloader $1" 8
+	fi
+
+	echo "flash erase..."
+	if ! flash_eraseall -j /dev/mtd-bootloader; then
+		stats_inc "upgrade_failure_flash"
+		status set "upgrade_failure_last" "flash"
+		abort "flash_eraseall -j /dev/mtd-bootloader" 9
+	fi
+
+	echo "nandwrite..."
+	if ! nandwrite -m -q /dev/mtd-bootloader $1; then
+		stats_inc "upgrade_failure_flash"
+		status set "upgrade_failure_last" "flash"
+		abort "nandwrite -m -q /dev/mtd-bootloader $1" 10
+	fi
+}
+
+upgrade_main() {
+	echo "verif crc..."
+	# wfi-tag-verif write CRC=0xXXXXXXXX and LENGTH=XXXX in stderr
+	# this can be evaluated to get the verified CRC and LENGTH
+	wfi_eval=$(wfi-tag-verif $1 2>&1 >/dev/null);
+	res=$?
+	CRC="";
+	LENGTH="";
+	BTRM="";
+	if [ $res -eq 0 ]; then
+		eval $wfi_eval;
+	else
+		abort "wfi-tag-verif" 6
+	fi
+
+	if [ -z "$CRC" -o -z "$LENGTH" ]; then
+		abort "wfi-tag-verif" 6
+	fi
+
+	# NB6VAC Secure Boot image check
+	# Allowing upgrade only if OTP SECBOOT_ENABLE correspond to WFI_TAG BTRM flag
+	if [ -z "$BTRM" -o "$BTRM" != "$(status get version_secureboot)" ]; then
+		abort "wfi-tag doesn't match SecBoot OTP value" 6
+	fi
+
+	echo "flash erase..."
+	if ! flash_eraseall -j /dev/mtd-upgrade-image; then
+		stats_inc "upgrade_failure_flash"
+		status set "upgrade_failure_last" "flash"
+		abort "flash_eraseall -j /dev/mtd-upgrade-image" 7
+	fi
+
+	echo "nandwrite from second block..."
+	if ! tail $1 -c +131073 | nandwrite -m -s 131072 -q /dev/mtd-upgrade-image; then
+		flash_eraseall -j /dev/mtd-upgrade-image
+		stats_inc "upgrade_failure_flash"
+		status set "upgrade_failure_last" "flash"
+		abort "tail $1 -c +131073 | nandwrite -m -s 131072 -q /dev/mtd-upgrade-image" 8
+	fi
+
+	# writing OOB Sequence prior writing 1st block
+	echo "update sequence number..."
+	if ! nandseq -u /dev/mtd-upgrade-image /dev/mtd-rootfs-image -c 0 -l 0; then
+		stats_inc "upgrade_failure_flash"
+		status set "upgrade_failure_last" "flash"
+		abort "nandseq -u /dev/mtd-upgrade-image /dev/mtd-rootfs-image" 9
+	fi
+
+	echo "nandwrite first block..."
+	if ! head $1 -c 131072 | nandwrite -m -q /dev/mtd-upgrade-image; then
+		flash_eraseall -j /dev/mtd-upgrade-image
+		stats_inc "upgrade_failure_flash"
+		status set "upgrade_failure_last" "flash"
+		abort "head $1 -c 131072 | nandwrite -m -q /dev/mtd-upgrade-image" 10
+	fi
+
+	# compute sh256sum to check
+	local length=$(ls -l $1 |awk '{print $5}')
+	local flash=$(nanddump --bb=skipbad -l ${length} /dev/mtd-upgrade-image|sha256sum|awk '{print $1}')
+	local file=$(sha256sum $1|awk '{print $1}')
+	if [ "${file}" != "${flash}" ]; then
+		flash_eraseall -j /dev/mtd-upgrade-image
+		stats_inc "upgrade_failure_flash"
+		status set "upgrade_failure_last" "flash"
+		abort "sha256sum file:${file} flash:${flash}" 11
+	fi
+}
+
+upgrade_xdsl() {
+	if ! adslphy_copy $1 /dev/null $(hostname); then
+		abort "adslphy_copy $1 /dev/null $(hostname)" 6
+	fi
+	rm -f /etc/adsl/*DSL*
+	if ! mv -f $1 /etc/adsl/$(basename $1); then
+		stats_inc "upgrade_failure_flash"
+		status set "upgrade_failure_last" "flash"
+		abort "mv -f $1 /etc/adsl/$(basename $1)" 7
+	fi
+	sync
+}
+
+upgrade_mcu() {
+	local version=$(basename $1 |sed 's/.*\-R//g')
+	echo "Flash MCU firmware"
+	echo /tmp/$1 > /sys/mcu/firmware
+	# Wait for the MCU to reboot
+	sleep 2
+	local new_version=$(cat /sys/mcu/firmware)
+	if [ ${new_version} -ne ${version} ]; then
+		abort "incorrect flashed mcu firmware, version ${new_version} != ${version}" 6
+	fi
+	echo "MCU firmware flashed!"
+	rm -f /etc/mcu/*MCU*
+	if ! mv -f $1 /etc/mcu/$(basename $1); then
+		stats_inc "upgrade_failure_flash"
+		status set "upgrade_failure_last" "flash"
+		abort "mv -f $1 /etc/mcu/$(basename $1)" 7
+	fi
+}
+
+upgrade_config() {
+	if ! cp -f $1 /etc/config/system_upgrade.xml; then
+		stats_inc "upgrade_failure_flash"
+		status set "upgrade_failure_last" "flash"
+		abort "cp -f $1 /etc/config/system_upgrade.xml" 6
+	fi
+	sync
+}
+
+lock /run/lock/upgrade.lock
+
+trap "stats_inc upgrade_failure_signal; abort \"signal INT\" 20" INT
+
+eval $(echo $1|awk -F '[:/]' '{print "PROTO="$1"\nHOST="$4"\nFILE="$NF}')
+SHA256SUM=$2
+echo "download..."
+autoconf set status downloading
+[ -x /sbin/mcu_state ] && mcu_state update_in_progress 1
+
+case "${PROTO}" in
+"tftp")
+	cd /tmp
+	if ! tftp -b 2000 -gr ${FILE} ${HOST}; then
+		stats_inc "upgrade_failure_download"
+		status set "upgrade_failure_last" "download"
+		abort "tftp -b 2000 -gr ${FILE} ${HOST}" 1
+	fi
+	;;
+"http")
+	cd /tmp
+	local timeout=$(nvram get autoconf_wget-timeout)
+	for i in $(seq 3)
+	do
+		wget -O ${FILE} -c -T ${timeout:-60} $1
+		wget_code=$?
+		[ $wget_code -eq 0 ] && break
+	done
+	# code: 2, 3: timeout
+	if [ "${wget_code}" != "0" ]; then
+		logger -t "upgrade[$$]" "wget failed. return code ${wget_code}"
+		stats_inc "upgrade_failure_download"
+		status set "upgrade_failure_last" "download"
+		abort "wget -O ${FILE} -c -T ${timeout:-60} $1" ${wget_code}
+	fi
+	;;
+*)
+	# upgrade from local file
+	PROTO=file
+	HOST=localhost
+	FILE=$1
+	if test -e ${FILE}; then
+		cp ${FILE} "/tmp/"
+		eval $(echo $1| awk -F '[:/]' '{print "FILE=/tmp/"$NF}')
+	else
+		stats_inc "upgrade_failure_download"
+		status set "upgrade_failure_last" "download"
+		abort "test -e ${FILE}" 4
+	fi
+	;;
+esac
+
+ledctl mode upgrade
+autoconf set status ""
+
+if ! test -e ${FILE}; then
+	stats_inc "upgrade_failure_download"
+    status set "upgrade_failure_last" "download"
+	abort "test -e ${FILE}" 4
+fi
+
+if test -n "${SHA256SUM}"; then
+	if ! echo "${SHA256SUM}  ${FILE}"|sha256sum -c; then
+		stats_inc "upgrade_failure_checksum"
+		status set "upgrade_failure_last" "checksum"
+		abort "echo \"${SHA256SUM}  ${FILE}\"|sha256sum -c" 5
+	fi
+fi
+
+echo "write..."
+ledctl mode burning
+autoconf set status burning
+
+if echo ${FILE}|grep -q -i bootloader; then
+	upgrade_bootloader ${FILE}
+elif echo ${FILE}|grep -q -i main; then
+	upgrade_main ${FILE}
+elif  echo ${FILE}|grep -q -i dsl; then
+	upgrade_xdsl ${FILE}
+elif  echo ${FILE}|grep -q -i config; then
+	upgrade_config ${FILE}
+elif echo ${FILE}| grep -q -i mcu; then
+	upgrade_mcu ${FILE}
+else
+	abort "unknow type: ${FILE}" 99
+fi
+
+echo "done !"
+ledctl mode $mode
+autoconf set status ""
+[ -x /sbin/mcu_state ] && mcu_state update_in_progress 0
+
+case "${PROTO}" in
+"tftp"|"http"|"file")
+	rm -f ${FILE}
+	;;
+esac
+cd -
+lock -u /run/lock/upgrade.lock

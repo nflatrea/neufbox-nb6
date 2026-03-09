@@ -1,0 +1,18 @@
+#!/bin/sh
+
+action=$1
+ip_lan=$3
+vendor_class_id_audiocode=$(nvram get dscp_vendor-id_ata)
+
+if [ $action == "add" ]; then
+	if [ $DNSMASQ_VENDOR_CLASS == $vendor_class_id_audiocode ]; then
+		iptables -t mangle -C FORWARD -s $ip_lan -j voip_Lan_High_QoS >/dev/null 2>&1
+		ret=$?
+		if [ $ret -eq 1 ]; then
+			iptables -t mangle -I FORWARD -s $ip_lan -j voip_Lan_High_QoS
+		fi
+	fi
+elif [ $action == "del" ]; then
+	iptables -t mangle -D FORWARD -s $ip_lan -j voip_Lan_High_QoS >/dev/null 2>&1
+fi
+

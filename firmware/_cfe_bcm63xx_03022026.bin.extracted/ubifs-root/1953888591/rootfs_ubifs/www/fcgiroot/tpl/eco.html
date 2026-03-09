@@ -1,0 +1,55 @@
+<div class="title">
+        <h1><?cs var:Env.Section.eco.Title ?></h1>
+</div>
+
+<div class="content">
+        <form id="form_eco_configuration" method="post" action="<?cs var:Env.Page.Name ?>">
+            <table>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.eco_status.Header ?></th>
+                        <td id="eco_status" class="<?cs if:Env.status.eco.status == "down" ?>disabled<?cs else ?>enabled<?cs /if ?>"><?cs if:Env.status.eco.status == "down" ?><?cs var:Env.Var.eco_status.Value.down?><?cs else ?><?cs var:Env.Var.eco_status.Value.up?><?cs /if ?></td>
+                </tr>
+                <tr>
+                    <th scope="row"><?cs var:Env.Section.eco.Title ?></th>
+                    <td>
+                        <?cs call:div_onoff("eco_enable",(Env.user.eco.active == "on")) ?>
+                    </td>
+                </tr>
+            </table>
+            <button class="btn" type="submit" name="ecomode_activate"><?cs var:Button.Submit ?></button>
+        </form>
+        <hr />
+        <table id="table_eco">
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.telephone.Header ?></th>
+                        <td id="eco_voip"><?cs if:Env.user.eco.voip.active == "on" ?><?cs var:Env.Var.eco_status.Value.up?><?cs else ?><?cs var:Env.Var.eco_status.Value.down ?><?cs /if ?></td>
+                </tr>
+                
+                <?cs if:?Var.pwrsaveenable.Value && Var.pwrsaveenable.Value ?>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.powersw.Header ?></th>
+                        <td><?cs if:Env.status.eco.status == "down" ?><?cs var:Env.Var.eco_status.Value.down?><?cs else ?><?cs var:Env.Var.eco_status.Value.up?><?cs /if ?></td>
+                </tr>
+                <?cs /if ?>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.ethernet_lan.Header ?> 1</th>
+                        <td><?cs var:Env.Var.ethernet[Env.user.eco.link.lan1.active] ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.ethernet_lan.Header ?> 2</th>
+                        <td><?cs var:Env.Var.ethernet[Env.user.eco.link.lan2.active] ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.ethernet_lan.Header ?> 3</th>
+                        <td><?cs var:Env.Var.ethernet[Env.user.eco.link.lan3.active] ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.ethernet_lan.Header ?> 4</th>
+                        <td><?cs var:Env.Var.ethernet[Env.user.eco.link.lan4.active] ?></td>
+                </tr>
+                <tr>
+                        <th scope="row"><?cs var:Env.Var.brightness.Header ?></th>
+                        <td><?cs var:Env.Var.leds[Env.user.eco.led.active] ?></td>
+                </tr>
+        </table>
+</div>

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+[ "${INTERFACE}" != "data" ] && exit 0
+
+case ${ACTION} in
+	ifup)
+		# setup cron, every 8 hours
+		local min=$(($(date +%M)))
+		local hour_00=$(date +%k)
+		local hour_08=$(((${hour_00} + 8) % 24))
+		local hour_16=$(((${hour_08} + 8) % 24))
+		lock /run/lock/cron.lock
+		sed -e '/firewall smtp/d' \
+		    -e "1a${min} ${hour_00} * * * /etc/init.d/firewall smtp" \
+		    -e "1a${min} ${hour_08} * * * /etc/init.d/firewall smtp" \
+		    -e "1a${min} ${hour_16} * * * /etc/init.d/firewall smtp" \
+			/run/crontabs/root | crontab -u root -
+		lock -u /run/lock/cron.lock
+		;;
+	ifdown)
+		lock /run/lock/cron.lock
+		sed -e '/firewall smtp/d' \
+			/run/crontabs/root | crontab -u root -
+		lock -u /run/lock/cron.lock
+		;;
+esac

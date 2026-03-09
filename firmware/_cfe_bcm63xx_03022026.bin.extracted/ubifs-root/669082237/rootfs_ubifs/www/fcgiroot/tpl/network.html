@@ -1,0 +1,96 @@
+
+
+
+<div class="title">
+	<h1><?cs var:Env.Section.lan_status.Header?></h1>
+</div>
+
+<div class="content">
+	<table id="network_status">
+		<?cs each:link = Var.links?>
+		<?cs if:link.name.Value!="lan5"?>
+		<tr>
+			<th scope="row"><?cs call:IfaceToPortName(link.name.Value)?></th>
+			<td class="<?cs if:link.status.Value == "up" ?>enabled<?cs else ?>unused<?cs /if ?>" id="<?cs var:link.name.Value?>_status">
+				<?cs if:link.status.Value == "up" ?>
+				        <?cs if:link.type.Value == "stb" ?>
+                                                <?cs var:Env.Var.type.Value.stb?>
+				        <?cs else ?>
+					        <?cs var:link.speed.Value?>
+				        <?cs /if ?>
+				<?cs else?>
+					<?cs var:Env.Var.LinkStatus.Value.down?>
+				<?cs /if?>
+			</td>
+		</tr>
+		<?cs /if?>
+		<?cs /each?>
+
+		<?cs if:?Var.USBStatus.Value?>
+		<tr>
+			<th scope="row"><?cs var:Env.Var.USBStatus.Header?></th>
+			<td class="<?cs if:Var.USBStatus.Value == "up" ?>enabled<?cs else ?>unused<?cs /if ?>" id="usb_status">
+			    	<?cs call:varValue_d(Env.Var.USBStatus.Value[Var.USBStatus.Value], Env.Var.USBStatus.Value.down)?>
+			</td>
+		</tr>
+		<?cs /if?>
+		
+		<tr>
+			<th scope="row"><?cs var:Env.Var.WifiStatus.Header?></th>
+			<td class="<?cs if:Var.WifiStatus.Value == "on" ?>enabled<?cs else ?>disabled<?cs /if ?>" id="wifi_status">
+	                        <?cs call:varValue_d(Env.Var.WifiStatus.Value[Var.WifiStatus.Value], Env.Var.WifiStatus.Value.off)?>
+				<?cs if:Var.WifiStatus.Value == "on" ?>
+				     	 (<?cs if:Var.WifiCountClient.Value == "0" ?><?cs var:Env.Var.WifiCountClient.Value.0?><?cs elif:Var.WifiCountClient.Value == "1" ?><?cs var:Env.Var.WifiCountClient.Value.1?><?cs else ?><?cs var:Var.WifiCountClient.Value ?> <?cs var:Env.Var.WifiCountClient.Value.many?><?cs /if ?>)
+				<?cs /if ?>
+			</td>
+		</tr>
+	</table>
+</div>
+
+<div class="title">
+	<h1><?cs var:Env.Section.connected_computers.Header?></h1>
+</div>
+
+<div class="content">
+	<table id="network_clients" class="magictable">
+		<thead>
+			<tr>
+				<th scope="col" class="col_number">#</th>
+				<th scope="col" class="col_mac"><?cs var:Env.Var.mac_addr.Header?></th>
+				<th scope="col" class="col_hostname"><?cs var:Env.Var.Sys.Hostname.Header ?></th>
+				<th scope="col" class="col_ip"><?cs var:Env.Var.ip_addr.Header?></th>
+				<th scope="col" class="col_port"><?cs var:Env.Var.port.Header?></th>
+			</tr>
+		</thead>
+		<tbody>
+			<?cs set:cpt = 0?>
+			<?cs each:host = Env.status.lan.topology.device ?>
+                        <?cs if:(host.status=="online") && (host.type=="pc" || host.type=="stb" || host.type=="femto") && (host.ipaddr !='') ?>
+                        <?cs set:cpt = #cpt +1?>
+			<tr>
+				<td data-title="#" class="col_number">
+					<?cs var:cpt ?>
+				</td>
+				<td data-title="<?cs var:Env.Var.mac_addr.Header?>" >
+					<?cs var:host.macaddr ?>
+				</td>
+				<td data-title="<?cs var:Env.Var.Sys.Hostname.Header ?>">
+					<?cs if:host.hostname != ''  ?>
+                                        <?cs var:host.hostname ?>
+                                        <?cs else?>
+                                        -
+                                        <?cs /if?>
+				</td>
+                                <td data-title="<?cs var:Env.Var.ip_addr.Header?>">
+                                        <?cs var:host.ipaddr ?>
+                                </td>
+				<td data-title="<?cs var:Env.Var.port.Header?>">
+					<?cs call:IfaceToPortName(host.port)?>
+				</td>
+                                
+			</tr>
+                        <?cs /if ?>
+			<?cs /each ?>
+		</tbody>
+	</table>
+</div>

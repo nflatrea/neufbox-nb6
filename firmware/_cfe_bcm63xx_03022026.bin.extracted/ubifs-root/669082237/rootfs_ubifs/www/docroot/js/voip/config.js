@@ -1,0 +1,1 @@
+$(document).ready(function(){$("input[name=blacklist_ndi]").keypress(function(event){if(event.keyCode=="13"){event.preventDefault();$("button[name=blacklist_ndi_add]").trigger("click")}})});

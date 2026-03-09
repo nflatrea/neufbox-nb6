@@ -1,0 +1,2 @@
+<?cs each:item = Env.status.lan.topology.device ?><?cs if:item.type=="pc" || item.type=="stb" || item.type=="femto" ?>
+  <host type="<?cs var:item.type ?>" name="<?cs var:item.hostname ?>" ip="<?cs var:item.ipaddr ?>" mac="<?cs var:item.macaddr ?>" iface="<?cs var:item.port ?>" probe="<?cs var:item.probe ?>" alive="<?cs var:item.alive ?>" status="<?cs var:item.status ?>" /><?cs /if ?><?cs /each ?>   

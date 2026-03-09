@@ -1,0 +1,289 @@
+#!/bin/sh /etc/rc.common
+
+START=58
+
+#--------------------------------------------------------------------------------------------------
+# Private functions
+#--------------------------------------------------------------------------------------------------
+_wait_on_hook_state() {
+	while [ $(status get voip_hookstate) = "offhook" ]
+	do
+		sleep 1
+	done
+	
+	status set voip_linestatus ko
+	status set voip_loginstatus ko
+	event notify voip-line-down
+}
+
+_start_mgcp() {
+	#================================================
+	# Extract configuration from autoconf file
+	#================================================
+	local autoconf_file="/tmp/autoconf/$(autoconf get voip_file)"
+	
+	local call_agent=$(roxml -q $autoconf_file "/voipconf/telephony-services/ca-ip-address")
+	if [ -z "$call_agent" ]; then return 1; fi
+	status set voip_callagent $call_agent
+	
+	local fqdn=$(roxml -q $autoconf_file "/voipconf/telephony-services/ca-fqdn")
+	if [ -z "$fqdn" ]; then return 1; fi
+	status set voip_fqdn $fqdn
+	
+	local port_min=$(roxml -q $autoconf_file "/voipconf/media/rtp/port-min")
+	if [ -z "$port_min" ]; then return 1; fi
+	
+	local port_max=$(roxml -q $autoconf_file "/voipconf/media/rtp/port-max")
+	if [ -z "$port_max" ]; then return 1; fi
+	
+	local local_port=$(roxml -q $autoconf_file "/voipconf/localSettings/port")
+	if [ -z "$local_port" ]; then local_port=2427; fi # Use default value if the node is not present in the XML file
+	
+	#================================================
+	# Add needed iptables rules
+	#================================================
+	iptables -N MGCP_FILTER
+	iptables -F MGCP_FILTER
+	
+	# Redirect INPUT MGCP to MGCP_FILTER
+	local voip_interface_name=$(status get net_voip_ifname)
+	if [ -z $voip_interface_name ]; then return 1; fi
+	iptables -D INPUT -i $voip_interface_name -m state --state NEW -j MGCP_FILTER &> /dev/null
+	iptables -A INPUT -i $voip_interface_name -m state --state NEW -j MGCP_FILTER
+	
+	# MGCP protocol
+	iptables -A MGCP_FILTER -p udp -m udp --dport $local_port -j ACCEPT
+	
+	# MGCP rtp streams
+	iptables -A MGCP_FILTER -p udp --dport "$port_min:$port_max" -j ACCEPT
+	
+	#================================================
+	# Start the MGCP client
+	#================================================
+	diaglog poll voip &> /dev/null
+	exec vodsl mgcp_start $call_agent $fqdn $voip_interface_name FRA auto
+}
+
+_stop_mgcp() {
+	#================================================
+	# Wait for the handset to be on-hook
+	#================================================
+	_wait_on_hook_state
+	
+	#================================================
+	# Remove iptables rules
+	#================================================
+	iptables -D INPUT -i ppp0 -m state --state NEW -j MGCP_FILTER &> /dev/null
+	iptables -D INPUT -i ppp1 -m state --state NEW -j MGCP_FILTER &> /dev/null
+	iptables -D INPUT -i ppp2 -m state --state NEW -j MGCP_FILTER &> /dev/null
+	iptables -D INPUT -i voip0 -m state --state NEW -j MGCP_FILTER &> /dev/null
+	iptables -D INPUT -i wan0 -m state --state NEW -j MGCP_FILTER &> /dev/null
+	
+	iptables -F MGCP_FILTER
+	iptables -X MGCP_FILTER
+	
+	#================================================
+	# Stop the client
+	#================================================
+	exec vodsl mgcp_stop
+	
+	event notify voip-stop
+}
+
+_start_sip() {
+	#================================================
+	# Extract configuration from autoconf file
+	#================================================
+	local autoconf_file="/tmp/autoconf/$(autoconf get voip_file)"
+	
+	local services_proxy=$(roxml -q $autoconf_file "/voipconf/telephony-services/proxy" | tail -n 1) # Two XML fields have the same name and are returned by roxml, both fields have the same value separated by a new line, so discard the second line
+	if [ -z "$services_proxy" ]; then return 1; fi
+	
+	local dns_type=$(roxml -q $autoconf_file "/voipconf/telephony-services/proxy/dnstype")
+	if [ "$dns_type" != "naptr" ]; then dns_type="a"; fi
+	
+	local port_min=$(roxml -q $autoconf_file "/voipconf/media/rtp/port-min")
+	if [ -z "$port_min" ]; then return 1; fi
+	
+	local port_max=$(roxml -q $autoconf_file "/voipconf/media/rtp/port-max")
+	if [ -z "$port_max" ]; then return 1; fi
+	
+	local local_port=$(roxml -q $autoconf_file "/voipconf/localSettings/port")
+	if [ -z "$local_port" ]; then local_port=5060; fi # Use default value if the node is not present in the XML file
+	
+	#================================================
+	# Add needed iptables rules
+	#================================================
+	xtables -N SIP_FILTER
+	xtables -F SIP_FILTER
+	
+	local voip_interface_name=$(status get net_voip_ifname)
+	if [ -z $voip_interface_name ]; then return 1; fi
+	xtables -D INPUT -i $voip_interface_name -m state --state NEW -j SIP_FILTER &> /dev/null
+	xtables -A INPUT -i $voip_interface_name -m state --state NEW -j SIP_FILTER
+	
+	# Open ports : SIP client handles iptables if DNS is of type NAPTR
+	if [ $dns_type != "naptr" ]
+	then
+		# Determine the IP version
+		echo $services_proxy | grep "\:" &> /dev/null # Return 0 if ':' is found
+		local is_ipv6=$?
+		echo $services_proxy | grep "\." &> /dev/null # Return 0 if '.' is found
+		local is_ipv4=$?
+		
+		if [ $is_ipv6 -eq 0 ]
+		then
+			iptable_command=ip6tables
+		elif [ $is_ipv4 -eq 0 ]
+		then
+			iptable_command=iptables
+		else
+			echo "[/etc/init.d/voip] Invalid voip_services_proxy IP address."
+			return 1
+		fi
+		
+		$iptable_command -A SIP_FILTER -p udp -s $services_proxy --dport $local_port -j ACCEPT
+		
+		# slr: we need tcp port to be opened for compatibility issues with ims (tests tcp port at first)
+		$iptable_command -A SIP_FILTER -p tcp -s $services_proxy --dport $local_port -j ACCEPT
+		
+		# Open RTP ports
+		$iptable_command -A SIP_FILTER -p udp --dport "$port_min:$port_max" -j ACCEPT
+	fi
+	
+	#================================================
+	# Start the SIP client
+	#================================================
+	diaglog poll voip &> /dev/null
+	exec clientSip -p /var/run/clientsip.pid
+}
+
+_stop_sip() {
+	#================================================
+	# Wait for the handset to be on-hook
+	#================================================
+	_wait_on_hook_state
+	
+	#================================================
+	# Remove iptables rules
+	#================================================
+	xtables -D INPUT -i ppp0 -m state --state NEW -j SIP_FILTER
+	xtables -D INPUT -i ppp1 -m state --state NEW -j SIP_FILTER
+	xtables -D INPUT -i voip0 -m state --state NEW -j SIP_FILTER
+	xtables -D INPUT -i wan0 -m state --state NEW -j SIP_FILTER
+	
+	xtables -F SIP_FILTER
+	xtables -X SIP_FILTER
+	
+	#================================================
+	# Stop the client
+	#================================================
+	# Get SIP client PID
+	pid=$(cat /var/run/clientsip.pid)
+	if [ -z $pid ]; then return 0; fi # No SIP client running
+
+	# Send stop command
+	echo -e "NULL\nkill" > /var/voip/fifo
+	
+	# Wait for the client to stop
+	for i in $(seq 60)
+	do
+		# The "voip_network" nbd variable is set to empty when the SIP client has deinitialized the endpoint driver
+		if [ -z "$(status get voip_network)" ]; then break; fi
+		
+		sleep 1
+	done
+	# Time has elapsed, the SIP client is not stopped
+	if [ $i -eq 60 ]; then return 1; fi
+
+	sleep 2 # Wait some more time to make sure the endpoint driver is ready
+	rm -f /var/run/clientsip.pid
+	event notify voip-stop
+}
+
+#--------------------------------------------------------------------------------------------------
+# Public functions
+#--------------------------------------------------------------------------------------------------
+boot() {
+	event notify voip-down
+	wrapper -t voip -p /var/run/voip-wrapper.pid
+}
+
+start() {
+	# VoIP protocol is given as second argument
+	case $1 in
+		"mgcp")
+			_start_mgcp
+			if [ $? -ne 0 ]; then return 1; fi
+			;;
+		"sip")
+			_start_sip
+			if [ $? -ne 0 ]; then return 1; fi
+			;;
+		*)
+			echo "Unsupported protocol. Use sip or mgcp."
+			return 1
+	esac
+}
+
+stop() {
+	# VoIP protocol is given as second argument
+	case $1 in
+		"mgcp")
+			_stop_mgcp
+			if [ $? -ne 0 ]; then return 1; fi
+			;;
+		"sip")
+			_stop_sip
+			if [ $? -ne 0 ]; then return 1; fi
+			;;
+		*)
+			echo "Unsupported protocol. Use sip or mgcp."
+			return 1
+	esac
+}
+
+reload() {
+	status set voip_confchecked no
+
+	#================================================
+	# Determine the VoIP protocol
+	#================================================
+	local autoconf_file="/tmp/autoconf/$(autoconf get voip_file)"
+	
+	local protocol=$(roxml -q $autoconf_file "/voipconf/voice-network/protocol")
+	if [ -z $protocol ]; then return 1; fi
+	
+	case $protocol in
+		1)
+			autoconf set voip_sig mgcp
+			;;
+		3)
+			autoconf set voip_sig sip
+			;;
+		*)
+			echo "Unsupported protocol type : $protocol"
+			return 1
+			;;
+	esac
+	
+	#================================================
+	# Determine the VoIP stack
+	#================================================
+	local stack=$(roxml -q $autoconf_file "/voipconf/voice-network/stack")
+	if [ $stack -eq 2 ]
+	then
+		autoconf set voip_stack alcatel
+	else
+		autoconf set voip_stack italtel
+	fi
+	
+	#================================================
+	# Wake up the VoIP wrapper
+	#================================================
+	# Get VoIP wrapper PID
+	local pid=$(cat /var/run/voip-wrapper.pid)
+	
+	# Send right signal
+	kill -SIGHUP $pid
+}

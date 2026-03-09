@@ -1,0 +1,31 @@
+Env.Page.Title = Applications
+
+Env.Help.Text = The <b>Applications</b> tab allows to manage file sharing applications, printer sharing, multimedia servers and access control provided by your Box. Please note that these applications only work with IPv4.
+
+Env.Section.Applications.Value = Applications
+
+Env.Header.samba.Value = File sharing
+
+Env.Var.samba_status.Value.up = Started
+Env.Var.samba_status.Value.down = Stopped
+Env.Var.samba_status.Value.starting = Starting
+Env.Var.samba_status.Value.installing = Installing
+Env.Var.samba_status.Value.error_unknown = Unknown error
+
+Env.Header.p910nd.Value = Printer sharing
+
+Env.Var.p910nd_status.Value.up = Up
+Env.Var.p910nd_status.Value.down = Down
+
+Env.Header.upnpav.Value = Media server
+
+Env.Var.upnpav_status.Value.starting = Starting
+Env.Var.upnpav_status.Value.stopping = Stopping
+Env.Var.upnpav_status.Value.up = Started
+Env.Var.upnpav_status.Value.down = Stopped
+Env.Var.upnpav_status.Value.installing = Installing
+
+Env.Header.ac.Value = Access control
+
+Env.Var.ac_status.Value.enable = Up
+Env.Var.ac_status.Value.disable = Down

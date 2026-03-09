@@ -1,0 +1,5 @@
+<rsp stat="ok">
+        <status val="<?cs var:Env.status.wlan.wps.proc.status ?>" text="<?cs call:varValue_d(Env.Var.wps_status.Value[Env.status.wlan.wps.proc.status], Env.Var.wps_status.Value.error) ?>" />
+        <mode val="<?cs var:Env.user.wlan.wl0.wps.mode ?>" text="<?cs call:varValue_d(Env.Var.wps_mode.Value[Env.user.wlan.wl0.wps.mode], Env.Var.wps_mode.Value.disabled) ?>" />
+        <staname val="<?cs var:Env.status.wlan.wps.proc.staname ?>" />
+</rsp>

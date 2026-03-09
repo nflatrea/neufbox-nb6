@@ -1,0 +1,14 @@
+#!/bin/sh
+
+service=cgnat-deconfig[$$]
+logger -t "$service" "$1"
+
+ipt_file=/tmp/ipt-cgnat.save
+
+# Flush previous rules properly
+touch $ipt_file
+while read rule ; do
+	iptables ${rule/-A/-D}
+done < $ipt_file
+
+ip route replace unreachable default table lan_t

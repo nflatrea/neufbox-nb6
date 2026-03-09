@@ -1,0 +1,29 @@
+#!/bin/sh /etc/rc.common
+
+START=35
+
+logger -t "xtm[$$]" "$action"
+
+boot() {
+	insmod bcmxtmcfg
+
+	local devno=$(sed -n "s/^\(.*\)bcmxtmcfg/\1/p" /proc/devices)
+	mknod -m 666 /dev/bcmxtmcfg0 c ${devno} 0
+}
+
+start() {
+	pqs=$(nvram get atm_pqs)
+	test -z "${pqs}" && pqs=256
+
+	xtm start --rq0 ${pqs}
+	xtm operate tdte --add ubr
+	xtm operate intf --state 1 enable
+	xtm operate intf --state 2 enable
+}
+
+stop() {
+	xtm operate intf --state 1 disable
+	xtm operate intf --state 2 disable
+	xtm operate tdte --delete 1
+	xtm stop
+}

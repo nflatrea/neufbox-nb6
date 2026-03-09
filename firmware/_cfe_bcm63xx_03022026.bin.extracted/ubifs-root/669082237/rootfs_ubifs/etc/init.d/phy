@@ -1,0 +1,83 @@
+#!/bin/sh /etc/rc.common
+
+START=34
+
+. /etc/functions
+
+boot_wlan() {
+
+    insmod wfd
+    insmod wlemf
+    insmod dhd firmware_path=/etc/wlan/dhd macaddr=$(/usr/bin/mac_addr -- 5)
+    insmod wl
+
+    wlctl -i wl0 up
+    wlctl -i wl0 down
+    wlctl -i wl0 mbss 0
+    wlctl -i wl0 ap 1
+    wlctl -i wl0 down
+
+    wlctl -i wl1 up
+    wlctl -i wl1 down
+    wlctl -i wl1 mbss 1
+    wlctl -i wl1 ap 1
+    wlctl -i wl1 down
+}
+
+enable_xdsl(){
+	gpio=10
+	echo ${gpio} > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio${gpio}/direction
+	echo 1   > /sys/class/gpio/gpio${gpio}/value
+}
+
+boot() {
+	hinfo "boot phy"
+
+	mknod /dev/bcmvlan c 238 0
+
+	insmod i2c_bcm6xxx
+	insmod bcm_enet
+	insmod bcmvlan
+
+	boot_wlan
+	swmdk
+
+	if [ "$(cat /proc/productid)" = "NB6VAC-FXC-s0" ]; then
+		hwarning "XDSL GPIO HACK APPLIED FOR NB6VAC-FXC-s0"
+		enable_xdsl
+	fi
+
+	rtk-switch init
+
+# 	for f in 0 1 2 3 4
+# 	do
+# 		rtk-switch filter fieldsel set $f default 0
+# 	done
+
+			rtk-switch loop enable
+	#fi
+
+	rtk-switch fc all all disable
+	rtk-switch qos init 3
+	# VoIP
+	# Upstream
+	rtk-switch qos add 055 2
+	# Downstream
+	rtk-switch qos add 050 2
+	# IGMP
+	# Upstream
+	rtk-switch qos add 044 1
+	# Downstream
+	rtk-switch qos add 040 1
+	rtk-switch interrupt init
+	rtk-switch interrupt link enable
+	rtk-switch interrupt speed enable
+
+	ethswctl -c wan -i eth0 -o enable
+	# Set only led in link activy mode
+	rtk-switch led green 2
+
+	ethctl eth0 phy-reset
+	ethctl eth0 media-type auto
+}

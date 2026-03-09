@@ -1,0 +1,1 @@
+$(document).ready(function(){$("#dhcp6_slaac_on").click(function(){$("#slaac_off_warning").hide()});$("#dhcp6_slaac_off").click(function(){$("#slaac_off_warning").show()});$("input[name='dhcp6_slaac']:checked").click()});
