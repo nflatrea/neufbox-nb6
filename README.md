@@ -12,8 +12,7 @@
  . . . . nflatrea <nflatrea@mailo.com> 
 ```
 
-An attempt to reverse engineer `neufbox-nb6` router, specifically `SFR NB6VAC-FXC` model. 
-The project is an open research to better understand their internal workings and functionality.
+An attempt to reverse engineer `neufbox-nb6` router, specifically `SFR NB6VAC-FXC` model.
 
 ### Tree
 
