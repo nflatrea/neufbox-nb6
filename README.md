@@ -34,9 +34,6 @@ An attempt to reverse engineer `neufbox-nb6` router, specifically `SFR NB6VAC-FX
 
 ![](hardware/NB6VC_treadown.webp)
 
-| ------------------------------------------ | ------------------------------------------ |
-| ![](hardware/img/IMG_20260119_093846.webp) | ![](hardware/img/IMG_20260119_093957.webp) |
-
 ### License
 
 This repository is licensed under the MIT License. See the LICENSE file for details.
