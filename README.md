@@ -1,16 +1,9 @@
 ### neufbox-nb6
 
-<<<<<<< HEAD
-```       
- . . . . neufbox-nb6
- . . . . SFR NB6VAC-FXC Analysis and Reverse Engineering
- . . . . nflatrea <nflatrea@mailo.com> 
-=======
-```                    
+```
 . . . . neufbox-nb6
 . . . . SFR NB6VAC-FXC Analysis and Reverse Engineering
 . . . . nflatrea <nflatrea@mailo.com> 
->>>>>>> 43dfafcf8b008674502026910a920567d5c3e618
 ```
 
 An attempt to reverse engineer `neufbox-nb6` router, specifically `SFR NB6VAC-FXC` model.
