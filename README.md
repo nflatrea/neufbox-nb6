@@ -1,12 +1,6 @@
 ### neufbox-nb6
 
-```
- __/\\___   
-(_     __)) 
- / ._))//   
-/: ._))\\   
-\  ____//   
- \//        
+```       
  . . . . neufbox-nb6
  . . . . SFR NB6VAC-FXC Analysis and Reverse Engineering
  . . . . nflatrea <nflatrea@mailo.com> 
@@ -30,9 +24,19 @@ The project is an open research to better understand their internal workings and
 │   ├── img
 │   └── NB6VC_treadown.webp
 ├── LICENSE
-├── misc
 └── README.md
 ```
+
+### Firmware
+
+### Hardware
+
+> Model: NB6VAC-FXC-r1
+
+![](hardware/NB6VC_treadown.webp)
+
+| ------------------------------------------ | ------------------------------------------ |
+| ![](hardware/img/IMG_20260119_093846.webp) | ![](hardware/img/IMG_20260119_093957.webp) |
 
 ### License
 
