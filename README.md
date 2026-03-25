@@ -21,14 +21,6 @@ An attempt to reverse engineer `neufbox-nb6` router, specifically `SFR NB6VAC-FX
 └── README.md
 ```
 
-### Firmware
-
-### Hardware
-
-> Model: NB6VAC-FXC-r1
-
-![](hardware/NB6VC_treadown.webp)
-
 ### License
 
 This repository is licensed under the MIT License. See the LICENSE file for details.
