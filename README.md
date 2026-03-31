@@ -36,8 +36,7 @@ An attempt to reverse engineer `neufbox-nb6` router, specifically `SFR NB6VAC-FX
 
 #### Getting a root shell
 
-![](hardware/img/IMG_20260119_093851.webp)
-
+![](hardware/img/IMG_20260119_093851.png)
 ![](hardware/img/IMG_20260331_002516.png)
 
 Unscrewing the base uncovers four UART connectors (and voids warranty).
