@@ -32,7 +32,10 @@ An attempt to reverse engineer `neufbox-nb6` router, specifically `SFR NB6VAC-FX
 | Firmware              | NB6VAC-MAIN-R4.0.44f   |
 | Emergency Firmware    | NB6VAC-MAIN-R4.0.44j   |
 
-![](hardware/teardown.png)
+
+| Complete Teardown     |
+|:---------------------:|
+| ![](hardware/teardown.png) |
 
 #### Getting a root shell
 | Visible port          | After teardown         |
