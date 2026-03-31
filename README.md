@@ -38,7 +38,7 @@ An attempt to reverse engineer `neufbox-nb6` router, specifically `SFR NB6VAC-FX
 
 ![](hardware/img/IMG_20260119_093851.webp)
 
-![]("hardware/img/Screenshot\ From\ 2026-03-31\ 00-25-16.png")
+![](hardware/img/IMG_20260331_002516.png)
 
 Unscrewing the base uncovers four UART connectors (and voids warranty).
 Considering pin 1 to be the closest to the power supply cable, pins respectively correspond to:
