@@ -1,6 +1,3 @@
-### neufbox-nb6
-
-=======
 # neufbox-nb6
 
 SFR NB6VAC-FXC Analysis and Reverse Engineering <br>
