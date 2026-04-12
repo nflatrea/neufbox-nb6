@@ -142,8 +142,8 @@ Main Thread Number [0|1]          : 0
 WLan Feature                      : 0x02  
 ```
 
-The CPU is a BCM63168D0 (400MHz), MIPS architecture. 
-The NAND flash chip is 128 mibibytes (128 MiB = 131072 KiB = 134217728 bytes). 
+The CPU is a BCM63168D0 (400MHz), MIPS architecture. <br>
+The NAND flash chip is 128 MiB
 
 ```console
 CFE> fi
