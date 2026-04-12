@@ -39,7 +39,7 @@ An attempt to reverse engineer `neufbox-nb6` router, specifically `SFR NB6VAC-FX
 |:---------------------:|:----------------------:|
 | ![hardware/img/IMG_20260119_093851.png](hardware/img/IMG_20260119_093851.png) | ![hardware/img/IMG_20260331_002516.png](hardware/img/IMG_20260331_002516.png) |
 
-Unscrewing the base uncovers four UART connectors (and voids warranty).
+Unscrewing the base gets you four UART connectors.
 Considering pin 1 to be the closest to the power supply cable, pins respectively correspond to:
 
 1. GND      (TP_UART_GND)
@@ -47,7 +47,7 @@ Considering pin 1 to be the closest to the power supply cable, pins respectively
 3. RX       (TP_UART_SIN)
 4. VCC 3V3  (TP_UART_3V3) <= not needed
 
-Plugging those pins to a computer (_via_ a TTL-to-USB convertor like CH340),
+By pluggin those pins to a computer (_via_ a TTL-to-USB convertor like CH340),
 we can see what the serial console prints during boot:
 
 ```console
@@ -62,7 +62,7 @@ Let's turn the router on and look at it.
 CFE version 1.0.39-116.174 for BCM963268 (32bit,SP,BE)
 ```
 
-* CFE offers an interactive menu when a key is pressed from the serial at startup.
+* CFE offers an interactive menu when (Ctrl-C) key is pressed  from the serial at startup.
 
 ```console
 *** Press any key to stop auto run (1 seconds) ***
@@ -113,7 +113,6 @@ For more information about a command, enter 'help command-name'
 
 * The CPU is a BCM63168D0 (400MHz), MIPS architecture. 
 The NAND flash chip is 128 mibibytes (128 MiB = 131072 KiB = 134217728 bytes). 
-Here are some more parameters:
 
 ```console
 Boot Strap Register:  0x1ff97bf
