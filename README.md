@@ -56,8 +56,6 @@ $ picocom -b 115200 /dev/ttyUSB90 -g TP_UART_nb6_2101220251416.txt
 
 Let's turn the router on and look at it.
 
-* The boot loader is CFE version 1.0.39
-
 ```console
 CFE version 1.0.39-116.174 for BCM963268 (32bit,SP,BE)
 ```
@@ -111,9 +109,6 @@ For more information about a command, enter 'help command-name'
 *** command status = 0
 ```
 
-* The CPU is a BCM63168D0 (400MHz), MIPS architecture. 
-The NAND flash chip is 128 mibibytes (128 MiB = 131072 KiB = 134217728 bytes). 
-
 ```console
 Boot Strap Register:  0x1ff97bf
 Chip ID: BCM63168D0, MIPS: 400MHz, DDR: 400MHz, Bus: 200MHz
@@ -145,6 +140,19 @@ System Log Size (0-256) KBytes    : 0
 Auxillary File System Size Percent: 0  
 Main Thread Number [0|1]          : 0  
 WLan Feature                      : 0x02  
+```
+
+The CPU is a BCM63168D0 (400MHz), MIPS architecture. 
+The NAND flash chip is 128 mibibytes (128 MiB = 131072 KiB = 134217728 bytes). 
+
+```console
+CFE> fi
+0 : boot    offset=0x00000000, size=131072 (128 ko), block=1
+1 : rootfs1 offset=0x00020000, size=33947648 (32 Mo), blocks=259
+2 : rootfs2 offset=0x02080000, size=33947648 (32 Mo), blocks=259
+3 : data    offset=0x04100000, size=65011712 (62 Mo), blocks=496
+4 : bbt     offset=0x07f00000, size=1048576 (1024 ko), blocks=8
+flash_end   offset=0x07f00400, blocks=1024
 ```
 
 ### License
